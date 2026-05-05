@@ -1,0 +1,118 @@
+import { Router } from 'express'
+import { z } from 'zod'
+import { authenticate, authorize } from '../middleware/auth.js'
+import * as svc from '../services/warga.service.js'
+import { ok, created, paginated } from '../utils/response.js'
+
+export const wargaRouter = Router()
+
+wargaRouter.use(authenticate)
+
+const bodySchema = z.object({
+  keluargaId:         z.number().int().positive().optional().nullable(),
+  nomorInduk:         z.string().max(30).optional().nullable(),
+  namaLengkap:        z.string().min(2, 'Nama minimal 2 karakter').max(150),
+  namaPanggilan:      z.string().max(50).optional().nullable(),
+  jenisKelamin:       z.enum(['L', 'P']),
+  tempatLahir:        z.string().max(100).optional().nullable(),
+  tanggalLahir:       z.string().date().optional().nullable(),
+  nik:                z.string().length(16).optional().nullable(),
+  golonganDarah:      z.enum(['A', 'B', 'AB', 'O']).optional().nullable(),
+  statusKeluarga:     z.enum(['KEPALA', 'ISTRI', 'ANAK', 'MENANTU', 'CUCU', 'LAINNYA']).optional(),
+  statusKeanggotaan:  z.enum(['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_KELUAR', 'MENINGGAL']).optional(),
+  sudahBaptis:        z.boolean().optional(),
+  tanggalBaptis:      z.string().date().optional().nullable(),
+  tempatBaptis:       z.string().max(150).optional().nullable(),
+  sudahSidi:          z.boolean().optional(),
+  nomorSidi:          z.string().max(30).optional().nullable(),
+  tanggalSidi:        z.string().date().optional().nullable(),
+  telepon:            z.string().max(20).optional().nullable(),
+  whatsapp:           z.string().max(20).optional().nullable(),
+  email:              z.string().email().max(100).optional().nullable(),
+  pendidikanTerakhir: z.string().max(50).optional().nullable(),
+  pekerjaan:          z.string().max(100).optional().nullable(),
+  catatan:            z.string().optional().nullable(),
+})
+
+// GET /api/warga
+wargaRouter.get('/', async (req, res) => {
+  const { page, limit, search, kelompokId, wilayahId, statusKeanggotaan, jenisKelamin, dataStatus, sudahSidi, sudahBaptis } = req.query
+  const result = await svc.listWarga(
+    {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      search: search as string | undefined,
+      kelompokId: kelompokId ? Number(kelompokId) : undefined,
+      wilayahId: wilayahId ? Number(wilayahId) : undefined,
+      statusKeanggotaan: statusKeanggotaan as string | undefined,
+      jenisKelamin: jenisKelamin as string | undefined,
+      dataStatus: dataStatus as string | undefined,
+      sudahSidi: sudahSidi === 'true' ? true : sudahSidi === 'false' ? false : undefined,
+      sudahBaptis: sudahBaptis === 'true' ? true : sudahBaptis === 'false' ? false : undefined,
+    },
+    req.user!,
+  )
+  paginated(res, result.data, result.total, result.page, result.limit)
+})
+
+// GET /api/warga/ulang-tahun
+wargaRouter.get('/ulang-tahun', async (_req, res) => {
+  const data = await svc.getWargaUlangTahunBulanIni()
+  ok(res, data)
+})
+
+// GET /api/warga/:id
+wargaRouter.get('/:id', async (req, res) => {
+  const warga = await svc.getWargaById(Number(req.params['id']), req.user!)
+  ok(res, warga)
+})
+
+// POST /api/warga
+wargaRouter.post(
+  '/',
+  authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
+  async (req, res) => {
+    const data = bodySchema.parse(req.body)
+    const warga = await svc.createWarga(
+      {
+        ...data,
+        tanggalLahir: data.tanggalLahir ? new Date(data.tanggalLahir) : null,
+        tanggalBaptis: data.tanggalBaptis ? new Date(data.tanggalBaptis) : null,
+        tanggalSidi: data.tanggalSidi ? new Date(data.tanggalSidi) : null,
+      } as any,
+      req.user!.userId,
+    )
+    created(res, warga)
+  },
+)
+
+// PUT /api/warga/:id
+wargaRouter.put(
+  '/:id',
+  authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
+  async (req, res) => {
+    const data = bodySchema.parse(req.body)
+    const warga = await svc.updateWarga(
+      Number(req.params['id']),
+      {
+        ...data,
+        tanggalLahir: data.tanggalLahir ? new Date(data.tanggalLahir) : null,
+        tanggalBaptis: data.tanggalBaptis ? new Date(data.tanggalBaptis) : null,
+        tanggalSidi: data.tanggalSidi ? new Date(data.tanggalSidi) : null,
+      } as any,
+      req.user!.userId,
+      req.user!,
+    )
+    ok(res, warga)
+  },
+)
+
+// DELETE /api/warga/:id
+wargaRouter.delete(
+  '/:id',
+  authorize('SUPERADMIN', 'KEPALA_KANTOR'),
+  async (req, res) => {
+    await svc.deleteWarga(Number(req.params['id']))
+    ok(res, { message: 'Data warga berhasil dihapus' })
+  },
+)

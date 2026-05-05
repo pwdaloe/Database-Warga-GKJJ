@@ -1,0 +1,319 @@
+// ============================================================
+// Prisma Schema — Database Warga GKJJ
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// MASTER DATA
+// ============================================================
+
+model Wilayah {
+  id          Int        @id @default(autoincrement())
+  kode        String     @unique @db.VarChar(5)
+  nama        String     @db.VarChar(100)
+  keterangan  String?    @db.Text
+  aktif       Boolean    @default(true)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  kelompoks   Kelompok[]
+
+  @@map("wilayah")
+}
+
+model Kelompok {
+  id                Int       @id @default(autoincrement())
+  wilayahId         Int       @map("wilayah_id")
+  kode              String    @unique @db.VarChar(5)
+  nama              String    @db.VarChar(100)
+  penatamaId        Int?      @map("penatua_id")
+  penatua_nama_temp String?   @db.VarChar(150)
+  aktif             Boolean   @default(true)
+  keterangan        String?   @db.Text
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  wilayah           Wilayah   @relation(fields: [wilayahId], references: [id])
+  penatua           Warga?    @relation("KelompokPenatua", fields: [penatamaId], references: [id])
+  keluargas         Keluarga[]
+  users             User[]
+
+  @@map("kelompok")
+}
+
+// ============================================================
+// DATA JEMAAT
+// ============================================================
+
+model Keluarga {
+  id              Int            @id @default(autoincrement())
+  nomorKeluarga   String?        @unique @db.VarChar(20) @map("nomor_keluarga")
+  kelompokId      Int?           @map("kelompok_id")
+  alamat          String?        @db.Text
+  rt              String?        @db.VarChar(5)
+  rw              String?        @db.VarChar(5)
+  kelurahan       String?        @db.VarChar(100)
+  kecamatan       String?        @db.VarChar(100)
+  kota            String?        @db.VarChar(100)
+  kodePos         String?        @db.VarChar(10) @map("kode_pos")
+  teleponRumah    String?        @db.VarChar(20) @map("telepon_rumah")
+  status          StatusKeluarga @default(AKTIF)
+  dataStatus      DataStatus     @default(DRAFT) @map("data_status")
+  catatan         String?        @db.Text
+  createdBy       Int?           @map("created_by")
+  updatedBy       Int?           @map("updated_by")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  kelompok        Kelompok?      @relation(fields: [kelompokId], references: [id])
+  createdByUser   User?          @relation("KeluargaCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser   User?          @relation("KeluargaUpdatedBy", fields: [updatedBy], references: [id])
+  wargas          Warga[]
+
+  @@index([kelompokId])
+  @@map("keluarga")
+}
+
+model Warga {
+  id                     Int                  @id @default(autoincrement())
+  keluargaId             Int?                 @map("keluarga_id")
+  nomorAnggota           String?              @unique @db.VarChar(20) @map("nomor_anggota")
+  nomorInduk             String?              @unique @db.VarChar(30) @map("nomor_induk")
+  namaLengkap            String               @db.VarChar(150) @map("nama_lengkap")
+  namaPanggilan          String?              @db.VarChar(50) @map("nama_panggilan")
+  jenisKelamin           JenisKelamin         @map("jenis_kelamin")
+  tempatLahir            String?              @db.VarChar(100) @map("tempat_lahir")
+  tanggalLahir           DateTime?            @db.Date @map("tanggal_lahir")
+  nik                    String?              @unique @db.VarChar(20)
+  golonganDarah          GolonganDarah?       @map("golongan_darah")
+  fotoUrl                String?              @db.Text @map("foto_url")
+  statusKeluarga         StatusDalamKeluarga  @default(LAINNYA) @map("status_keluarga")
+  statusKeanggotaan      StatusKeanggotaan    @default(AKTIF) @map("status_keanggotaan")
+  sudahBaptis            Boolean              @default(false) @map("sudah_baptis")
+  tanggalBaptis          DateTime?            @db.Date @map("tanggal_baptis")
+  tempatBaptis           String?              @db.VarChar(150) @map("tempat_baptis")
+  sudahSidi              Boolean              @default(false) @map("sudah_sidi")
+  nomorSidi              String?              @db.VarChar(30) @map("nomor_sidi")
+  tanggalSidi            DateTime?            @db.Date @map("tanggal_sidi")
+  telepon                String?              @db.VarChar(20)
+  whatsapp               String?              @db.VarChar(20)
+  email                  String?              @db.VarChar(100)
+  pendidikanTerakhir     String?              @db.VarChar(50) @map("pendidikan_terakhir")
+  pekerjaan              String?              @db.VarChar(100)
+  dataStatus             DataStatus           @default(DRAFT) @map("data_status")
+  catatan                String?              @db.Text
+  createdBy              Int?                 @map("created_by")
+  updatedBy              Int?                 @map("updated_by")
+  createdAt              DateTime             @default(now()) @map("created_at")
+  updatedAt              DateTime             @updatedAt @map("updated_at")
+
+  keluarga               Keluarga?            @relation(fields: [keluargaId], references: [id])
+  createdByUser          User?                @relation("WargaCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser          User?                @relation("WargaUpdatedBy", fields: [updatedBy], references: [id])
+  kelompokSebagaiPenatua Kelompok[]           @relation("KelompokPenatua")
+  perpindahans           Perpindahan[]        @relation("WargaPerpindahan")
+  perpindahanApproved    Perpindahan[]        @relation("PerpindahanApprovedBy")
+  perpindahanValidated   Perpindahan[]        @relation("PerpindahanValidatedBy")
+  user                   User?                @relation("WargaUser")
+
+  @@index([keluargaId])
+  @@index([namaLengkap])
+  @@index([nomorInduk])
+  @@index([statusKeanggotaan])
+  @@index([dataStatus])
+  @@map("warga")
+}
+
+// ============================================================
+// PERPINDAHAN
+// ============================================================
+
+model Perpindahan {
+  id                  Int              @id @default(autoincrement())
+  wargaId             Int              @map("warga_id")
+  jenis               JenisPerpindahan
+  gerejaAsalTujuan    String?          @db.VarChar(200) @map("gereja_asal_tujuan")
+  tanggalPerpindahan  DateTime?        @db.Date @map("tanggal_perpindahan")
+  nomorSurat          String?          @db.VarChar(50) @map("nomor_surat")
+  approvedBy          Int?             @map("approved_by")
+  validatedBy         Int?             @map("validated_by")
+  keterangan          String?          @db.Text
+  createdAt           DateTime         @default(now()) @map("created_at")
+
+  warga               Warga            @relation("WargaPerpindahan", fields: [wargaId], references: [id])
+  approvedByWarga     Warga?           @relation("PerpindahanApprovedBy", fields: [approvedBy], references: [id])
+  validatedByWarga    Warga?           @relation("PerpindahanValidatedBy", fields: [validatedBy], references: [id])
+
+  @@map("perpindahan")
+}
+
+// ============================================================
+// USERS & ACCESS
+// ============================================================
+
+model User {
+  id            Int       @id @default(autoincrement())
+  wargaId       Int?      @unique @map("warga_id")
+  nama          String    @db.VarChar(150)
+  username      String    @unique @db.VarChar(50)
+  email         String    @unique @db.VarChar(100)
+  passwordHash  String    @db.VarChar(255) @map("password_hash")
+  role          UserRole
+  kelompokId    Int?      @map("kelompok_id")
+  aktif         Boolean   @default(true)
+  lastLogin     DateTime? @map("last_login")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  warga            Warga?     @relation("WargaUser", fields: [wargaId], references: [id])
+  kelompok         Kelompok?  @relation(fields: [kelompokId], references: [id])
+  auditLogs        AuditLog[]
+  importLogs       ImportLog[]
+  keluargasCreated Keluarga[] @relation("KeluargaCreatedBy")
+  keluargasUpdated Keluarga[] @relation("KeluargaUpdatedBy")
+  wargasCreated    Warga[]    @relation("WargaCreatedBy")
+  wargasUpdated    Warga[]    @relation("WargaUpdatedBy")
+
+  @@map("users")
+}
+
+// ============================================================
+// AUDIT & IMPORT LOG
+// ============================================================
+
+model AuditLog {
+  id        BigInt      @id @default(autoincrement())
+  userId    Int?        @map("user_id")
+  action    AuditAction
+  tabel     String      @db.VarChar(50)
+  recordId  Int         @map("record_id")
+  dataLama  Json?       @map("data_lama")
+  dataBaru  Json?       @map("data_baru")
+  ipAddress String?     @db.VarChar(45) @map("ip_address")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user      User?       @relation(fields: [userId], references: [id])
+
+  @@index([tabel, recordId])
+  @@index([userId])
+  @@map("audit_log")
+}
+
+model ImportLog {
+  id            Int          @id @default(autoincrement())
+  userId        Int?         @map("user_id")
+  filename      String       @db.VarChar(255)
+  totalRows     Int?         @map("total_rows")
+  successCount  Int          @default(0) @map("success_count")
+  errorCount    Int          @default(0) @map("error_count")
+  errorDetail   Json?        @map("error_detail")
+  status        ImportStatus @default(PROCESSING)
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  user          User?        @relation(fields: [userId], references: [id])
+
+  @@map("import_log")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum StatusKeluarga {
+  AKTIF
+  NON_AKTIF
+
+  @@map("status_keluarga_enum")
+}
+
+enum DataStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  VALIDATED
+
+  @@map("data_status_enum")
+}
+
+enum JenisKelamin {
+  L
+  P
+
+  @@map("jenis_kelamin_enum")
+}
+
+enum GolonganDarah {
+  A
+  B
+  AB
+  O
+
+  @@map("golongan_darah_enum")
+}
+
+enum StatusDalamKeluarga {
+  KEPALA
+  ISTRI
+  ANAK
+  MENANTU
+  CUCU
+  LAINNYA
+
+  @@map("status_dalam_keluarga_enum")
+}
+
+enum StatusKeanggotaan {
+  AKTIF
+  NON_AKTIF
+  KATEKUMEN
+  PINDAH_KELUAR
+  MENINGGAL
+
+  @@map("status_keanggotaan_enum")
+}
+
+enum JenisPerpindahan {
+  MASUK
+  KELUAR
+  MENINGGAL
+
+  @@map("jenis_perpindahan_enum")
+}
+
+enum UserRole {
+  SUPERADMIN
+  KEPALA_KANTOR
+  MAJELIS
+  STAF_ADMIN
+  PENATUA_KELOMPOK
+  VIEWER
+
+  @@map("user_role_enum")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  APPROVE
+  VALIDATE
+  IMPORT
+
+  @@map("audit_action_enum")
+}
+
+enum ImportStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("import_status_enum")
+}
