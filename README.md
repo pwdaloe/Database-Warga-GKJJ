@@ -1,6 +1,6 @@
 # Database Warga GKJJ
 
-Aplikasi manajemen data jemaat **Gereja Kristen Jawa Joglo (GKJJ)** berbasis web. Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, dan wilayah gereja secara terpusat.
+Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web. Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, dan wilayah gereja secara terpusat.
 
 ---
 
@@ -311,4 +311,4 @@ Hasil import tersimpan di tabel `ImportLog` untuk keperluan audit.
 
 ## Lisensi
 
-Proyek ini dikembangkan untuk keperluan internal **GKJJ (Gereja Kristen Jawa Joglo)**.
+Proyek ini dikembangkan untuk keperluan internal **GKJJ (Gereja Kristen Jawa Jakarta)**.
