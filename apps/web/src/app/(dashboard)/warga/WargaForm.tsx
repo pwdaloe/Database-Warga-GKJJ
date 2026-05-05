@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2, User, Award, Phone, Users, Crown } from 'lucide-react'
 import { InputField, SelectField, TextareaField } from '@/components/ui/FormField'
-import { useWilayahKelompok, useKeluargaList } from '@/hooks/useKeluarga'
+import { useWilayahKelompok, useKeluargaList, useKeluargaDetail } from '@/hooks/useKeluarga'
 import { cn } from '@/lib/utils'
 
 // ── Status Dokumen ─────────────────────────────────────────────
@@ -70,8 +70,9 @@ interface Props {
 
 export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabel = 'Simpan' }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('identitas')
+  const [keluargaSearch, setKeluargaSearch] = useState('')
   const { data: wilayahList = [] } = useWilayahKelompok()
-  const { data: keluargaData } = useKeluargaList({ limit: 200 })
+  const { data: keluargaData } = useKeluargaList({ limit: 50, search: keluargaSearch || undefined })
   const keluargaList = keluargaData?.data ?? []
 
   const {
@@ -99,6 +100,11 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
   const sudahBaptis = watch('sudahBaptis')
   const sudahSidi = watch('sudahSidi')
   const selectedKeluargaId = watch('keluargaId')
+
+  // Fetch detail KK terpilih saat edit (search kosong, ID sudah ada)
+  const { data: selectedKeluargaDetail } = useKeluargaDetail(
+    !keluargaSearch.trim() && selectedKeluargaId ? selectedKeluargaId : null,
+  )
 
   const TABS = [
     { key: 'identitas' as Tab,   label: 'Identitas',    icon: User },
@@ -358,32 +364,99 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
                 <Users size={15} className="text-brand-500" />
                 <span className="text-sm font-semibold text-gray-700">Bergabung ke Keluarga</span>
               </div>
+
+              {/* Search input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Pilih Nomor KK
+                  Cari Keluarga
                 </label>
-                <select
-                  value={selectedKeluargaId ?? ''}
-                  onChange={(e) => setValue('keluargaId', e.target.value ? Number(e.target.value) : null)}
+                <input
+                  type="text"
+                  value={keluargaSearch}
+                  onChange={(e) => {
+                    setKeluargaSearch(e.target.value)
+                    setValue('keluargaId', null)
+                  }}
+                  placeholder="Ketik nama orang tua atau nomor KK..."
                   className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
-                >
-                  <option value="">— Pilih Keluarga —</option>
-                  {keluargaList.map((k: any) => {
-                    const kepala = k.kepalaKeluarga?.namaLengkap
-                      ?? k.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')?.namaLengkap
-                    return (
-                      <option key={k.id} value={k.id}>
-                        {k.nomorKeluarga ?? `KLG-${k.id}`}
-                        {kepala ? ` — ${kepala}` : ''}
-                        {k.kelompok ? ` (${k.kelompok.nama})` : ''}
-                      </option>
-                    )
-                  })}
-                </select>
-                <p className="mt-1.5 text-xs text-gray-400">
-                  Pilih nomor KK dari kepala keluarga yang sudah terdaftar.
-                </p>
+                />
               </div>
+
+              {/* Hasil pencarian */}
+              {keluargaSearch.trim() && !selectedKeluargaId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Pilih dari Hasil Pencarian
+                    {keluargaList.length > 0 && (
+                      <span className="ml-1.5 text-xs text-gray-400">({keluargaList.length} ditemukan)</span>
+                    )}
+                  </label>
+                  {keluargaList.length === 0 ? (
+                    <p className="text-sm text-gray-400 italic py-2">Tidak ada keluarga ditemukan.</p>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden divide-y max-h-52 overflow-y-auto">
+                      {keluargaList.map((k: any) => {
+                        const kepala = k.kepalaKeluarga?.namaLengkap
+                          ?? k.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')?.namaLengkap
+                        const isSelected = selectedKeluargaId === k.id
+                        return (
+                          <button
+                            key={k.id}
+                            type="button"
+                            onClick={() => setValue('keluargaId', k.id)}
+                            className={cn(
+                              'w-full text-left px-3 py-2.5 text-sm transition',
+                              isSelected
+                                ? 'bg-brand-50 border-l-2 border-brand-500'
+                                : 'bg-white hover:bg-gray-50',
+                            )}
+                          >
+                            <span className="font-medium text-gray-900">
+                              {kepala ?? '(Kepala belum ditentukan)'}
+                            </span>
+                            <span className="text-gray-400 ml-2 text-xs">
+                              {k.nomorKeluarga ?? `KLG-${k.id}`}
+                              {k.kelompok ? ` · ${k.kelompok.nama}` : ''}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tampilkan KK yang sudah dipilih */}
+              {selectedKeluargaId && (() => {
+                const sel = keluargaList.find((k: any) => k.id === selectedKeluargaId)
+                  ?? selectedKeluargaDetail
+                if (!sel) return null
+                const kepala = sel.kepalaKeluarga?.namaLengkap
+                  ?? sel.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')?.namaLengkap
+                return (
+                  <div className="flex items-center justify-between p-2.5 bg-brand-50 border border-brand-200 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-brand-900">{kepala ?? 'Kepala belum ditentukan'}</p>
+                      <p className="text-xs text-brand-600">
+                        {sel.nomorKeluarga}{sel.kelompok ? ` · ${sel.kelompok.nama}` : ''}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setValue('keluargaId', null); setKeluargaSearch('') }}
+                      className="text-xs text-brand-500 hover:text-brand-700 underline ml-3"
+                    >
+                      Ubah
+                    </button>
+                  </div>
+                )
+              })()}
+
+              {!keluargaSearch.trim() && !selectedKeluargaId && (
+                <p className="text-xs text-gray-400">
+                  Ketik nama kepala keluarga atau nomor KK untuk mencari.
+                </p>
+              )}
             </div>
           )}
         </div>
