@@ -73,13 +73,10 @@ model Keluarga {
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
-  kepalakeluargaId  Int?           @map("kepala_keluarga_id")
-
-  kelompok          Kelompok?      @relation(fields: [kelompokId], references: [id])
-  kepalaKeluarga    Warga?         @relation("KeluargaKepala", fields: [kepalakeluargaId], references: [id])
-  createdByUser     User?          @relation("KeluargaCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser     User?          @relation("KeluargaUpdatedBy", fields: [updatedBy], references: [id])
-  wargas            Warga[]
+  kelompok        Kelompok?      @relation(fields: [kelompokId], references: [id])
+  createdByUser   User?          @relation("KeluargaCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser   User?          @relation("KeluargaUpdatedBy", fields: [updatedBy], references: [id])
+  wargas          Warga[]
 
   @@index([kelompokId])
   @@map("keluarga")
@@ -121,8 +118,7 @@ model Warga {
   keluarga               Keluarga?            @relation(fields: [keluargaId], references: [id])
   createdByUser          User?                @relation("WargaCreatedBy", fields: [createdBy], references: [id])
   updatedByUser          User?                @relation("WargaUpdatedBy", fields: [updatedBy], references: [id])
-  kelompokSebagaiPenatua   Kelompok[]           @relation("KelompokPenatua")
-  keluargaSebagaiKepala    Keluarga[]           @relation("KeluargaKepala")
+  kelompokSebagaiPenatua Kelompok[]           @relation("KelompokPenatua")
   perpindahans           Perpindahan[]        @relation("WargaPerpindahan")
   perpindahanApproved    Perpindahan[]        @relation("PerpindahanApprovedBy")
   perpindahanValidated   Perpindahan[]        @relation("PerpindahanValidatedBy")
@@ -240,9 +236,9 @@ enum StatusKeluarga {
 
 enum DataStatus {
   DRAFT
-  VALIDASI
-  AKTIF
-  TIDAK_AKTIF
+  PENDING
+  APPROVED
+  VALIDATED
 
   @@map("data_status_enum")
 }

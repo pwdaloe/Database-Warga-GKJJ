@@ -9,10 +9,10 @@ const STATUS_KEANGGOTAAN: Record<string, { label: string; className: string }> =
 }
 
 const DATA_STATUS: Record<string, { label: string; className: string }> = {
-  DRAFT:       { label: 'Draft',       className: 'bg-gray-100 text-gray-500' },
-  VALIDASI:    { label: 'Validasi',    className: 'bg-yellow-100 text-yellow-700' },
-  AKTIF:       { label: 'Aktif',       className: 'bg-green-100 text-green-700' },
-  TIDAK_AKTIF: { label: 'Tidak Aktif', className: 'bg-red-100 text-red-600' },
+  DRAFT:     { label: 'Draft',    className: 'bg-gray-100 text-gray-600' },
+  PENDING:   { label: 'Pending',  className: 'bg-yellow-100 text-yellow-700' },
+  APPROVED:  { label: 'Approved', className: 'bg-blue-100 text-blue-700' },
+  VALIDATED: { label: 'Valid',    className: 'bg-green-100 text-green-700' },
 }
 
 const STATUS_KELUARGA_MAP: Record<string, { label: string; className: string }> = {

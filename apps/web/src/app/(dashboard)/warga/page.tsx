@@ -1,7 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Users, Pencil, Trash2, Eye, Filter, User } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+  Plus, Search, Users, Pencil, Trash2, Eye, Filter,
+  UserPlus, CheckCircle2, Loader2, Crown,
+} from 'lucide-react'
 import { format, differenceInYears } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { useWargaList, useWargaMutations } from '@/hooks/useWarga'
@@ -9,11 +13,109 @@ import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
-import { WargaForm } from './WargaForm'
+import { WargaForm, type WargaFormData } from './WargaForm'
 import { useAuth } from '@/hooks/useAuth'
-import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { InputField, SelectField } from '@/components/ui/FormField'
 
+// ── Wizard state ──────────────────────────────────────────────
+type WizardStep =
+  | { step: 1 }
+  | { step: 2; kepalaNama: string; keluargaId: number | null; addedAnggota: any[] }
+
+// ── Quick-add form untuk anggota ──────────────────────────────
+const anggotaSchema = z.object({
+  namaLengkap:    z.string().min(2, 'Nama minimal 2 karakter'),
+  jenisKelamin:   z.enum(['L', 'P'], { required_error: 'Pilih jenis kelamin' }),
+  statusKeluarga: z.enum(['ISTRI', 'ANAK', 'MENANTU', 'CUCU', 'LAINNYA']),
+  tanggalLahir:   z.string().optional().nullable(),
+})
+type AnggotaData = z.infer<typeof anggotaSchema>
+
+function AnggotaQuickForm({
+  keluargaId,
+  onAdded,
+}: {
+  keluargaId: number | null
+  onAdded: (anggota: any) => void
+}) {
+  const { create } = useWargaMutations()
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<AnggotaData>({
+    resolver: zodResolver(anggotaSchema),
+    defaultValues: { statusKeluarga: 'ANAK' },
+  })
+
+  async function onSubmit(data: AnggotaData) {
+    const warga = await create.mutateAsync({
+      ...data,
+      keluargaId,
+      statusKeanggotaan: 'AKTIF',
+      dataStatus: 'DRAFT',
+      tanggalLahir: data.tanggalLahir || null,
+    })
+    onAdded(warga)
+    reset({ statusKeluarga: 'ANAK' })
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-50 rounded-xl border p-4 space-y-3">
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tambah Anggota</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <InputField
+            label="Nama Lengkap" required
+            {...register('namaLengkap')}
+            error={errors.namaLengkap}
+            placeholder="Nama anggota keluarga"
+          />
+        </div>
+        <SelectField
+          label="Jenis Kelamin" required
+          options={[{ value: 'L', label: 'Laki-laki' }, { value: 'P', label: 'Perempuan' }]}
+          placeholder="— Pilih —"
+          {...register('jenisKelamin')}
+          error={errors.jenisKelamin}
+        />
+        <SelectField
+          label="Status dalam Keluarga" required
+          options={[
+            { value: 'ISTRI', label: 'Istri' },
+            { value: 'ANAK', label: 'Anak' },
+            { value: 'MENANTU', label: 'Menantu' },
+            { value: 'CUCU', label: 'Cucu' },
+            { value: 'LAINNYA', label: 'Lainnya' },
+          ]}
+          {...register('statusKeluarga')}
+          error={errors.statusKeluarga}
+        />
+        <div className="col-span-2">
+          <InputField label="Tanggal Lahir" type="date" {...register('tanggalLahir')} error={errors.tanggalLahir as any} />
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700
+            disabled:bg-brand-300 text-white text-sm font-medium rounded-lg transition"
+        >
+          {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+          {isSubmitting ? 'Menyimpan...' : 'Tambah Anggota'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+// ── Main page ─────────────────────────────────────────────────
 export default function WargaPage() {
   const { isRole } = useAuth()
   const router = useRouter()
@@ -30,6 +132,7 @@ export default function WargaPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState<any>(null)
   const [confirmDelete, setConfirmDelete] = useState<any>(null)
+  const [wizard, setWizard] = useState<WizardStep>({ step: 1 })
 
   const { data, isLoading } = useWargaList({
     page, limit: 25, search, kelompokId, wilayahId,
@@ -42,24 +145,59 @@ export default function WargaPage() {
   const canEdit = isRole('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK')
   const canDelete = isRole('SUPERADMIN', 'KEPALA_KANTOR')
 
+  function openCreate() {
+    setEditData(null)
+    setWizard({ step: 1 })
+    setModalOpen(true)
+  }
+
+  function closeModal() {
+    setModalOpen(false)
+    setEditData(null)
+    setWizard({ step: 1 })
+  }
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setSearch(searchInput)
     setPage(1)
   }
 
-  async function handleSubmit(formData: any) {
+  async function handleSubmit(formData: WargaFormData) {
     if (editData) {
       await update.mutateAsync({ id: editData.id, data: formData })
-    } else {
-      await create.mutateAsync(formData)
+      closeModal()
+      return
     }
-    setModalOpen(false)
-    setEditData(null)
+
+    const warga = await create.mutateAsync(formData)
+
+    // Wizard: jika Kepala Keluarga, lanjut ke Step 2
+    if (formData.statusKeluarga === 'KEPALA') {
+      setWizard({
+        step: 2,
+        kepalaNama: warga.namaLengkap,
+        keluargaId: warga.keluargaId ?? null,
+        addedAnggota: [],
+      })
+    } else {
+      closeModal()
+    }
+  }
+
+  function handleAnggotaAdded(anggota: any) {
+    if (wizard.step !== 2) return
+    setWizard({ ...wizard, addedAnggota: [...wizard.addedAnggota, anggota] })
   }
 
   const wargaList = data?.data ?? []
   const meta = data?.meta
+
+  const modalTitle = editData
+    ? `Edit: ${editData.namaLengkap}`
+    : wizard.step === 2
+    ? 'Tambah Anggota Keluarga'
+    : 'Tambah Warga Baru'
 
   return (
     <div className="p-8">
@@ -73,7 +211,7 @@ export default function WargaPage() {
         </div>
         {canEdit && (
           <button
-            onClick={() => { setEditData(null); setModalOpen(true) }}
+            onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700
               text-white text-sm font-medium rounded-lg transition"
           >
@@ -253,18 +391,14 @@ export default function WargaPage() {
                       <div className="flex gap-1.5 justify-center">
                         <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
                           w.sudahBaptis ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'
-                        )}>
-                          Baptis
-                        </span>
+                        )}>Baptis</span>
                         <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
                           w.sudahSidi ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400'
-                        )}>
-                          Sidi
-                        </span>
+                        )}>Sidi</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <Badge value={w.statusKeanggotaan} type="keanggotaan" />
+                      <Badge value={w.dataStatus} type="dataStatus" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
@@ -277,7 +411,7 @@ export default function WargaPage() {
                         </button>
                         {canEdit && (
                           <button
-                            onClick={() => { setEditData(w); setModalOpen(true) }}
+                            onClick={() => { setEditData(w); setWizard({ step: 1 }); setModalOpen(true) }}
                             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-brand-600 transition"
                             title="Edit"
                           >
@@ -307,42 +441,107 @@ export default function WargaPage() {
         )}
       </div>
 
-      {/* Modal Form */}
+      {/* Modal Wizard */}
       <Modal
         open={modalOpen}
-        onClose={() => { setModalOpen(false); setEditData(null) }}
-        title={editData ? `Edit: ${editData.namaLengkap}` : 'Tambah Warga Baru'}
+        onClose={closeModal}
+        title={modalTitle}
         size="xl"
       >
-        <WargaForm
-          defaultValues={editData ? {
-            keluargaId: editData.keluargaId,
-            nomorInduk: editData.nomorInduk,
-            namaLengkap: editData.namaLengkap,
-            namaPanggilan: editData.namaPanggilan,
-            jenisKelamin: editData.jenisKelamin,
-            tempatLahir: editData.tempatLahir,
-            tanggalLahir: editData.tanggalLahir?.split('T')[0],
-            nik: editData.nik,
-            golonganDarah: editData.golonganDarah,
-            statusKeluarga: editData.statusKeluarga,
-            statusKeanggotaan: editData.statusKeanggotaan,
-            sudahBaptis: editData.sudahBaptis,
-            tanggalBaptis: editData.tanggalBaptis?.split('T')[0],
-            tempatBaptis: editData.tempatBaptis,
-            sudahSidi: editData.sudahSidi,
-            nomorSidi: editData.nomorSidi,
-            tanggalSidi: editData.tanggalSidi?.split('T')[0],
-            telepon: editData.telepon,
-            whatsapp: editData.whatsapp,
-            email: editData.email,
-            pendidikanTerakhir: editData.pendidikanTerakhir,
-            pekerjaan: editData.pekerjaan,
-            catatan: editData.catatan,
-          } : undefined}
-          onSubmit={handleSubmit}
-          submitLabel={editData ? 'Update Warga' : 'Simpan Warga'}
-        />
+        {/* ── Step 1: Form Warga ── */}
+        {wizard.step === 1 && (
+          <WargaForm
+            defaultValues={editData ? {
+              dataStatus: editData.dataStatus,
+              keluargaId: editData.keluargaId,
+              nomorInduk: editData.nomorInduk,
+              namaLengkap: editData.namaLengkap,
+              namaPanggilan: editData.namaPanggilan,
+              jenisKelamin: editData.jenisKelamin,
+              tempatLahir: editData.tempatLahir,
+              tanggalLahir: editData.tanggalLahir?.split('T')[0],
+              nik: editData.nik,
+              golonganDarah: editData.golonganDarah,
+              statusKeluarga: editData.statusKeluarga,
+              statusKeanggotaan: editData.statusKeanggotaan,
+              sudahBaptis: editData.sudahBaptis,
+              tanggalBaptis: editData.tanggalBaptis?.split('T')[0],
+              tempatBaptis: editData.tempatBaptis,
+              sudahSidi: editData.sudahSidi,
+              nomorSidi: editData.nomorSidi,
+              tanggalSidi: editData.tanggalSidi?.split('T')[0],
+              telepon: editData.telepon,
+              whatsapp: editData.whatsapp,
+              email: editData.email,
+              pendidikanTerakhir: editData.pendidikanTerakhir,
+              pekerjaan: editData.pekerjaan,
+              catatan: editData.catatan,
+            } : undefined}
+            onSubmit={handleSubmit}
+            submitLabel={editData ? 'Update Warga' : 'Simpan & Lanjutkan →'}
+          />
+        )}
+
+        {/* ── Step 2: Tambah Anggota Keluarga ── */}
+        {wizard.step === 2 && (
+          <div className="space-y-5">
+            {/* Konfirmasi kepala tersimpan */}
+            <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <CheckCircle2 size={20} className="text-green-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-green-800">
+                  Data Kepala Keluarga berhasil disimpan
+                </p>
+                <p className="text-xs text-green-600 mt-0.5">
+                  <Crown size={11} className="inline mr-1" />
+                  {wizard.kepalaNama}
+                </p>
+              </div>
+            </div>
+
+            {/* Daftar anggota yang sudah ditambahkan */}
+            {wizard.addedAnggota.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  Anggota yang ditambahkan ({wizard.addedAnggota.length})
+                </p>
+                <div className="divide-y border rounded-xl overflow-hidden">
+                  {wizard.addedAnggota.map((a: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-2.5 bg-white">
+                      <div className={cn(
+                        'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold',
+                        a.jenisKelamin === 'L' ? 'bg-blue-400' : 'bg-pink-400',
+                      )}>
+                        {a.namaLengkap.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{a.namaLengkap}</p>
+                        <p className="text-xs text-gray-400">{a.statusKeluarga}</p>
+                      </div>
+                      <Badge value={a.dataStatus} type="dataStatus" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Form tambah anggota */}
+            <AnggotaQuickForm
+              keluargaId={wizard.keluargaId}
+              onAdded={handleAnggotaAdded}
+            />
+
+            {/* Tombol selesai */}
+            <div className="flex justify-end pt-2 border-t">
+              <button
+                onClick={closeModal}
+                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition"
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Konfirmasi Hapus */}

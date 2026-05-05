@@ -115,6 +115,7 @@ export default function WargaDetailPage() {
                 )}
                 <Badge value={warga.statusKeluarga} type="statusKeluarga" />
                 <Badge value={warga.statusKeanggotaan} type="keanggotaan" />
+                <Badge value={warga.dataStatus} type="dataStatus" />
               </div>
               {warga.keluarga && (
                 <p className="text-sm text-gray-500 mt-1.5 flex items-center gap-1.5">
@@ -409,6 +410,7 @@ export default function WargaDetailPage() {
       >
         <WargaForm
           defaultValues={{
+            dataStatus: warga.dataStatus,
             keluargaId: warga.keluargaId,
             nomorInduk: warga.nomorInduk,
             namaLengkap: warga.namaLengkap,

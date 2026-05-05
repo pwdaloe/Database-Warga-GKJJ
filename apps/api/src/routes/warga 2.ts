@@ -20,7 +20,6 @@ const bodySchema = z.object({
   golonganDarah:      z.enum(['A', 'B', 'AB', 'O']).optional().nullable(),
   statusKeluarga:     z.enum(['KEPALA', 'ISTRI', 'ANAK', 'MENANTU', 'CUCU', 'LAINNYA']).optional(),
   statusKeanggotaan:  z.enum(['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_KELUAR', 'MENINGGAL']).optional(),
-  dataStatus:         z.enum(['DRAFT', 'VALIDASI', 'AKTIF', 'TIDAK_AKTIF']).optional(),
   sudahBaptis:        z.boolean().optional(),
   tanggalBaptis:      z.string().date().optional().nullable(),
   tempatBaptis:       z.string().max(150).optional().nullable(),

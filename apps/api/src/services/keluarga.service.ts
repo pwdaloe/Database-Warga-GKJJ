@@ -156,12 +156,12 @@ export async function deleteKeluarga(id: number) {
 export async function approveKeluarga(id: number, userId: number) {
   const keluarga = await prisma.keluarga.findUnique({ where: { id } })
   if (!keluarga) throw new AppError(404, 'Data keluarga tidak ditemukan')
-  if (keluarga.dataStatus !== 'PENDING') {
-    throw new AppError(400, 'Hanya data berstatus PENDING yang dapat di-approve')
+  if (keluarga.dataStatus !== 'DRAFT' && keluarga.dataStatus !== 'VALIDASI') {
+    throw new AppError(400, 'Hanya data berstatus DRAFT atau VALIDASI yang dapat diproses')
   }
   return prisma.keluarga.update({
     where: { id },
-    data: { dataStatus: 'APPROVED', updatedBy: userId },
+    data: { dataStatus: 'AKTIF', updatedBy: userId },
     include: keluargaInclude,
   })
 }
