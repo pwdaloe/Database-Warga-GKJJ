@@ -106,14 +106,15 @@ wargaRouter.put(
   '/:id',
   authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
   async (req, res) => {
-    const data = bodySchema.parse(req.body)
+    // newKeluarga diabaikan saat update — perubahan kelompok lewat halaman Keluarga
+    const { newKeluarga, ...rest } = bodySchema.parse(req.body)
     const warga = await svc.updateWarga(
       Number(req.params['id']),
       {
-        ...data,
-        tanggalLahir: data.tanggalLahir ? new Date(data.tanggalLahir) : null,
-        tanggalBaptis: data.tanggalBaptis ? new Date(data.tanggalBaptis) : null,
-        tanggalSidi: data.tanggalSidi ? new Date(data.tanggalSidi) : null,
+        ...rest,
+        tanggalLahir: rest.tanggalLahir ? new Date(rest.tanggalLahir) : null,
+        tanggalBaptis: rest.tanggalBaptis ? new Date(rest.tanggalBaptis) : null,
+        tanggalSidi: rest.tanggalSidi ? new Date(rest.tanggalSidi) : null,
       } as any,
       req.user!.userId,
       req.user!,
