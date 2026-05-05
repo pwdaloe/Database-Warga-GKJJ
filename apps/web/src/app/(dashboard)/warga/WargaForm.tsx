@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, User, Award, Phone, Users } from 'lucide-react'
+import { Loader2, User, Award, Phone, Users, Crown } from 'lucide-react'
 import { InputField, SelectField, TextareaField } from '@/components/ui/FormField'
 import { useWilayahKelompok, useKeluargaList } from '@/hooks/useKeluarga'
 import { cn } from '@/lib/utils'
@@ -23,6 +23,16 @@ const PENDIDIKAN = ['SD', 'SMP', 'SMA/SMK', 'D3', 'S1', 'S2', 'S3', 'Lainnya']
 const schema = z.object({
   dataStatus:         z.enum(['DRAFT', 'VALIDASI', 'AKTIF', 'TIDAK_AKTIF']).default('DRAFT'),
   keluargaId:         z.number().int().positive().optional().nullable(),
+  // Fields untuk membuat Keluarga baru (hanya saat statusKeluarga = KEPALA)
+  newKelompokId:      z.number().int().positive().optional().nullable(),
+  newAlamat:          z.string().max(500).optional().nullable(),
+  newRt:              z.string().max(5).optional().nullable(),
+  newRw:              z.string().max(5).optional().nullable(),
+  newKelurahan:       z.string().max(100).optional().nullable(),
+  newKecamatan:       z.string().max(100).optional().nullable(),
+  newKota:            z.string().max(100).optional().nullable(),
+  newKodePos:         z.string().max(10).optional().nullable(),
+  newTeleponRumah:    z.string().max(20).optional().nullable(),
   nomorInduk:         z.string().max(30).optional().nullable(),
   namaLengkap:        z.string().min(2, 'Nama minimal 2 karakter').max(150),
   namaPanggilan:      z.string().max(50).optional().nullable(),
@@ -85,6 +95,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
   })
 
   const dataStatus = watch('dataStatus')
+  const statusKeluarga = watch('statusKeluarga')
   const sudahBaptis = watch('sudahBaptis')
   const sudahSidi = watch('sudahSidi')
   const selectedKeluargaId = watch('keluargaId')
@@ -279,49 +290,102 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
 
       {/* ── Tab: Keluarga ─────────────────────────────────── */}
       {activeTab === 'keluarga' && !keluargaIdFixed && (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Kelompok
-            </label>
-            <select
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
-              defaultValue=""
-              disabled
-            >
-              <option value="">— Diatur melalui data Keluarga —</option>
-            </select>
-            <p className="mt-1.5 text-xs text-gray-400">
-              Kelompok ditentukan dari data Keluarga (KK) yang dipilih di bawah.
-            </p>
-          </div>
+        <div className="space-y-5">
+          {statusKeluarga === 'KEPALA' ? (
+            /* ── Buat Keluarga Baru ── */
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <Crown size={15} className="text-yellow-500" />
+                <span className="text-sm font-semibold text-gray-700">Data Keluarga Baru</span>
+                <span className="text-xs text-gray-400 ml-1">— otomatis dibuat saat disimpan</span>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Nomor KK / Keluarga
-            </label>
-            <select
-              value={selectedKeluargaId ?? ''}
-              onChange={(e) => setValue('keluargaId', e.target.value ? Number(e.target.value) : null)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="">— Belum ditentukan —</option>
-              {keluargaList.map((k: any) => {
-                const kepala = k.kepalaKeluarga?.namaLengkap
-                  ?? k.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')?.namaLengkap
-                return (
-                  <option key={k.id} value={k.id}>
-                    {k.nomorKeluarga ?? `KLG-${k.id}`}
-                    {kepala ? ` — ${kepala}` : ''}
-                    {k.kelompok ? ` (${k.kelompok.nama})` : ''}
-                  </option>
-                )
-              })}
-            </select>
-            <p className="mt-1.5 text-xs text-gray-400">
-              Jika warga ini adalah Kepala Keluarga baru, kosongkan — data KK akan dibuat otomatis setelah disimpan.
-            </p>
-          </div>
+              {/* Kelompok */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Kelompok <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={watch('newKelompokId') ?? ''}
+                  onChange={(e) => setValue('newKelompokId', e.target.value ? Number(e.target.value) : null)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="">— Pilih Kelompok —</option>
+                  {wilayahList.map((w) => (
+                    <optgroup key={w.id} label={w.nama}>
+                      {w.kelompoks.map((k) => (
+                        <option key={k.id} value={k.id}>[{k.kode}] {k.nama}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              {/* Alamat */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Alamat Rumah</label>
+                <textarea
+                  {...register('newAlamat')}
+                  rows={2}
+                  placeholder="Jl. Contoh No. 1"
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 gap-3">
+                <InputField label="RT" {...register('newRt')} placeholder="001" />
+                <InputField label="RW" {...register('newRw')} placeholder="005" />
+                <div className="col-span-2">
+                  <InputField label="Kelurahan" {...register('newKelurahan')} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <InputField label="Kecamatan" {...register('newKecamatan')} />
+                <InputField label="Kota" {...register('newKota')} placeholder="Jakarta" />
+                <InputField label="Kode Pos" {...register('newKodePos')} placeholder="13210" />
+              </div>
+              <InputField
+                label="Telepon Rumah"
+                type="tel"
+                {...register('newTeleponRumah')}
+                placeholder="021-XXXXXXX"
+              />
+            </div>
+          ) : (
+            /* ── Bergabung ke Keluarga yang Ada ── */
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <Users size={15} className="text-brand-500" />
+                <span className="text-sm font-semibold text-gray-700">Bergabung ke Keluarga</span>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Pilih Nomor KK
+                </label>
+                <select
+                  value={selectedKeluargaId ?? ''}
+                  onChange={(e) => setValue('keluargaId', e.target.value ? Number(e.target.value) : null)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="">— Pilih Keluarga —</option>
+                  {keluargaList.map((k: any) => {
+                    const kepala = k.kepalaKeluarga?.namaLengkap
+                      ?? k.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')?.namaLengkap
+                    return (
+                      <option key={k.id} value={k.id}>
+                        {k.nomorKeluarga ?? `KLG-${k.id}`}
+                        {kepala ? ` — ${kepala}` : ''}
+                        {k.kelompok ? ` (${k.kelompok.nama})` : ''}
+                      </option>
+                    )
+                  })}
+                </select>
+                <p className="mt-1.5 text-xs text-gray-400">
+                  Pilih nomor KK dari kepala keluarga yang sudah terdaftar.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -8,8 +8,21 @@ export const wargaRouter = Router()
 
 wargaRouter.use(authenticate)
 
+const newKeluargaSchema = z.object({
+  kelompokId:   z.number().int().positive(),
+  alamat:       z.string().max(500).optional().nullable(),
+  rt:           z.string().max(5).optional().nullable(),
+  rw:           z.string().max(5).optional().nullable(),
+  kelurahan:    z.string().max(100).optional().nullable(),
+  kecamatan:    z.string().max(100).optional().nullable(),
+  kota:         z.string().max(100).optional().nullable(),
+  kodePos:      z.string().max(10).optional().nullable(),
+  teleponRumah: z.string().max(20).optional().nullable(),
+})
+
 const bodySchema = z.object({
   keluargaId:         z.number().int().positive().optional().nullable(),
+  newKeluarga:        newKeluargaSchema.optional(),
   nomorInduk:         z.string().max(30).optional().nullable(),
   namaLengkap:        z.string().min(2, 'Nama minimal 2 karakter').max(150),
   namaPanggilan:      z.string().max(50).optional().nullable(),
@@ -73,15 +86,16 @@ wargaRouter.post(
   '/',
   authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
   async (req, res) => {
-    const data = bodySchema.parse(req.body)
+    const { newKeluarga, ...rest } = bodySchema.parse(req.body)
     const warga = await svc.createWarga(
       {
-        ...data,
-        tanggalLahir: data.tanggalLahir ? new Date(data.tanggalLahir) : null,
-        tanggalBaptis: data.tanggalBaptis ? new Date(data.tanggalBaptis) : null,
-        tanggalSidi: data.tanggalSidi ? new Date(data.tanggalSidi) : null,
+        ...rest,
+        tanggalLahir: rest.tanggalLahir ? new Date(rest.tanggalLahir) : null,
+        tanggalBaptis: rest.tanggalBaptis ? new Date(rest.tanggalBaptis) : null,
+        tanggalSidi: rest.tanggalSidi ? new Date(rest.tanggalSidi) : null,
       } as any,
       req.user!.userId,
+      newKeluarga,
     )
     created(res, warga)
   },

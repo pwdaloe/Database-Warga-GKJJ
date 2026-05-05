@@ -133,19 +133,61 @@ export async function getWargaById(id: number, user: JwtPayload) {
   return warga
 }
 
+export interface NewKeluargaInput {
+  kelompokId: number
+  alamat?: string | null
+  rt?: string | null
+  rw?: string | null
+  kelurahan?: string | null
+  kecamatan?: string | null
+  kota?: string | null
+  kodePos?: string | null
+  teleponRumah?: string | null
+}
+
 export async function createWarga(
   data: Prisma.WargaUncheckedCreateInput,
   userId: number,
+  newKeluarga?: NewKeluargaInput,
 ) {
-  // Auto-generate nomor anggota
-  if (!data.nomorAnggota) {
-    const count = await prisma.warga.count()
-    data.nomorAnggota = `WRG${String(count + 1).padStart(5, '0')}`
-  }
+  return prisma.$transaction(async (tx) => {
+    let keluargaId = data.keluargaId as number | null | undefined
 
-  return prisma.warga.create({
-    data: { ...data, createdBy: userId, updatedBy: userId },
-    include: wargaInclude,
+    // Jika Kepala Keluarga tanpa KK yang ada → buat KK baru
+    if (data.statusKeluarga === 'KEPALA' && !keluargaId && newKeluarga) {
+      const count = await tx.keluarga.count()
+      const nomorKeluarga = `KLG${String(count + 1).padStart(5, '0')}`
+      const keluarga = await tx.keluarga.create({
+        data: {
+          ...newKeluarga,
+          nomorKeluarga,
+          createdBy: userId,
+          updatedBy: userId,
+        } as Prisma.KeluargaUncheckedCreateInput,
+      })
+      keluargaId = keluarga.id
+    }
+
+    // Auto-generate nomor anggota
+    if (!data.nomorAnggota) {
+      const count = await tx.warga.count()
+      data.nomorAnggota = `WRG${String(count + 1).padStart(5, '0')}`
+    }
+
+    const warga = await tx.warga.create({
+      data: { ...data, keluargaId, createdBy: userId, updatedBy: userId },
+      include: wargaInclude,
+    })
+
+    // Tandai sebagai kepala keluarga di tabel Keluarga
+    if (data.statusKeluarga === 'KEPALA' && keluargaId) {
+      await tx.keluarga.update({
+        where: { id: keluargaId },
+        data: { kepalakeluargaId: warga.id },
+      })
+    }
+
+    return warga
   })
 }
 

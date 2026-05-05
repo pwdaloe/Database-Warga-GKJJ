@@ -164,16 +164,42 @@ export default function WargaPage() {
   }
 
   async function handleSubmit(formData: WargaFormData) {
+    // Pisahkan field newKeluarga dari field warga
+    const {
+      newKelompokId, newAlamat, newRt, newRw, newKelurahan,
+      newKecamatan, newKota, newKodePos, newTeleponRumah,
+      ...wargaFields
+    } = formData
+
+    const isNewKepala = wargaFields.statusKeluarga === 'KEPALA' && !wargaFields.keluargaId
+
+    const payload: any = {
+      ...wargaFields,
+      ...(isNewKepala && newKelompokId ? {
+        newKeluarga: {
+          kelompokId: newKelompokId,
+          alamat: newAlamat,
+          rt: newRt,
+          rw: newRw,
+          kelurahan: newKelurahan,
+          kecamatan: newKecamatan,
+          kota: newKota,
+          kodePos: newKodePos,
+          teleponRumah: newTeleponRumah,
+        },
+      } : {}),
+    }
+
     if (editData) {
-      await update.mutateAsync({ id: editData.id, data: formData })
+      await update.mutateAsync({ id: editData.id, data: payload })
       closeModal()
       return
     }
 
-    const warga = await create.mutateAsync(formData)
+    const warga = await create.mutateAsync(payload)
 
-    // Wizard: jika Kepala Keluarga, lanjut ke Step 2
-    if (formData.statusKeluarga === 'KEPALA') {
+    // Wizard: jika Kepala Keluarga, lanjut ke Step 2 tambah anggota
+    if (wargaFields.statusKeluarga === 'KEPALA') {
       setWizard({
         step: 2,
         kepalaNama: warga.namaLengkap,
