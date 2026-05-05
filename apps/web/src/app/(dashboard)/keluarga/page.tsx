@@ -173,7 +173,7 @@ export default function KeluargaPage() {
             </thead>
             <tbody className="divide-y">
               {keluargaList.map((k: any) => {
-                const kepala = k.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')
+                const kepala = k.kepalaKeluarga ?? k.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')
                 const alamatPendek = [k.kelurahan, k.kecamatan].filter(Boolean).join(', ')
                 return (
                   <tr key={k.id} className="hover:bg-gray-50 transition">
@@ -260,6 +260,7 @@ export default function KeluargaPage() {
         <KeluargaForm
           defaultValues={editData ? {
             kelompokId: editData.kelompokId,
+            kepalakeluargaId: editData.kepalakeluargaId,
             alamat: editData.alamat,
             rt: editData.rt,
             rw: editData.rw,
@@ -270,6 +271,7 @@ export default function KeluargaPage() {
             teleponRumah: editData.teleponRumah,
             catatan: editData.catatan,
           } : undefined}
+          wargas={editData?.wargas ?? []}
           onSubmit={handleSubmit}
           submitLabel={editData ? 'Update Keluarga' : 'Simpan Keluarga'}
         />

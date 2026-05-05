@@ -20,8 +20,44 @@ const wargaInclude = {
   keluarga: {
     include: {
       kelompok: { include: { wilayah: true } },
+      kepalaKeluarga: {
+        select: { id: true, namaLengkap: true, nomorAnggota: true },
+      },
     },
   },
+} satisfies Prisma.WargaInclude
+
+const wargaDetailInclude = {
+  keluarga: {
+    include: {
+      kelompok: { include: { wilayah: true } },
+      kepalaKeluarga: {
+        select: { id: true, namaLengkap: true, nomorAnggota: true },
+      },
+      wargas: {
+        orderBy: [
+          { statusKeluarga: 'asc' as const },
+          { namaLengkap: 'asc' as const },
+        ],
+        select: {
+          id: true,
+          namaLengkap: true,
+          namaPanggilan: true,
+          jenisKelamin: true,
+          tanggalLahir: true,
+          statusKeluarga: true,
+          statusKeanggotaan: true,
+          sudahBaptis: true,
+          sudahSidi: true,
+          telepon: true,
+          whatsapp: true,
+          fotoUrl: true,
+          nomorAnggota: true,
+        },
+      },
+    },
+  },
+  perpindahans: { orderBy: { createdAt: 'desc' as const } },
 } satisfies Prisma.WargaInclude
 
 export async function listWarga(filter: WargaFilter, user: JwtPayload) {
@@ -83,10 +119,7 @@ export async function listWarga(filter: WargaFilter, user: JwtPayload) {
 export async function getWargaById(id: number, user: JwtPayload) {
   const warga = await prisma.warga.findUnique({
     where: { id },
-    include: {
-      ...wargaInclude,
-      perpindahans: { orderBy: { createdAt: 'desc' } },
-    },
+    include: wargaDetailInclude,
   })
 
   if (!warga) throw new AppError(404, 'Data warga tidak ditemukan')

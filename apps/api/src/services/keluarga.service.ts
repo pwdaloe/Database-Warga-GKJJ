@@ -15,6 +15,9 @@ export interface KeluargaFilter {
 
 const keluargaInclude = {
   kelompok: { include: { wilayah: true } },
+  kepalaKeluarga: {
+    select: { id: true, namaLengkap: true, nomorAnggota: true },
+  },
   wargas: {
     orderBy: [
       { statusKeluarga: 'asc' as const },
@@ -95,6 +98,7 @@ export async function getKeluargaById(id: number, user: JwtPayload) {
 
 export interface KeluargaBody {
   kelompokId?: number | null
+  kepalakeluargaId?: number | null
   alamat?: string | null
   rt?: string | null
   rw?: string | null

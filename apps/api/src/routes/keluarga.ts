@@ -9,8 +9,9 @@ export const keluargaRouter = Router()
 keluargaRouter.use(authenticate)
 
 const bodySchema = z.object({
-  kelompokId:   z.number().int().positive().optional().nullable(),
-  alamat:       z.string().max(500).optional().nullable(),
+  kelompokId:        z.number().int().positive().optional().nullable(),
+  kepalakeluargaId:  z.number().int().positive().optional().nullable(),
+  alamat:            z.string().max(500).optional().nullable(),
   rt:           z.string().max(5).optional().nullable(),
   rw:           z.string().max(5).optional().nullable(),
   kelurahan:    z.string().max(100).optional().nullable(),
