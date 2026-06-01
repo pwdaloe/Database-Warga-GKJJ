@@ -155,29 +155,37 @@ export async function createWarga(
 
     // Jika Kepala Keluarga tanpa KK yang ada → buat KK baru
     if (data.statusKeluarga === 'KEPALA' && !keluargaId && newKeluarga) {
-      const count = await tx.keluarga.count()
-      const nomorKeluarga = `KLG${String(count + 1).padStart(5, '0')}`
+      // Buat dulu tanpa nomorKeluarga → pakai ID sebagai nomor (tidak ada race condition)
       const keluarga = await tx.keluarga.create({
         data: {
           ...newKeluarga,
-          nomorKeluarga,
           createdBy: userId,
           updatedBy: userId,
         } as Prisma.KeluargaUncheckedCreateInput,
       })
+      const nomorKeluarga = `KLG${String(keluarga.id).padStart(5, '0')}`
+      await tx.keluarga.update({ where: { id: keluarga.id }, data: { nomorKeluarga } })
       keluargaId = keluarga.id
     }
 
-    // Auto-generate nomor anggota
-    if (!data.nomorAnggota) {
-      const count = await tx.warga.count()
-      data.nomorAnggota = `WRG${String(count + 1).padStart(5, '0')}`
-    }
-
+    // Buat warga terlebih dahulu, nomorAnggota diisi berdasarkan ID setelah insert
     const warga = await tx.warga.create({
-      data: { ...data, keluargaId, createdBy: userId, updatedBy: userId },
+      data: {
+        ...data,
+        keluargaId,
+        nomorAnggota: undefined,   // akan diisi di bawah
+        createdBy: userId,
+        updatedBy: userId,
+      },
       include: wargaInclude,
     })
+
+    // Auto-generate nomorAnggota berbasis ID (dijamin unik)
+    if (!data.nomorAnggota) {
+      const nomorAnggota = `WRG${String(warga.id).padStart(5, '0')}`
+      await tx.warga.update({ where: { id: warga.id }, data: { nomorAnggota } })
+      warga.nomorAnggota = nomorAnggota
+    }
 
     // Tandai sebagai kepala keluarga di tabel Keluarga
     if (data.statusKeluarga === 'KEPALA' && keluargaId) {

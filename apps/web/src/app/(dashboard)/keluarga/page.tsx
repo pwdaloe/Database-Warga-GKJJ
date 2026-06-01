@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, MapPin, Users, Pencil, Trash2, Eye, Filter } from 'lucide-react'
+import { Plus, Search, Users, Pencil, Trash2, Eye, Filter } from 'lucide-react'
 import { useKeluargaList, useKeluargaMutations, useWilayahKelompok } from '@/hooks/useKeluarga'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
@@ -44,11 +44,13 @@ export default function KeluargaPage() {
   async function handleSubmit(formData: any) {
     if (editData) {
       await update.mutateAsync({ id: editData.id, data: formData })
+      setModalOpen(false)
+      setEditData(null)
     } else {
-      await create.mutateAsync(formData)
+      const keluargaBaru = await create.mutateAsync(formData)
+      setModalOpen(false)
+      router.push(`/keluarga/${keluargaBaru.id}`)
     }
-    setModalOpen(false)
-    setEditData(null)
   }
 
   async function handleDelete(keluarga: any) {
@@ -259,6 +261,7 @@ export default function KeluargaPage() {
       >
         <KeluargaForm
           defaultValues={editData ? {
+            dataStatus: editData.dataStatus,
             kelompokId: editData.kelompokId,
             kepalakeluargaId: editData.kepalakeluargaId,
             alamat: editData.alamat,
@@ -274,6 +277,7 @@ export default function KeluargaPage() {
           wargas={editData?.wargas ?? []}
           onSubmit={handleSubmit}
           submitLabel={editData ? 'Update Keluarga' : 'Simpan Keluarga'}
+          keluargaId={editData?.id}
         />
       </Modal>
 

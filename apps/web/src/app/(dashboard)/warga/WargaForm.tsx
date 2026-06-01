@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, User, Award, Phone, Users, Crown } from 'lucide-react'
+import { Loader2, User, Award, Phone, Users, Crown, MapPin, UserPlus, Camera, X } from 'lucide-react'
 import { InputField, SelectField, TextareaField } from '@/components/ui/FormField'
 import { useWilayahKelompok, useKeluargaList, useKeluargaDetail } from '@/hooks/useKeluarga'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,23 @@ const STATUS_DOKUMEN = [
 ]
 
 const PENDIDIKAN = ['SD', 'SMP', 'SMA/SMK', 'D3', 'S1', 'S2', 'S3', 'Lainnya']
+
+const STATUS_KELUARGA_LABEL: Record<string, string> = {
+  KEPALA: 'Kepala KK',
+  ISTRI: 'Istri',
+  ANAK: 'Anak',
+  MENANTU: 'Menantu',
+  CUCU: 'Cucu',
+  LAINNYA: 'Lainnya',
+}
+
+const STATUS_KEANGGOTAAN_COLOR: Record<string, string> = {
+  AKTIF: 'bg-green-100 text-green-700',
+  NON_AKTIF: 'bg-gray-100 text-gray-500',
+  KATEKUMEN: 'bg-blue-100 text-blue-700',
+  PINDAH_KELUAR: 'bg-orange-100 text-orange-700',
+  MENINGGAL: 'bg-red-100 text-red-600',
+}
 
 // ── Schema ─────────────────────────────────────────────────────
 const schema = z.object({
@@ -40,7 +57,7 @@ const schema = z.object({
   tempatLahir:        z.string().max(100).optional().nullable(),
   tanggalLahir:       z.string().optional().nullable(),
   nik:                z.string().optional().nullable(),
-  golonganDarah:      z.enum(['A', 'B', 'AB', 'O']).optional().nullable(),
+  golonganDarah:      z.preprocess(v => v === '' ? null : v, z.enum(['A', 'B', 'AB', 'O']).optional().nullable()),
   statusKeluarga:     z.enum(['KEPALA', 'ISTRI', 'ANAK', 'MENANTU', 'CUCU', 'LAINNYA']),
   statusKeanggotaan:  z.enum(['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_KELUAR', 'MENINGGAL']),
   sudahBaptis:        z.boolean().default(false),
@@ -54,22 +71,58 @@ const schema = z.object({
   email:              z.string().email('Format email tidak valid').optional().nullable().or(z.literal('')),
   pendidikanTerakhir: z.string().max(50).optional().nullable(),
   pekerjaan:          z.string().max(100).optional().nullable(),
+  fotoUrl:            z.string().optional().nullable(),
+  alamatKtp:          z.string().optional().nullable(),
+  alamatDomisili:     z.string().optional().nullable(),
+  latitude:           z.number().optional().nullable(),
+  longitude:          z.number().optional().nullable(),
   catatan:            z.string().optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.statusKeluarga === 'KEPALA' && !data.keluargaId && !data.newKelompokId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Pilih kelompok untuk Kepala Keluarga baru',
+      path: ['newKelompokId'],
+    })
+  }
 })
 
 export type WargaFormData = z.infer<typeof schema>
 
-type Tab = 'identitas' | 'keanggotaan' | 'kontak' | 'keluarga'
+type Tab = 'identitas' | 'keanggotaan' | 'kontak' | 'keluarga' | 'alamat'
 
 interface Props {
   defaultValues?: Partial<WargaFormData>
   keluargaIdFixed?: number
+  onTambahAnak?: () => void
   onSubmit: (data: WargaFormData) => Promise<void>
   submitLabel?: string
 }
 
-export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabel = 'Simpan' }: Props) {
+async function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img')
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const MAX = 400
+      const ratio = Math.min(MAX / img.width, MAX / img.height, 1)
+      const w = Math.round(img.width * ratio)
+      const h = Math.round(img.height * ratio)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.8))
+    }
+    img.onerror = reject
+    img.src = url
+  })
+}
+
+export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubmit, submitLabel = 'Simpan' }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('identitas')
+  const fotoInputRef = useRef<HTMLInputElement>(null)
   const [keluargaSearch, setKeluargaSearch] = useState('')
   const { data: wilayahList = [] } = useWilayahKelompok()
   const { data: keluargaData } = useKeluargaList({ limit: 50, search: keluargaSearch || undefined })
@@ -100,27 +153,57 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
   const sudahBaptis = watch('sudahBaptis')
   const sudahSidi = watch('sudahSidi')
   const selectedKeluargaId = watch('keluargaId')
-
-  // Fetch detail KK terpilih saat edit (search kosong, ID sudah ada)
-  const { data: selectedKeluargaDetail } = useKeluargaDetail(
-    !keluargaSearch.trim() && selectedKeluargaId ? selectedKeluargaId : null,
+  const fotoUrl = watch('fotoUrl')
+  const alamatDomisili = watch('alamatDomisili')
+  const [domisiliDifferent, setDomisiliDifferent] = useState(
+    () => !!(defaultValues?.alamatDomisili)
   )
 
-  const TABS = [
-    { key: 'identitas' as Tab,   label: 'Identitas',    icon: User },
-    { key: 'keanggotaan' as Tab, label: 'Keanggotaan',  icon: Award },
-    { key: 'kontak' as Tab,      label: 'Kontak',       icon: Phone },
-    { key: 'keluarga' as Tab,    label: 'Keluarga',     icon: Users },
-  ]
+  async function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const compressed = await compressImage(file)
+      setValue('fotoUrl', compressed)
+    } catch {
+      alert('Gagal memproses foto. Coba foto lain.')
+    }
+    e.target.value = ''
+  }
 
-  const currentStatus = STATUS_DOKUMEN.find((s) => s.value === dataStatus) ?? STATUS_DOKUMEN[0]
+  // Fetch detail KK terpilih saat search kosong tapi ID sudah ada
+  const { data: selectedKeluargaDetail } = useKeluargaDetail(
+    !keluargaSearch.trim() && selectedKeluargaId && !keluargaIdFixed ? selectedKeluargaId : null,
+  )
+
+  // Fetch detail KK fixed (saat ditambah dari halaman keluarga)
+  const { data: fixedKeluargaDetail } = useKeluargaDetail(keluargaIdFixed ?? null)
+
+  const TABS = [
+    { key: 'identitas'   as Tab, label: 'Identitas',   icon: User },
+    { key: 'keanggotaan' as Tab, label: 'Keanggotaan', icon: Award },
+    { key: 'kontak'      as Tab, label: 'Kontak',      icon: Phone },
+    { key: 'keluarga'    as Tab, label: 'Keluarga',    icon: Users },
+    { key: 'alamat'      as Tab, label: 'Alamat',      icon: MapPin },
+  ]
 
   const tabHasError = (tab: Tab) => {
     if (tab === 'identitas') return !!(errors.namaLengkap || errors.jenisKelamin || errors.nik)
     if (tab === 'keanggotaan') return !!(errors.statusKeluarga || errors.statusKeanggotaan)
     if (tab === 'kontak') return !!(errors.email)
+    if (tab === 'keluarga') return !!(errors.newKelompokId)
     return false
   }
+
+  // Resolve keluarga yang aktif (search, fixed, atau default values)
+  const activeKeluarga = (() => {
+    if (keluargaIdFixed) return fixedKeluargaDetail
+    const sel = keluargaList.find((k: any) => k.id === selectedKeluargaId) ?? selectedKeluargaDetail
+    return sel ?? null
+  })()
+
+  const kepalaAnggota = activeKeluarga?.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')
+  const anggotaList: any[] = activeKeluarga?.wargas ?? []
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-0">
@@ -172,6 +255,52 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
       {/* ── Tab: Identitas ────────────────────────────────── */}
       {activeTab === 'identitas' && (
         <div className="space-y-4">
+
+          {/* Foto */}
+          <div className="flex flex-col items-center gap-1.5 pb-2">
+            <button
+              type="button"
+              onClick={() => fotoInputRef.current?.click()}
+              className="relative group"
+              title="Upload foto"
+            >
+              {fotoUrl ? (
+                <img
+                  src={fotoUrl}
+                  alt="Foto warga"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-sm"
+                />
+              ) : (
+                <div className={cn(
+                  'w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-gray-200 shadow-sm',
+                  watch('jenisKelamin') === 'P' ? 'bg-pink-400' : 'bg-blue-400',
+                )}>
+                  {watch('namaLengkap')?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                <Camera size={22} className="text-white" />
+              </div>
+            </button>
+            <input
+              ref={fotoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFotoChange}
+            />
+            <p className="text-xs text-gray-400">Klik foto untuk upload</p>
+            {fotoUrl && (
+              <button
+                type="button"
+                onClick={() => setValue('fotoUrl', null)}
+                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition"
+              >
+                <X size={11} /> Hapus foto
+              </button>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 grid grid-cols-2 gap-4">
               <InputField
@@ -295,18 +424,50 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
       )}
 
       {/* ── Tab: Keluarga ─────────────────────────────────── */}
-      {activeTab === 'keluarga' && !keluargaIdFixed && (
-        <div className="space-y-5">
-          {statusKeluarga === 'KEPALA' ? (
-            /* ── Buat Keluarga Baru ── */
+      {activeTab === 'keluarga' && (
+        <div className="space-y-4">
+          {/* Kasus: keluarga sudah fixed (tambah anggota dari halaman KK) */}
+          {keluargaIdFixed ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <Users size={15} className="text-brand-500" />
+                <span className="text-sm font-semibold text-gray-700">Keluarga</span>
+              </div>
+
+              {/* Info keluarga fixed */}
+              {fixedKeluargaDetail && (
+                <div className="p-3 bg-brand-50 border border-brand-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Crown size={13} className="text-yellow-500" />
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Kepala Keluarga</span>
+                  </div>
+                  <p className="text-sm font-medium text-brand-900">
+                    {kepalaAnggota?.namaLengkap ?? '(Belum ditentukan)'}
+                  </p>
+                  <p className="text-xs text-brand-600 mt-0.5">
+                    {fixedKeluargaDetail.nomorKeluarga}
+                    {fixedKeluargaDetail.kelompok ? ` · ${fixedKeluargaDetail.kelompok.nama}` : ''}
+                  </p>
+                </div>
+              )}
+
+              {/* Tabel anggota */}
+              <AnggotaTable anggota={anggotaList} />
+
+              {/* Tambah anak — hanya saat edit warga yg sudah punya KK */}
+              {onTambahAnak && activeKeluarga && (
+                <TambahAnakButton onClick={onTambahAnak} />
+              )}
+            </div>
+          ) : statusKeluarga === 'KEPALA' ? (
+            /* Kasus: warga baru sebagai Kepala KK baru */
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b">
                 <Crown size={15} className="text-yellow-500" />
-                <span className="text-sm font-semibold text-gray-700">Data Keluarga Baru</span>
-                <span className="text-xs text-gray-400 ml-1">— otomatis dibuat saat disimpan</span>
+                <span className="text-sm font-semibold text-gray-700">Keluarga Baru</span>
               </div>
 
-              {/* Kelompok */}
+              {/* Kelompok — wajib */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Kelompok <span className="text-red-500">*</span>
@@ -314,7 +475,10 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
                 <select
                   value={watch('newKelompokId') ?? ''}
                   onChange={(e) => setValue('newKelompokId', e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                  className={cn(
+                    'w-full px-3 py-2.5 rounded-lg border text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500',
+                    errors.newKelompokId ? 'border-red-400 focus:ring-red-400' : 'border-gray-300',
+                  )}
                 >
                   <option value="">— Pilih Kelompok —</option>
                   {wilayahList.map((w) => (
@@ -325,47 +489,38 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
                     </optgroup>
                   ))}
                 </select>
+                {errors.newKelompokId && (
+                  <p className="mt-1 text-xs text-red-600">{errors.newKelompokId.message}</p>
+                )}
               </div>
 
-              {/* Alamat */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Alamat Rumah</label>
-                <textarea
-                  {...register('newAlamat')}
-                  rows={2}
-                  placeholder="Jl. Contoh No. 1"
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
-                />
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-800">
+                KK baru akan dibuat otomatis saat disimpan. Detail alamat dapat dilengkapi di tab{' '}
+                <strong>Alamat</strong>.
               </div>
 
-              <div className="grid grid-cols-4 gap-3">
-                <InputField label="RT" {...register('newRt')} placeholder="001" />
-                <InputField label="RW" {...register('newRw')} placeholder="005" />
-                <div className="col-span-2">
-                  <InputField label="Kelurahan" {...register('newKelurahan')} />
+              {onTambahAnak && activeKeluarga ? (
+                <>
+                  <AnggotaTable anggota={anggotaList} />
+                  <TambahAnakButton onClick={onTambahAnak} />
+                </>
+              ) : (
+                <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center">
+                  <Users size={28} className="mx-auto text-gray-300 mb-2" />
+                  <p className="text-sm text-gray-400">Belum ada anggota keluarga</p>
+                  <p className="text-xs text-gray-300 mt-1">Tambahkan setelah KK berhasil dibuat</p>
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <InputField label="Kecamatan" {...register('newKecamatan')} />
-                <InputField label="Kota" {...register('newKota')} placeholder="Jakarta" />
-                <InputField label="Kode Pos" {...register('newKodePos')} placeholder="13210" />
-              </div>
-              <InputField
-                label="Telepon Rumah"
-                type="tel"
-                {...register('newTeleponRumah')}
-                placeholder="021-XXXXXXX"
-              />
+              )}
             </div>
           ) : (
-            /* ── Bergabung ke Keluarga yang Ada ── */
+            /* Kasus: bukan kepala — cari & pilih keluarga */
             <div className="space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b">
                 <Users size={15} className="text-brand-500" />
                 <span className="text-sm font-semibold text-gray-700">Bergabung ke Keluarga</span>
               </div>
 
-              {/* Search input */}
+              {/* Search */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Cari Keluarga
@@ -377,7 +532,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
                     setKeluargaSearch(e.target.value)
                     setValue('keluargaId', null)
                   }}
-                  placeholder="Ketik nama orang tua atau nomor KK..."
+                  placeholder="Ketik nama kepala keluarga atau nomor KK..."
                   className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
                 />
               </div>
@@ -386,7 +541,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
               {keluargaSearch.trim() && !selectedKeluargaId && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Pilih dari Hasil Pencarian
+                    Pilih Keluarga
                     {keluargaList.length > 0 && (
                       <span className="ml-1.5 text-xs text-gray-400">({keluargaList.length} ditemukan)</span>
                     )}
@@ -394,22 +549,16 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
                   {keluargaList.length === 0 ? (
                     <p className="text-sm text-gray-400 italic py-2">Tidak ada keluarga ditemukan.</p>
                   ) : (
-                    <div className="border rounded-lg overflow-hidden divide-y max-h-52 overflow-y-auto">
+                    <div className="border rounded-lg overflow-hidden divide-y max-h-48 overflow-y-auto">
                       {keluargaList.map((k: any) => {
                         const kepala = k.kepalaKeluarga?.namaLengkap
                           ?? k.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')?.namaLengkap
-                        const isSelected = selectedKeluargaId === k.id
                         return (
                           <button
                             key={k.id}
                             type="button"
                             onClick={() => setValue('keluargaId', k.id)}
-                            className={cn(
-                              'w-full text-left px-3 py-2.5 text-sm transition',
-                              isSelected
-                                ? 'bg-brand-50 border-l-2 border-brand-500'
-                                : 'bg-white hover:bg-gray-50',
-                            )}
+                            className="w-full text-left px-3 py-2.5 text-sm bg-white hover:bg-gray-50 transition"
                           >
                             <span className="font-medium text-gray-900">
                               {kepala ?? '(Kepala belum ditentukan)'}
@@ -426,31 +575,41 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
                 </div>
               )}
 
-              {/* Tampilkan KK yang sudah dipilih */}
-              {selectedKeluargaId && (() => {
-                const sel = keluargaList.find((k: any) => k.id === selectedKeluargaId)
-                  ?? selectedKeluargaDetail
-                if (!sel) return null
-                const kepala = sel.kepalaKeluarga?.namaLengkap
-                  ?? sel.wargas?.find((w: any) => w.statusKeluarga === 'KEPALA')?.namaLengkap
-                return (
-                  <div className="flex items-center justify-between p-2.5 bg-brand-50 border border-brand-200 rounded-lg">
+              {/* Keluarga terpilih: kepala + anggota */}
+              {selectedKeluargaId && activeKeluarga && (
+                <div className="space-y-3">
+                  {/* Kepala KK */}
+                  <div className="flex items-center justify-between p-3 bg-brand-50 border border-brand-200 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-brand-900">{kepala ?? 'Kepala belum ditentukan'}</p>
-                      <p className="text-xs text-brand-600">
-                        {sel.nomorKeluarga}{sel.kelompok ? ` · ${sel.kelompok.nama}` : ''}
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <Crown size={12} className="text-yellow-500" />
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Kepala Keluarga</span>
+                      </div>
+                      <p className="text-sm font-medium text-brand-900">
+                        {kepalaAnggota?.namaLengkap ?? 'Belum ditentukan'}
+                      </p>
+                      <p className="text-xs text-brand-600 mt-0.5">
+                        {activeKeluarga.nomorKeluarga}
+                        {activeKeluarga.kelompok ? ` · ${activeKeluarga.kelompok.nama}` : ''}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setValue('keluargaId', null); setKeluargaSearch('') }}
-                      className="text-xs text-brand-500 hover:text-brand-700 underline ml-3"
+                      className="text-xs text-brand-500 hover:text-brand-700 underline ml-3 shrink-0"
                     >
                       Ubah
                     </button>
                   </div>
-                )
-              })()}
+
+                  {/* Tabel anggota */}
+                  <AnggotaTable anggota={anggotaList} />
+
+                  {onTambahAnak && (
+                    <TambahAnakButton onClick={onTambahAnak} />
+                  )}
+                </div>
+              )}
 
               {!keluargaSearch.trim() && !selectedKeluargaId && (
                 <p className="text-xs text-gray-400">
@@ -462,9 +621,140 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
         </div>
       )}
 
-      {activeTab === 'keluarga' && keluargaIdFixed && (
-        <div className="p-4 bg-brand-50 border border-brand-200 rounded-xl text-sm text-brand-700">
-          Warga ini akan langsung tergabung dalam keluarga yang sedang aktif.
+      {/* ── Tab: Alamat ───────────────────────────────────── */}
+      {activeTab === 'alamat' && (
+        <div className="space-y-5">
+
+          {/* Alamat Rumah Tangga — hanya KEPALA baru */}
+          {statusKeluarga === 'KEPALA' && !keluargaIdFixed && (
+            <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-center gap-2">
+                <MapPin size={14} className="text-blue-500" />
+                <span className="text-sm font-semibold text-blue-800">Alamat Rumah Tangga (KK)</span>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Alamat</label>
+                <textarea
+                  {...register('newAlamat')}
+                  rows={2}
+                  placeholder="Jl. Contoh No. 1"
+                  className="w-full px-3 py-2.5 rounded-lg border border-blue-200 text-sm outline-none bg-white focus:ring-2 focus:ring-blue-400 resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-4 gap-3">
+                <InputField label="RT" {...register('newRt')} placeholder="001" />
+                <InputField label="RW" {...register('newRw')} placeholder="005" />
+                <div className="col-span-2">
+                  <InputField label="Kelurahan" {...register('newKelurahan')} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <InputField label="Kecamatan" {...register('newKecamatan')} />
+                <InputField label="Kota" {...register('newKota')} placeholder="Jakarta" />
+                <InputField label="Kode Pos" {...register('newKodePos')} placeholder="13210" />
+              </div>
+              <InputField label="Telepon Rumah" type="tel" {...register('newTeleponRumah')} placeholder="021-XXXXXXX" />
+            </div>
+          )}
+
+          {/* ── Alamat KTP ─────────────────────────────────── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 pb-1.5 border-b">
+              <span className="text-sm font-semibold text-gray-700">Alamat KTP</span>
+              <span className="text-xs text-gray-400">Sesuai Kartu Tanda Penduduk</span>
+            </div>
+            <textarea
+              {...register('alamatKtp')}
+              rows={3}
+              placeholder="Jl. Nama Jalan No. XX, RT 000/RW 000, Kelurahan, Kecamatan, Kota, Kode Pos"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
+            />
+          </div>
+
+          {/* ── Alamat Domisili ─────────────────────────────── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 pb-1.5 border-b">
+              <span className="text-sm font-semibold text-gray-700">Alamat Domisili</span>
+              <span className="text-xs text-gray-400">Jika berbeda dari KTP</span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={domisiliDifferent}
+                onChange={(e) => {
+                  setDomisiliDifferent(e.target.checked)
+                  if (!e.target.checked) setValue('alamatDomisili', null)
+                }}
+                className="w-4 h-4 rounded text-brand-600"
+              />
+              <span className="text-sm text-gray-600">Domisili berbeda dari KTP</span>
+            </label>
+            {domisiliDifferent && (
+              <textarea
+                {...register('alamatDomisili')}
+                rows={3}
+                placeholder="Jl. Nama Jalan No. XX, RT 000/RW 000, Kelurahan, Kecamatan, Kota, Kode Pos"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
+              />
+            )}
+            {domisiliDifferent && alamatDomisili && (
+              <p className="text-xs text-gray-400">Domisili: {alamatDomisili}</p>
+            )}
+          </div>
+
+          {/* ── Titik Rumah ─────────────────────────────────── */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 pb-1.5 border-b">
+              <span className="text-sm font-semibold text-gray-700">Titik Rumah</span>
+              <span className="text-xs text-gray-400">Koordinat Google Maps</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Latitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={watch('latitude') ?? ''}
+                  onChange={(e) => setValue('latitude', e.target.value ? parseFloat(e.target.value) : null)}
+                  placeholder="-6.2088"
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Longitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={watch('longitude') ?? ''}
+                  onChange={(e) => setValue('longitude', e.target.value ? parseFloat(e.target.value) : null)}
+                  placeholder="106.8456"
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+            {/* Link buka maps jika sudah ada koordinat */}
+            {watch('latitude') && watch('longitude') ? (
+              <a
+                href={`https://www.google.com/maps?q=${watch('latitude')},${watch('longitude')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-brand-600 hover:underline"
+              >
+                <MapPin size={12} />
+                Lihat di Google Maps
+              </a>
+            ) : (
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Cara mendapatkan koordinat: buka{' '}
+                <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:underline">
+                  Google Maps
+                </a>
+                {' '}→ cari lokasi rumah → klik kanan → pilih{' '}
+                <strong>"What's here?"</strong> → salin angka koordinat ke field di atas.
+              </p>
+            )}
+          </div>
+
         </div>
       )}
 
@@ -483,7 +773,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
               ← Sebelumnya
             </button>
           )}
-          {activeTab !== 'keluarga' && (
+          {activeTab !== 'alamat' && (
             <button
               type="button"
               onClick={() => {
@@ -507,5 +797,83 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onSubmit, submitLabe
         </button>
       </div>
     </form>
+  )
+}
+
+// ── Tombol tambah anak ────────────────────────────────────────
+function TambahAnakButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center justify-center gap-2 w-full px-4 py-2.5
+        border border-dashed border-brand-300 text-brand-600 hover:bg-brand-50
+        text-sm font-medium rounded-lg transition"
+    >
+      <UserPlus size={14} />
+      Tambah Anggota Keluarga ke KK Ini
+    </button>
+  )
+}
+
+// ── Komponen tabel anggota keluarga ───────────────────────────
+function AnggotaTable({ anggota }: { anggota: any[] }) {
+  if (anggota.length === 0) return null
+
+  return (
+    <div>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+        Anggota Keluarga ({anggota.length})
+      </p>
+      <div className="rounded-lg border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 border-b">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Nama</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Status</th>
+              <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">JK</th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Keanggotaan</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {anggota.map((w) => (
+              <tr key={w.id} className="hover:bg-gray-50 transition">
+                <td className="px-3 py-2">
+                  <p className="font-medium text-gray-900 leading-tight">{w.namaLengkap}</p>
+                  {w.namaPanggilan && (
+                    <p className="text-xs text-gray-400">{w.namaPanggilan}</p>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  <span className={cn(
+                    'inline-flex items-center gap-1 text-xs font-medium',
+                    w.statusKeluarga === 'KEPALA' ? 'text-yellow-700' : 'text-gray-600',
+                  )}>
+                    {w.statusKeluarga === 'KEPALA' && <Crown size={10} />}
+                    {STATUS_KELUARGA_LABEL[w.statusKeluarga] ?? w.statusKeluarga}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-center text-xs text-gray-500">
+                  {w.jenisKelamin === 'L' ? 'L' : 'P'}
+                </td>
+                <td className="px-3 py-2">
+                  <span className={cn(
+                    'px-2 py-0.5 rounded-full text-xs font-medium',
+                    STATUS_KEANGGOTAAN_COLOR[w.statusKeanggotaan] ?? 'bg-gray-100 text-gray-500',
+                  )}>
+                    {w.statusKeanggotaan === 'AKTIF' ? 'Aktif'
+                      : w.statusKeanggotaan === 'NON_AKTIF' ? 'Non Aktif'
+                      : w.statusKeanggotaan === 'KATEKUMEN' ? 'Katekumen'
+                      : w.statusKeanggotaan === 'PINDAH_KELUAR' ? 'Pindah'
+                      : w.statusKeanggotaan === 'MENINGGAL' ? 'Meninggal'
+                      : w.statusKeanggotaan}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }

@@ -45,6 +45,11 @@ const bodySchema = z.object({
   email:              z.string().email().max(100).optional().nullable(),
   pendidikanTerakhir: z.string().max(50).optional().nullable(),
   pekerjaan:          z.string().max(100).optional().nullable(),
+  fotoUrl:            z.string().optional().nullable(),
+  alamatKtp:          z.string().optional().nullable(),
+  alamatDomisili:     z.string().optional().nullable(),
+  latitude:           z.number().optional().nullable(),
+  longitude:          z.number().optional().nullable(),
   catatan:            z.string().optional().nullable(),
 })
 

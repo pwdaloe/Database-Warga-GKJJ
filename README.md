@@ -1,6 +1,9 @@
 # Database Warga GKJJ
 
-Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web. Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, dan wilayah gereja secara terpusat.
+Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
+Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
+
+**Versi:** `v1.0` · **Terakhir diperbarui:** 31 Mei 2026
 
 ---
 
@@ -15,32 +18,123 @@ Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis w
 - [Database](#database)
 - [API Endpoints](#api-endpoints)
 - [Role & Hak Akses](#role--hak-akses)
-- [Import Data](#import-data)
-- [Kontribusi](#kontribusi)
+- [Halaman Publik](#halaman-publik)
+- [Kontak & Bantuan](#kontak--bantuan)
 
 ---
 
 ## Fitur
 
-### Manajemen Data Jemaat
-- **Data Warga** — biodata lengkap, status baptis & sidi, status keanggotaan
-- **Data Keluarga** — pengelompokan warga per KK beserta alamat lengkap
-- **Perpindahan Jemaat** — pencatatan masuk, keluar, dan meninggal
+### Beranda
 
-### Organisasi Gereja
-- **Wilayah & Kelompok** — struktur organisasi gereja berjenjang
-- **Penugasan Penatua** — setiap kelompok memiliki penatua yang terdaftar sebagai warga
+#### Dashboard
+- Statistik ringkasan: **Total Warga**, **Total Keluarga**, **Kelompok Aktif**, **Perlu Divalidasi** (status Draft)
+- Setiap kartu statistik bisa diklik untuk navigasi langsung ke halaman terkait
+- **Chart distribusi komisi** — bar chart warna-warni menampilkan jumlah anggota per komisi berdasarkan rentang usia (Recharts), rentang usia dapat dikonfigurasi di Pengaturan
+- **Peta lokasi warga** — pin interaktif berbasis OpenStreetMap (Leaflet) untuk warga yang memiliki koordinat rumah, dengan filter per kelurahan
 
-### Sistem Pengguna
-- Autentikasi JWT dengan role-based access control (RBAC)
-- 6 level role: Superadmin, Kepala Kantor, Majelis, Staf Admin, Penatua Kelompok, Viewer
-- Penatua Kelompok hanya dapat mengakses data kelompoknya sendiri
+---
 
-### Data & Audit
-- Import data massal dari file Excel (.xlsx)
-- Log audit lengkap untuk setiap perubahan data (CREATE, UPDATE, DELETE, APPROVE, VALIDATE, IMPORT)
-- Alur persetujuan data: `DRAFT → PENDING → APPROVED → VALIDATED`
-- Dashboard ringkasan statistik jemaat
+### Data Jemaat
+
+#### Data Warga
+- Tambah, edit, hapus data warga dengan form multi-tab:
+  - **Tab Identitas** — nama, foto, NIK, tempat/tanggal lahir, golongan darah
+  - **Tab Keanggotaan** — status keluarga (Kepala KK, Istri, Anak, dll.), status keanggotaan, sakramen baptis & sidi
+  - **Tab Kontak** — telepon, WhatsApp, email, pendidikan, pekerjaan
+  - **Tab Keluarga** — pilih/cari keluarga, atau buat keluarga baru otomatis saat warga sebagai Kepala KK (dengan validasi wajib pilih kelompok)
+  - **Tab Alamat** — Alamat KTP, Alamat Domisili (jika berbeda), koordinat GPS (latitude/longitude) dengan panduan Google Maps
+- **Foto warga** — upload foto, dikompres otomatis di browser (max 400px, JPEG 80%), disimpan sebagai base64
+- **Filter & pencarian** — cari nama, filter per wilayah, kelompok, status keanggotaan, jenis kelamin, status dokumen
+- **Status dokumen** — alur Draft → Validasi → Aktif → Tidak Aktif
+- **Detail warga** — halaman biodata lengkap, tampilkan foto asli jika ada
+- **Wizard tambah warga** — setelah input Kepala KK, lanjut ke step 2 untuk tambah anggota keluarga
+
+#### Data Keluarga
+- Tambah, edit, hapus data kepala keluarga (KK)
+- Form keluarga baru dengan pemisahan: field Kelompok (wajib, muncul di tab Keluarga) dan Alamat (tab Alamat) — tidak ada duplikasi input
+- Detail halaman: info kepala keluarga, tabel anggota, edit alamat inline
+- **Autocomplete kelurahan** — ketik nama kelurahan, otomatis isi kecamatan, kota, dan kode pos dari master data
+- Aksi: Lihat detail, Edit, Hapus, Approve
+
+#### Kartu Anggota
+- Search anggota (minimal 2 huruf) dengan hasil real-time
+- **ID Card digital** menampilkan:
+  - Logo GKJ Jakarta
+  - Foto atau avatar inisial berwarna (biru = laki-laki, pink = perempuan)
+  - Nomor induk warga (prioritas `nomorInduk`, fallback ke `nomorAnggota`)
+  - Kelompok, wilayah, penatua, status keanggotaan, tanggal validasi
+  - Badge Baptis & Sidi
+  - **QR Code** yang mengarah ke halaman kartu digital publik
+- **Cetak ID Card** — buka jendela print dengan layout 85.6 × 72mm (ukuran kartu), logo GKJ, QR code, siap cetak
+- **Kirim via WhatsApp** — buka `wa.me` dengan pesan terformat berisi data keanggotaan + link kartu digital; peringatan jika nomor tidak tersedia
+- **Buka Data Warga** — navigasi langsung ke detail biodata
+
+---
+
+### Organisasi
+
+#### Wilayah & Kelompok
+- Tampilan accordion per wilayah, expand/collapse
+- Setiap wilayah: badge kode, nama, jumlah kelompok, jumlah KK
+- Tabel kelompok di dalam setiap wilayah: kode, nama, penatua/PJ, jumlah KK
+- Operasi per wilayah: **Edit**, **Aktifkan/Nonaktifkan**, **Hapus** (hanya jika tidak ada KK terdaftar)
+- Operasi per kelompok: **Edit**, **Aktifkan/Nonaktifkan**
+- Tambah kelompok langsung dari dalam card wilayah
+
+---
+
+### Utilitas
+
+#### Import Data
+Wizard 5 langkah untuk import massal data warga dari file Excel:
+
+1. **Upload** — drag & drop atau klik, accept `.xlsx` / `.xls`
+2. **Mapping kolom** — tabel pemetaan header Excel ke field sistem, dengan **auto-mapping otomatis** (50+ pola nama kolom)
+3. **Preview & validasi** — tampilkan 10 baris pertama, highlight baris bermasalah, summary valid/invalid
+4. **Processing** — kirim per batch 100 baris, progress bar real-time
+5. **Hasil** — summary sukses/gagal, log per baris dengan alasan kegagalan, download log Excel
+
+**Template Excel** (tombol "Download Template"):
+- **Sheet 1 — Data Warga**: 23 kolom, header field wajib ditandai `*`, 2 baris contoh data
+- **Sheet 2 — Petunjuk Pengisian**: tabel format & nilai yang diterima per field
+- **Sheet 3 — Referensi Kelompok**: daftar kode, nama kelompok, wilayah, dan penatua dari database
+
+#### Perpindahan *(coming soon)*
+- Pencatatan masuk, keluar, dan meninggal
+
+---
+
+### Sistem
+
+#### Manajemen Pengguna
+- Daftar pengguna: nama, username, email, role, kelompok, status aktif, waktu login terakhir
+- Tambah pengguna baru dengan form: nama, username, email, password (min. 8 karakter), role, kelompok
+- **Edit** — ubah semua field kecuali password
+- **Reset Password** — modal khusus, password baru minimal 8 karakter
+- **Toggle Aktif/Nonaktif** — akun nonaktif tidak bisa login
+- Akses hanya untuk **Superadmin** dan **Kepala Kantor**
+
+#### Log Aktivitas
+- Setiap operasi **POST/PUT/PATCH/DELETE** otomatis dicatat ke tabel `activity_log`
+- Data yang dicatat: waktu, method, path, HTTP status, pesan error (jika ada), body snapshot (password disanitasi), IP address, durasi, nama pengguna
+- **Filter**: Semua / Error saja / Sukses saja, filter path
+- **Klik baris** → expand detail: request body snapshot + pesan error lengkap
+- Badge warna per method (POST=biru, PUT=kuning, PATCH=ungu, DELETE=merah) dan status (2xx=hijau, 4xx=oranye, 5xx=merah)
+- **Auto-refresh** tiap 30 detik
+- Tombol "Bersihkan Log" — hapus entri lebih dari 90 hari
+
+#### Pengaturan
+**Tab Rentang Umur Komisi:**
+- Konfigurasi min/max usia dan warna per komisi (default: Anak 0–11, Pra-Remaja 12–14, Remaja 15–18, Pemuda 19–35, Dewasa 36–59, Adiyuswa ≥60)
+- Edit inline dengan color picker
+- Langsung memperbarui chart distribusi di Dashboard
+
+**Tab Master Kelurahan:**
+- 63 kelurahan Jakarta Timur pre-seeded (10 kecamatan: Cakung, Cipayung, Ciracas, Duren Sawit, Jatinegara, Kramat Jati, Makasar, Matraman, Pasar Rebo, Pulo Gadung)
+- Tabel searchable + filter per kecamatan
+- CRUD: tambah, edit, hapus
+- Data dipakai untuk **autocomplete** field kelurahan di form Keluarga
 
 ---
 
@@ -48,14 +142,15 @@ Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis w
 
 | Lapisan | Teknologi |
 |---|---|
-| **Frontend** | Next.js 15, React 19, Tailwind CSS, TanStack Query, React Hook Form |
+| **Frontend** | Next.js 15, React 19, Tailwind CSS, TanStack Query, React Hook Form, Zod |
+| **Grafik** | Recharts |
+| **Peta** | React-Leaflet + OpenStreetMap (gratis, tanpa API key) |
+| **QR Code** | qrcode |
+| **Excel** | SheetJS (xlsx) |
 | **Backend** | Express.js, TypeScript, Prisma ORM |
 | **Database** | PostgreSQL 16 |
-| **Cache** | Redis 7 |
 | **Build Tool** | Turborepo |
-| **Validasi** | Zod |
-| **Auth** | JWT (jsonwebtoken) |
-| **Upload** | Multer, Cloudinary (opsional) |
+| **Auth** | JWT (jsonwebtoken) + bcryptjs |
 
 ---
 
@@ -64,29 +159,56 @@ Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis w
 ```
 Database-Warga-GKJJ/
 ├── apps/
-│   ├── api/                  # Backend Express + Prisma
+│   ├── api/                        # Backend Express + Prisma
 │   │   ├── prisma/
-│   │   │   ├── schema.prisma # Skema database
-│   │   │   ├── migrations/   # Riwayat migrasi
-│   │   │   └── seed.ts       # Data awal
+│   │   │   ├── schema.prisma       # Skema database
+│   │   │   └── seed-master.ts      # Seed kelurahan & komisi config
 │   │   └── src/
-│   │       ├── middleware/   # Auth, error handler
-│   │       ├── routes/       # Endpoint API
-│   │       ├── services/     # Business logic
-│   │       └── utils/        # Helper & response formatter
-│   └── web/                  # Frontend Next.js
+│   │       ├── middleware/
+│   │       │   ├── auth.ts         # JWT authentication
+│   │       │   ├── errorHandler.ts # Prisma & Zod error mapping
+│   │       │   └── activityLogger.ts # Request logging middleware
+│   │       ├── routes/
+│   │       │   ├── auth.ts
+│   │       │   ├── warga.ts
+│   │       │   ├── keluarga.ts
+│   │       │   ├── wilayah.ts
+│   │       │   ├── kelompok.ts
+│   │       │   ├── dashboard.ts    # Stats, komisi chart, peta
+│   │       │   ├── pengaturan.ts   # Master kelurahan & komisi config
+│   │       │   ├── import.ts       # Batch import Excel
+│   │       │   ├── users.ts        # Manajemen pengguna
+│   │       │   ├── logs.ts         # Activity log
+│   │       │   └── public.ts       # Endpoint publik (tanpa auth)
+│   │       ├── services/
+│   │       │   ├── warga.service.ts
+│   │       │   ├── keluarga.service.ts
+│   │       │   └── auth.service.ts
+│   │       └── utils/
+│   └── web/                        # Frontend Next.js
 │       └── src/
-│           ├── app/          # App Router (halaman)
-│           ├── components/   # Komponen UI reusable
-│           ├── hooks/        # Custom React hooks
-│           └── lib/          # API client & utilities
-├── packages/
-│   └── types/                # Shared TypeScript types
+│           ├── app/
+│           │   ├── (auth)/login/   # Halaman login
+│           │   ├── (dashboard)/    # Halaman yang memerlukan auth
+│           │   │   ├── dashboard/  # Dashboard + chart + peta
+│           │   │   ├── warga/      # Data warga + wizard
+│           │   │   ├── keluarga/   # Data keluarga + detail
+│           │   │   ├── kartu/      # Kartu anggota + QR
+│           │   │   ├── wilayah/    # Master wilayah & kelompok
+│           │   │   ├── import/     # Wizard import Excel
+│           │   │   ├── pengguna/   # Manajemen pengguna
+│           │   │   ├── log/        # Log aktivitas
+│           │   │   └── pengaturan/ # Pengaturan sistem
+│           │   └── m/[id]/         # Kartu digital publik (tanpa auth)
+│           ├── components/
+│           │   ├── layout/
+│           │   │   ├── Sidebar.tsx # Navigasi bergroup + v1.0 badge
+│           │   │   └── ProtectedRoute.tsx
+│           │   └── ui/             # Modal, Badge, Pagination, FormField
+│           └── hooks/              # Custom React hooks per domain
 ├── database/
-│   └── seeds/                # SQL reference (wilayah & kelompok)
-├── docs/                     # Dokumentasi tambahan
+├── docs/
 ├── docker-compose.yml
-├── turbo.json
 └── package.json
 ```
 
@@ -96,7 +218,7 @@ Database-Warga-GKJJ/
 
 - **Node.js** >= 20.0.0
 - **npm** >= 10.0.0
-- **Docker Desktop** (untuk PostgreSQL & Redis lokal)
+- **Docker Desktop** (untuk PostgreSQL lokal)
 
 ---
 
@@ -121,9 +243,7 @@ npm install
 docker-compose up -d
 ```
 
-Ini akan menjalankan:
-- **PostgreSQL** di `localhost:5433`
-- **Redis** di `localhost:6379`
+Menjalankan **PostgreSQL** di `localhost:5432`.
 
 ### 4. Konfigurasi Environment
 
@@ -132,13 +252,14 @@ cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 ```
 
-Edit `apps/api/.env` dan ganti `JWT_SECRET` dengan string acak yang kuat (minimal 32 karakter).
+Edit `apps/api/.env` — ganti `JWT_SECRET` dengan string acak minimal 32 karakter.
 
-### 5. Migrasi & Seed Database
+### 5. Push Schema & Seed Data
 
 ```bash
-npm run db:migrate   # Jalankan migrasi Prisma
-npm run db:seed      # Isi master data & akun superadmin
+cd apps/api
+npx prisma db push
+npx tsx prisma/seed-master.ts   # Seed kelurahan Jakarta Timur + komisi config
 ```
 
 Akun default setelah seed:
@@ -158,10 +279,9 @@ npm run dev
 
 | Service | URL |
 |---|---|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:4000 |
-| Health Check | http://localhost:4000/health |
-| Prisma Studio | http://localhost:5555 (via `npm run db:studio`) |
+| **Frontend** | http://localhost:3000 |
+| **Backend API** | http://localhost:4000 |
+| **Health Check** | http://localhost:4000/health |
 
 ---
 
@@ -170,24 +290,12 @@ npm run dev
 ### `apps/api/.env`
 
 ```env
-# Database
-DATABASE_URL="postgresql://gkjj:gkjj_dev_password@localhost:5433/gkjj_db"
-
-# Server
+DATABASE_URL="postgresql://gkjj:gkjj_dev_password@localhost:5432/gkjj_db"
 PORT=4000
 NODE_ENV=development
-
-# JWT — ganti dengan secret yang kuat di production!
 JWT_SECRET="ganti-dengan-random-string-minimal-32-karakter"
 JWT_EXPIRES_IN="7d"
-
-# CORS
 CORS_ORIGIN="http://localhost:3000"
-
-# File Upload (Cloudinary) — opsional
-CLOUDINARY_CLOUD_NAME=""
-CLOUDINARY_API_KEY=""
-CLOUDINARY_API_SECRET=""
 ```
 
 ### `apps/web/.env.local`
@@ -200,26 +308,28 @@ NEXT_PUBLIC_API_URL="http://localhost:4000/api"
 
 ## Database
 
-### Skema Utama
+### Model Utama
 
 | Model | Keterangan |
 |---|---|
-| `Warga` | Data individu jemaat |
-| `Keluarga` | Data kepala keluarga (KK) |
+| `Warga` | Biodata individu jemaat (termasuk foto, alamat KTP/domisili, koordinat GPS) |
+| `Keluarga` | Data kepala keluarga beserta alamat rumah tangga |
 | `Kelompok` | Unit terkecil organisasi gereja |
 | `Wilayah` | Kumpulan beberapa kelompok |
-| `Perpindahan` | Riwayat masuk/keluar/meninggal |
 | `User` | Akun pengguna sistem |
-| `AuditLog` | Log seluruh perubahan data |
+| `AuditLog` | Log perubahan data (CREATE, UPDATE, DELETE, APPROVE, VALIDATE, IMPORT) |
+| `ActivityLog` | Log seluruh request API mutasi beserta status & error |
 | `ImportLog` | Riwayat import Excel |
+| `MasterKelurahan` | Master data kelurahan (autocomplete alamat) |
+| `KomisiConfig` | Konfigurasi rentang usia per komisi untuk chart |
 
 ### Perintah Database
 
 ```bash
-npm run db:migrate      # Jalankan migrasi (development)
-npm run db:seed         # Seed data awal
-npm run db:studio       # Buka Prisma Studio GUI
-npm run db:generate     # Regenerate Prisma Client
+npx prisma db push          # Sync schema ke database
+npx prisma db studio        # Buka Prisma Studio GUI (port 5555)
+npx prisma generate         # Regenerate Prisma Client
+npx tsx prisma/seed-master.ts  # Seed data master
 ```
 
 ---
@@ -228,20 +338,25 @@ npm run db:generate     # Regenerate Prisma Client
 
 Base URL: `http://localhost:4000/api`
 
+Semua endpoint (kecuali `/auth/login` dan `/public/*`) memerlukan header:
+```
+Authorization: Bearer <token>
+```
+
 ### Autentikasi
 | Method | Endpoint | Keterangan |
 |---|---|---|
 | `POST` | `/auth/login` | Login, mendapatkan JWT |
 | `GET` | `/auth/me` | Data user yang sedang login |
 | `POST` | `/auth/change-password` | Ganti password |
-| `POST` | `/auth/logout` | Logout (hapus token di client) |
+| `POST` | `/auth/logout` | Logout |
 
 ### Warga
 | Method | Endpoint | Keterangan |
 |---|---|---|
-| `GET` | `/warga` | Daftar warga (dengan filter & pagination) |
-| `GET` | `/warga/:id` | Detail warga |
-| `POST` | `/warga` | Tambah warga baru |
+| `GET` | `/warga` | Daftar warga (filter: search, kelompok, wilayah, status, jenis kelamin, dataStatus) |
+| `GET` | `/warga/:id` | Detail warga beserta keluarga |
+| `POST` | `/warga` | Tambah warga baru (opsional: buat KK baru via `newKeluarga`) |
 | `PUT` | `/warga/:id` | Update data warga |
 | `DELETE` | `/warga/:id` | Hapus warga |
 
@@ -249,66 +364,100 @@ Base URL: `http://localhost:4000/api`
 | Method | Endpoint | Keterangan |
 |---|---|---|
 | `GET` | `/keluarga` | Daftar keluarga |
-| `GET` | `/keluarga/:id` | Detail keluarga beserta anggota |
-| `POST` | `/keluarga` | Tambah keluarga baru |
-| `PUT` | `/keluarga/:id` | Update data keluarga |
+| `GET` | `/keluarga/:id` | Detail keluarga + anggota |
+| `POST` | `/keluarga` | Tambah keluarga |
+| `PUT` | `/keluarga/:id` | Update keluarga |
 | `DELETE` | `/keluarga/:id` | Hapus keluarga |
+| `POST` | `/keluarga/:id/approve` | Approve keluarga |
 
 ### Master Data
 | Method | Endpoint | Keterangan |
 |---|---|---|
-| `GET` | `/wilayah` | Daftar wilayah |
-| `GET` | `/kelompok` | Daftar kelompok |
+| `GET/POST/PUT` | `/wilayah` | CRUD wilayah |
+| `PATCH` | `/wilayah/:id/toggle` | Toggle aktif/nonaktif |
+| `DELETE` | `/wilayah/:id` | Hapus (jika tidak ada KK) |
+| `GET/POST/PUT` | `/kelompok` | CRUD kelompok |
+| `PATCH` | `/kelompok/:id/toggle` | Toggle aktif/nonaktif |
 
-### Lainnya
+### Dashboard
 | Method | Endpoint | Keterangan |
 |---|---|---|
-| `GET` | `/dashboard` | Statistik ringkasan |
-| `POST` | `/import` | Import data dari Excel |
+| `GET` | `/dashboard/stats` | Total warga, keluarga, draft |
+| `GET` | `/dashboard/komisi-stats` | Distribusi anggota per komisi |
+| `GET` | `/dashboard/map` | Koordinat warga (filter: `?kelurahan=`) |
 
-Semua endpoint (kecuali `/auth/login`) memerlukan header:
-```
-Authorization: Bearer <token>
-```
+### Pengaturan
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| `GET` | `/pengaturan/kelurahan` | Daftar master kelurahan (`?search=`) |
+| `POST/PUT/DELETE` | `/pengaturan/kelurahan/:id` | CRUD kelurahan |
+| `GET` | `/pengaturan/komisi` | Daftar komisi config |
+| `PUT` | `/pengaturan/komisi/:id` | Update rentang usia komisi |
+
+### Sistem
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| `GET/POST/PUT` | `/users` | CRUD pengguna |
+| `PATCH` | `/users/:id/toggle` | Toggle aktif/nonaktif |
+| `POST` | `/users/:id/reset-password` | Reset password pengguna |
+| `GET` | `/logs` | Log aktivitas (filter: status, path, userId) |
+| `DELETE` | `/logs` | Hapus log lama (`?days=90`) |
+| `POST` | `/import/warga` | Import batch warga dari Excel (max 200 baris per call) |
+
+### Publik (tanpa autentikasi)
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| `GET` | `/public/member/:id` | Info anggota terbatas untuk kartu digital |
 
 ---
 
 ## Role & Hak Akses
 
-| Role | Keterangan |
-|---|---|
-| `SUPERADMIN` | Akses penuh ke seluruh sistem |
-| `KEPALA_KANTOR` | Kelola seluruh data jemaat, validasi akhir |
-| `MAJELIS` | Approve data, akses baca ke semua wilayah |
-| `STAF_ADMIN` | Input & edit data harian |
-| `PENATUA_KELOMPOK` | Akses hanya ke kelompoknya sendiri |
-| `VIEWER` | Hanya baca, tanpa edit |
+| Role | Dashboard | Data Warga | Data Keluarga | Kartu Anggota | Wilayah | Import | Pengguna | Log | Pengaturan |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `SUPERADMIN` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `KEPALA_KANTOR` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `MAJELIS` | ✓ | ✓ | ✓ | ✓ | ✓ (baca) | — | — | — | — |
+| `STAF_ADMIN` | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | — |
+| `PENATUA_KELOMPOK` | ✓ | ✓ (kelompoknya) | ✓ (kelompoknya) | ✓ | — | — | — | — | — |
+| `VIEWER` | ✓ | — | — | — | — | — | — | — | — |
 
 ---
 
-## Import Data
+## Halaman Publik
 
-Mendukung import massal data warga dari file **Excel (.xlsx)**.
+### Kartu Digital Anggota — `/m/[id]`
 
-1. Login sebagai `STAF_ADMIN` atau di atasnya
-2. Buka menu **Import** di sidebar
-3. Upload file Excel sesuai format template
-4. Sistem akan memproses baris per baris dan menampilkan log sukses/gagal
+Halaman **tanpa login** yang menampilkan kartu keanggotaan digital saat QR code di-scan.
 
-Hasil import tersimpan di tabel `ImportLog` untuk keperluan audit.
+Menampilkan:
+- Logo GKJ Jakarta
+- Foto atau avatar inisial
+- Nama lengkap, nama panggilan
+- Nomor anggota (prioritas nomor induk)
+- Kelompok, wilayah, penatua
+- Status keanggotaan
+- Badge Baptis & Sidi
+
+> **Catatan privasi:** Halaman ini TIDAK menampilkan NIK, email, nomor telepon, atau data sensitif lainnya.
+
+**Roadmap QR & Absensi:**
+Fondasi URL QR (`{app}/m/{wargaId}`) dirancang untuk mendukung fitur absensi kehadiran ibadah di masa mendatang:
+- Anggota scan QR acara → check-in mandiri
+- Penatua scan kartu anggota → catat kehadiran
+- Laporan kehadiran per acara dan per kelompok
 
 ---
 
-## Kontribusi
+## Kontak & Bantuan
 
-1. Fork repository ini
-2. Buat branch fitur: `git checkout -b feat/nama-fitur`
-3. Commit perubahan: `git commit -m "feat: deskripsi fitur"`
-4. Push ke branch: `git push origin feat/nama-fitur`
-5. Buat Pull Request ke branch `main`
+Untuk pertanyaan teknis atau bantuan penggunaan sistem:
+
+**Email Helpdesk:** [gkjjkeu@outlook.com](mailto:gkjjkeu@outlook.com)
 
 ---
 
 ## Lisensi
 
-Proyek ini dikembangkan untuk keperluan internal **GKJJ (Gereja Kristen Jawa Jakarta)**.
+Proyek ini dikembangkan untuk keperluan internal **GKJJ (Gereja Kristen Jawa Jakarta)**.  
+Hak cipta © 2026 GKJJ. Seluruh hak dilindungi.

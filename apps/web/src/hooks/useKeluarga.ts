@@ -59,6 +59,18 @@ export function useKeluargaMutations() {
   return { create, update, remove }
 }
 
+export function useKelurahanSearch(search: string) {
+  return useQuery({
+    queryKey: ['kelurahan-search', search],
+    queryFn: async () => {
+      const res = await api.get('/pengaturan/kelurahan', { params: { search } })
+      return res.data.data as Array<{ id: number; nama: string; kecamatan: string; kota: string; kodePos: string | null }>
+    },
+    enabled: search.length >= 2,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function useWilayahKelompok() {
   return useQuery({
     queryKey: ['wilayah'],

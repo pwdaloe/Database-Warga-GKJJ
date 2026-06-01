@@ -43,10 +43,21 @@ export function errorHandler(
   // Prisma unique constraint violation
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2002') {
-      const fields = (err.meta?.target as string[]) ?? []
+      const FIELD_LABELS: Record<string, string> = {
+        nik:            'NIK',
+        nomor_anggota:  'Nomor Anggota',
+        nomor_induk:    'No. Induk Warga',
+        nomor_keluarga: 'Nomor Keluarga',
+        email:          'Email',
+        username:       'Username',
+        kode:           'Kode',
+      }
+      const raw = (err.meta?.target as string[] | string) ?? []
+      const cols = Array.isArray(raw) ? raw : [raw]
+      const labels = cols.map((c) => FIELD_LABELS[c] ?? c).join(', ')
       res.status(409).json({
         success: false,
-        error: `Data sudah ada: ${fields.join(', ')}`,
+        error: `Data duplikat: ${labels} sudah terdaftar di sistem. Periksa kembali data yang dimasukkan.`,
       })
       return
     }
@@ -54,6 +65,13 @@ export function errorHandler(
       res.status(404).json({
         success: false,
         error: 'Data tidak ditemukan',
+      })
+      return
+    }
+    if (err.code === 'P2003') {
+      res.status(400).json({
+        success: false,
+        error: 'Data referensi tidak valid — pastikan relasi yang dipilih sudah ada.',
       })
       return
     }

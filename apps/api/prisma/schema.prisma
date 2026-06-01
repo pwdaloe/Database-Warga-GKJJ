@@ -15,6 +15,48 @@ datasource db {
 // MASTER DATA
 // ============================================================
 
+// ── MASTER DATA ─────────────────────────────────────────────
+model ActivityLog {
+  id           BigInt   @id @default(autoincrement())
+  userId       Int?     @map("user_id")
+  userNama     String?  @db.VarChar(150) @map("user_nama")
+  method       String   @db.VarChar(10)
+  path         String   @db.VarChar(500)
+  statusCode   Int      @map("status_code")
+  errorMessage String?  @db.Text @map("error_message")
+  bodySnapshot Json?    @map("body_snapshot")
+  ipAddress    String?  @db.VarChar(45) @map("ip_address")
+  durasiMs     Int?     @map("durasi_ms")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt(sort: Desc)])
+  @@index([userId])
+  @@index([statusCode])
+  @@map("activity_log")
+}
+
+model MasterKelurahan {
+  id        Int     @id @default(autoincrement())
+  nama      String  @db.VarChar(100)
+  kecamatan String  @db.VarChar(100)
+  kota      String  @db.VarChar(100)
+  kodePos   String? @db.VarChar(10) @map("kode_pos")
+
+  @@index([nama])
+  @@map("master_kelurahan")
+}
+
+model KomisiConfig {
+  id      Int    @id @default(autoincrement())
+  nama    String @db.VarChar(100)
+  minUsia Int    @map("min_usia")
+  maxUsia Int?   @map("max_usia")
+  urutan  Int    @default(0)
+  warna   String @default("#6366f1") @db.VarChar(20)
+
+  @@map("komisi_config")
+}
+
 model Wilayah {
   id          Int        @id @default(autoincrement())
   kode        String     @unique @db.VarChar(5)
@@ -111,6 +153,10 @@ model Warga {
   email                  String?              @db.VarChar(100)
   pendidikanTerakhir     String?              @db.VarChar(50) @map("pendidikan_terakhir")
   pekerjaan              String?              @db.VarChar(100)
+  alamatKtp              String?              @db.Text @map("alamat_ktp")
+  alamatDomisili         String?              @db.Text @map("alamat_domisili")
+  latitude               Float?
+  longitude              Float?
   dataStatus             DataStatus           @default(DRAFT) @map("data_status")
   catatan                String?              @db.Text
   createdBy              Int?                 @map("created_by")

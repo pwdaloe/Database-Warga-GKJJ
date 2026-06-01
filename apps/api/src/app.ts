@@ -14,6 +14,11 @@ import { keluargaRouter } from './routes/keluarga.js'
 import { wargaRouter } from './routes/warga.js'
 import { importRouter } from './routes/import.js'
 import { dashboardRouter } from './routes/dashboard.js'
+import { pengaturanRouter } from './routes/pengaturan.js'
+import { usersRouter } from './routes/users.js'
+import { publicRouter } from './routes/public.js'
+import { logsRouter } from './routes/logs.js'
+import { activityLogger } from './middleware/activityLogger.js'
 
 const app = express()
 
@@ -44,19 +49,26 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 
+// Activity logger — harus sebelum routes agar menangkap semua mutasi
+app.use(activityLogger)
+
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
 // Routes
-app.use('/api/auth',      authRouter)
-app.use('/api/wilayah',   wilayahRouter)
-app.use('/api/kelompok',  kelompokRouter)
-app.use('/api/keluarga',  keluargaRouter)
-app.use('/api/warga',     wargaRouter)
-app.use('/api/import',    importRouter)
-app.use('/api/dashboard', dashboardRouter)
+app.use('/api/auth',       authRouter)
+app.use('/api/wilayah',    wilayahRouter)
+app.use('/api/kelompok',   kelompokRouter)
+app.use('/api/keluarga',   keluargaRouter)
+app.use('/api/warga',      wargaRouter)
+app.use('/api/import',     importRouter)
+app.use('/api/dashboard',  dashboardRouter)
+app.use('/api/pengaturan', pengaturanRouter)
+app.use('/api/users',      usersRouter)
+app.use('/api/public',     publicRouter)
+app.use('/api/logs',       logsRouter)
 
 // Error handling (harus paling terakhir)
 app.use(notFound)

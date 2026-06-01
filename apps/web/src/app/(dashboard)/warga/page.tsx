@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Users, Pencil, Trash2, Eye, Filter,
-  UserPlus, CheckCircle2, Loader2, Crown,
+  UserPlus, CheckCircle2, Loader2, Crown, AlertCircle,
 } from 'lucide-react'
 import { format, differenceInYears } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
@@ -119,6 +119,7 @@ function AnggotaQuickForm({
 export default function WargaPage() {
   const { isRole } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
@@ -127,17 +128,21 @@ export default function WargaPage() {
   const [wilayahId, setWilayahId] = useState<number | undefined>()
   const [statusKeanggotaan, setStatusKeanggotaan] = useState('')
   const [jenisKelamin, setJenisKelamin] = useState('')
-  const [showFilter, setShowFilter] = useState(false)
+  const [dataStatus, setDataStatus] = useState(() => searchParams.get('dataStatus') ?? '')
+  const [showFilter, setShowFilter] = useState(() => !!searchParams.get('dataStatus'))
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState<any>(null)
   const [confirmDelete, setConfirmDelete] = useState<any>(null)
   const [wizard, setWizard] = useState<WizardStep>({ step: 1 })
+  const [addingAnakToKeluargaId, setAddingAnakToKeluargaId] = useState<number | null>(null)
+  const [submitError, setSubmitError] = useState('')
 
   const { data, isLoading } = useWargaList({
     page, limit: 25, search, kelompokId, wilayahId,
     statusKeanggotaan: statusKeanggotaan || undefined,
     jenisKelamin: jenisKelamin || undefined,
+    dataStatus: dataStatus || undefined,
   })
   const { data: wilayahList = [] } = useWilayahKelompok()
   const { create, update, remove } = useWargaMutations()
@@ -148,6 +153,7 @@ export default function WargaPage() {
   function openCreate() {
     setEditData(null)
     setWizard({ step: 1 })
+    setSubmitError('')
     setModalOpen(true)
   }
 
@@ -155,6 +161,15 @@ export default function WargaPage() {
     setModalOpen(false)
     setEditData(null)
     setWizard({ step: 1 })
+    setAddingAnakToKeluargaId(null)
+    setSubmitError('')
+  }
+
+  function handleTambahAnak() {
+    const keluargaId = editData?.keluargaId
+    if (!keluargaId) return
+    setEditData(null)
+    setAddingAnakToKeluargaId(keluargaId)
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -164,50 +179,63 @@ export default function WargaPage() {
   }
 
   async function handleSubmit(formData: WargaFormData) {
-    // Pisahkan field newKeluarga dari field warga
+    setSubmitError('')
+
     const {
       newKelompokId, newAlamat, newRt, newRw, newKelurahan,
       newKecamatan, newKota, newKodePos, newTeleponRumah,
       ...wargaFields
     } = formData
 
-    const isNewKepala = wargaFields.statusKeluarga === 'KEPALA' && !wargaFields.keluargaId
+    const sanitized = Object.fromEntries(
+      Object.entries(wargaFields).map(([k, v]) => [k, v === '' ? null : v])
+    )
+
+    const isNewKepala = sanitized.statusKeluarga === 'KEPALA' && !sanitized.keluargaId
 
     const payload: any = {
-      ...wargaFields,
+      ...sanitized,
       ...(isNewKepala && newKelompokId ? {
         newKeluarga: {
           kelompokId: newKelompokId,
-          alamat: newAlamat,
-          rt: newRt,
-          rw: newRw,
-          kelurahan: newKelurahan,
-          kecamatan: newKecamatan,
-          kota: newKota,
-          kodePos: newKodePos,
-          teleponRumah: newTeleponRumah,
+          alamat: newAlamat || null,
+          rt: newRt || null,
+          rw: newRw || null,
+          kelurahan: newKelurahan || null,
+          kecamatan: newKecamatan || null,
+          kota: newKota || null,
+          kodePos: newKodePos || null,
+          teleponRumah: newTeleponRumah || null,
         },
       } : {}),
     }
 
-    if (editData) {
-      await update.mutateAsync({ id: editData.id, data: payload })
-      closeModal()
-      return
-    }
+    try {
+      if (editData) {
+        await update.mutateAsync({ id: editData.id, data: payload })
+        closeModal()
+        return
+      }
 
-    const warga = await create.mutateAsync(payload)
+      const warga = await create.mutateAsync(payload)
 
-    // Wizard: jika Kepala Keluarga, lanjut ke Step 2 tambah anggota
-    if (wargaFields.statusKeluarga === 'KEPALA') {
-      setWizard({
-        step: 2,
-        kepalaNama: warga.namaLengkap,
-        keluargaId: warga.keluargaId ?? null,
-        addedAnggota: [],
-      })
-    } else {
-      closeModal()
+      if (wargaFields.statusKeluarga === 'KEPALA') {
+        setWizard({
+          step: 2,
+          kepalaNama: warga.namaLengkap,
+          keluargaId: warga.keluargaId ?? null,
+          addedAnggota: [],
+        })
+      } else {
+        closeModal()
+      }
+    } catch (err: any) {
+      const pesan =
+        err?.response?.data?.error ??
+        err?.response?.data?.message ??
+        err?.message ??
+        'Terjadi kesalahan, silakan coba lagi'
+      setSubmitError(pesan)
     }
   }
 
@@ -221,6 +249,8 @@ export default function WargaPage() {
 
   const modalTitle = editData
     ? `Edit: ${editData.namaLengkap}`
+    : addingAnakToKeluargaId
+    ? 'Tambah Anak ke Keluarga'
     : wizard.step === 2
     ? 'Tambah Anggota Keluarga'
     : 'Tambah Warga Baru'
@@ -320,11 +350,22 @@ export default function WargaPage() {
               <option value="L">Laki-laki</option>
               <option value="P">Perempuan</option>
             </select>
+            <select
+              value={dataStatus}
+              onChange={(e) => { setDataStatus(e.target.value); setPage(1) }}
+              className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+            >
+              <option value="">Semua Status Dokumen</option>
+              <option value="DRAFT">Draft (Perlu Validasi)</option>
+              <option value="VALIDASI">Validasi</option>
+              <option value="AKTIF">Aktif</option>
+              <option value="TIDAK_AKTIF">Tidak Aktif</option>
+            </select>
             <button
               onClick={() => {
                 setWilayahId(undefined); setKelompokId(undefined)
                 setStatusKeanggotaan(''); setJenisKelamin('')
-                setSearch(''); setSearchInput(''); setPage(1)
+                setDataStatus(''); setSearch(''); setSearchInput(''); setPage(1)
               }}
               className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 underline"
             >
@@ -474,9 +515,21 @@ export default function WargaPage() {
         title={modalTitle}
         size="xl"
       >
+        {/* ── Error banner ── */}
+        {submitError && wizard.step === 1 && (
+          <div className="flex items-start gap-2.5 mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+            <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-500" />
+            <div>
+              <p className="font-medium">Gagal menyimpan data</p>
+              <p className="text-red-600 mt-0.5">{submitError}</p>
+            </div>
+          </div>
+        )}
+
         {/* ── Step 1: Form Warga ── */}
         {wizard.step === 1 && (
           <WargaForm
+            key={editData?.id ?? (addingAnakToKeluargaId ? `anak-${addingAnakToKeluargaId}` : 'new')}
             defaultValues={editData ? {
               dataStatus: editData.dataStatus,
               keluargaId: editData.keluargaId,
@@ -501,10 +554,21 @@ export default function WargaPage() {
               email: editData.email,
               pendidikanTerakhir: editData.pendidikanTerakhir,
               pekerjaan: editData.pekerjaan,
+              fotoUrl: editData.fotoUrl,
+              alamatKtp: editData.alamatKtp,
+              alamatDomisili: editData.alamatDomisili,
+              latitude: editData.latitude,
+              longitude: editData.longitude,
               catatan: editData.catatan,
-            } : undefined}
+            } : addingAnakToKeluargaId ? { statusKeluarga: 'ANAK' } : undefined}
+            keluargaIdFixed={addingAnakToKeluargaId ?? undefined}
+            onTambahAnak={editData?.keluargaId ? handleTambahAnak : undefined}
             onSubmit={handleSubmit}
-            submitLabel={editData ? 'Update Warga' : 'Simpan & Lanjutkan →'}
+            submitLabel={
+              editData ? 'Update Warga'
+              : addingAnakToKeluargaId ? 'Simpan Anak'
+              : 'Simpan & Lanjutkan →'
+            }
           />
         )}
 

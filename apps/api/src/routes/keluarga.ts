@@ -20,6 +20,7 @@ const bodySchema = z.object({
   kodePos:      z.string().max(10).optional().nullable(),
   teleponRumah: z.string().max(20).optional().nullable(),
   status:       z.enum(['AKTIF', 'NON_AKTIF']).optional(),
+  dataStatus:   z.enum(['DRAFT', 'VALIDASI', 'AKTIF', 'TIDAK_AKTIF']).optional(),
   catatan:      z.string().optional().nullable(),
 })
 

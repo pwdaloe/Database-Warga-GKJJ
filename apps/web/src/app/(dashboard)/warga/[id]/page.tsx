@@ -96,12 +96,20 @@ export default function WargaDetailPage() {
       <div className="bg-white rounded-xl border shadow-sm p-6 mb-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className={cn(
-              'w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shrink-0',
-              warga.jenisKelamin === 'L' ? 'bg-blue-500' : 'bg-pink-500',
-            )}>
-              {warga.namaLengkap.charAt(0).toUpperCase()}
-            </div>
+            {warga.fotoUrl ? (
+              <img
+                src={warga.fotoUrl}
+                alt={warga.namaLengkap}
+                className="w-16 h-16 rounded-full object-cover shrink-0 border-2 border-gray-100 shadow-sm"
+              />
+            ) : (
+              <div className={cn(
+                'w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shrink-0',
+                warga.jenisKelamin === 'L' ? 'bg-blue-500' : 'bg-pink-500',
+              )}>
+                {warga.namaLengkap.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{warga.namaLengkap}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
