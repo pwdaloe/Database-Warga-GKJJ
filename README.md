@@ -3,13 +3,14 @@
 Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
 Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
 
-**Versi:** `v1.0` · **Terakhir diperbarui:** 31 Mei 2026
+**Versi:** `v1.1` · **Terakhir diperbarui:** 1 Juni 2026
 
 ---
 
 ## Daftar Isi
 
 - [Fitur](#fitur)
+- [Keamanan & Kepatuhan PDP](#keamanan--kepatuhan-pdp)
 - [Tech Stack](#tech-stack)
 - [Struktur Proyek](#struktur-proyek)
 - [Persyaratan](#persyaratan)
@@ -117,7 +118,8 @@ Wizard 5 langkah untuk import massal data warga dari file Excel:
 
 #### Log Aktivitas
 - Setiap operasi **POST/PUT/PATCH/DELETE** otomatis dicatat ke tabel `activity_log`
-- Data yang dicatat: waktu, method, path, HTTP status, pesan error (jika ada), body snapshot (password disanitasi), IP address, durasi, nama pengguna
+- Akses GET pada endpoint sensitif (`/warga`, `/keluarga`, `/users`) juga dicatat
+- Data yang dicatat: waktu, method, path, HTTP status, pesan error (jika ada), body snapshot (password & data sensitif disanitasi), IP address, durasi, nama pengguna
 - **Filter**: Semua / Error saja / Sukses saja, filter path
 - **Klik baris** → expand detail: request body snapshot + pesan error lengkap
 - Badge warna per method (POST=biru, PUT=kuning, PATCH=ungu, DELETE=merah) dan status (2xx=hijau, 4xx=oranye, 5xx=merah)
@@ -135,6 +137,52 @@ Wizard 5 langkah untuk import massal data warga dari file Excel:
 - Tabel searchable + filter per kecamatan
 - CRUD: tambah, edit, hapus
 - Data dipakai untuk **autocomplete** field kelurahan di form Keluarga
+
+---
+
+## Keamanan & Kepatuhan PDP
+
+Sistem ini dirancang untuk memenuhi ketentuan **UU No. 27 Tahun 2022 tentang Perlindungan Data Pribadi (UU PDP)** Republik Indonesia. Data jemaat yang dikelola mencakup **data pribadi sensitif** (afiliasi keagamaan, Pasal 4 ayat 2 UU PDP), sehingga penanganannya mengikuti standar yang lebih ketat.
+
+### Implementasi yang Telah Diterapkan (Prioritas 1)
+
+#### 1. Enkripsi Data Sensitif at Rest
+- **NIK** dienkripsi menggunakan **AES-256-ECB deterministik** sebelum disimpan ke database
+- Enkripsi dilakukan di layer aplikasi (`apps/api/src/utils/crypto.ts`) — bahkan jika database diakses langsung, NIK tidak terbaca
+- Format penyimpanan: `enc:<BASE64>` (kolom `nik` VARCHAR 64)
+- Kunci enkripsi di-derive dari `ENCRYPTION_KEY` di `.env` menggunakan HMAC-SHA256
+
+#### 2. Field Redaction Berbasis Role (Pasal 16)
+Setiap response API otomatis meredaksi field sensitif sesuai role pengguna:
+
+| Field | SUPERADMIN / KEPALA_KANTOR | MAJELIS / STAF_ADMIN | PENATUA_KELOMPOK | VIEWER |
+|---|:---:|:---:|:---:|:---:|
+| NIK | ✅ | ✅ | ❌ disembunyikan | ❌ disembunyikan |
+| Koordinat GPS (lat/lng) | ✅ | ❌ disembunyikan | ❌ disembunyikan | ❌ disembunyikan |
+| Alamat KTP | ✅ | ✅ | ❌ disembunyikan | ❌ disembunyikan |
+| Telepon / WhatsApp / Email | ✅ | ✅ | ✅ | ❌ disembunyikan |
+
+#### 3. Audit Trail Akses Data Pribadi (Pasal 49)
+- Setiap akses ke detail warga (`GET /api/warga/:id`) dicatat ke tabel `AuditLog` dengan action **`ACCESS`**
+- Data yang dicatat: userId, wargaId yang diakses, IP address, timestamp
+- Memungkinkan pembuktian *siapa mengakses data siapa* saat ada permintaan dari regulator
+
+#### 4. Field Consent & Retensi (Pasal 20 & 33)
+Tiga field baru pada tabel `Warga`:
+- `konsenPDP` — apakah data jemaat ini sudah ada persetujuannya
+- `tanggalKonsen` — kapan persetujuan diberikan
+- `retensiHingga` — batas waktu data harus dihapus/dianonimkan (relevan untuk warga meninggal/pindah)
+
+#### 5. Sanitasi Log (Pasal 16)
+Body snapshot pada `ActivityLog` secara otomatis:
+- **Menghapus** field: `nik`, `tanggalLahir`, `tempatLahir`, `alamatKtp`, `alamatDomisili`, `latitude`, `longitude`, `fotoUrl`
+- **Memask** field: `password`, `token`, `telepon`, `whatsapp`, `email` → diganti `***`
+
+### Catatan Operasional Penting
+
+> ⚠️ **JANGAN rotasi `ENCRYPTION_KEY` tanpa terlebih dahulu mendekripsi dan re-enkripsi semua NIK di database.** Rotasi kunci tanpa migrasi data akan membuat seluruh data NIK tidak terbaca.
+
+> 🔐 **Production:** Gunakan `openssl rand -hex 32` untuk generate `ENCRYPTION_KEY` yang kuat. Simpan di secrets manager (AWS Secrets Manager, Vault, dll.) — JANGAN di file `.env` yang bisa masuk ke repository.
 
 ---
 
@@ -185,6 +233,7 @@ Database-Warga-GKJJ/
 │   │       │   ├── keluarga.service.ts
 │   │       │   └── auth.service.ts
 │   │       └── utils/
+│   │           ├── crypto.ts       # AES-256 enkripsi/dekripsi NIK (PDP)
 │   └── web/                        # Frontend Next.js
 │       └── src/
 │           ├── app/
@@ -252,7 +301,9 @@ cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 ```
 
-Edit `apps/api/.env` — ganti `JWT_SECRET` dengan string acak minimal 32 karakter.
+Edit `apps/api/.env` — ganti nilai berikut:
+- `JWT_SECRET` — string acak minimal 32 karakter
+- `ENCRYPTION_KEY` — string hex 64 karakter, generate dengan: `openssl rand -hex 32`
 
 ### 5. Push Schema & Seed Data
 
@@ -296,7 +347,13 @@ NODE_ENV=development
 JWT_SECRET="ganti-dengan-random-string-minimal-32-karakter"
 JWT_EXPIRES_IN="7d"
 CORS_ORIGIN="http://localhost:3000"
+
+# Enkripsi field sensitif NIK — UU PDP No. 27/2022
+# Generate: openssl rand -hex 32
+ENCRYPTION_KEY="ganti-dengan-random-hex-64-karakter"
 ```
+
+> ⚠️ `ENCRYPTION_KEY` wajib diisi. Tanpa nilai ini, server akan gagal start saat ada operasi baca/tulis NIK.
 
 ### `apps/web/.env.local`
 
@@ -312,13 +369,13 @@ NEXT_PUBLIC_API_URL="http://localhost:4000/api"
 
 | Model | Keterangan |
 |---|---|
-| `Warga` | Biodata individu jemaat (termasuk foto, alamat KTP/domisili, koordinat GPS) |
+| `Warga` | Biodata individu jemaat — NIK disimpan terenkripsi (AES-256). Field PDP: `konsenPDP`, `tanggalKonsen`, `retensiHingga` |
 | `Keluarga` | Data kepala keluarga beserta alamat rumah tangga |
 | `Kelompok` | Unit terkecil organisasi gereja |
 | `Wilayah` | Kumpulan beberapa kelompok |
 | `User` | Akun pengguna sistem |
-| `AuditLog` | Log perubahan data (CREATE, UPDATE, DELETE, APPROVE, VALIDATE, IMPORT) |
-| `ActivityLog` | Log seluruh request API mutasi beserta status & error |
+| `AuditLog` | Log perubahan & akses data (CREATE, UPDATE, DELETE, APPROVE, VALIDATE, IMPORT, **ACCESS**) |
+| `ActivityLog` | Log seluruh request API mutasi + GET sensitif, beserta status & error |
 | `ImportLog` | Riwayat import Excel |
 | `MasterKelurahan` | Master data kelurahan (autocomplete alamat) |
 | `KomisiConfig` | Konfigurasi rentang usia per komisi untuk chart |
@@ -415,12 +472,17 @@ Authorization: Bearer <token>
 
 | Role | Dashboard | Data Warga | Data Keluarga | Kartu Anggota | Wilayah | Import | Pengguna | Log | Pengaturan |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `SUPERADMIN` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `KEPALA_KANTOR` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `MAJELIS` | ✓ | ✓ | ✓ | ✓ | ✓ (baca) | — | — | — | — |
-| `STAF_ADMIN` | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | — |
-| `PENATUA_KELOMPOK` | ✓ | ✓ (kelompoknya) | ✓ (kelompoknya) | ✓ | — | — | — | — | — |
+| `SUPERADMIN` | ✓ | ✓ penuh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `KEPALA_KANTOR` | ✓ | ✓ penuh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `MAJELIS` | ✓ | ✓ ¹ | ✓ | ✓ | ✓ (baca) | — | — | — | — |
+| `STAF_ADMIN` | ✓ | ✓ ¹ | ✓ | ✓ | — | ✓ | — | — | — |
+| `PENATUA_KELOMPOK` | ✓ | ✓ (kelompoknya) ² | ✓ (kelompoknya) | ✓ | — | — | — | — | — |
 | `VIEWER` | ✓ | — | — | — | — | — | — | — | — |
+
+**Catatan field redaction (UU PDP):**
+> ¹ **MAJELIS / STAF_ADMIN** — Koordinat GPS (latitude/longitude) disembunyikan  
+> ² **PENATUA_KELOMPOK** — NIK, Alamat KTP, dan Koordinat GPS disembunyikan  
+> **VIEWER** — NIK, Alamat KTP, Koordinat GPS, Telepon, WhatsApp, dan Email disembunyikan
 
 ---
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Users, Pencil, Trash2, Eye, Filter,
-  UserPlus, CheckCircle2, Loader2, Crown, AlertCircle,
+  UserPlus, CheckCircle2, Loader2, Crown, AlertCircle, MapPin,
 } from 'lucide-react'
 import { format, differenceInYears } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
@@ -117,7 +117,7 @@ function AnggotaQuickForm({
 
 // ── Main page ─────────────────────────────────────────────────
 export default function WargaPage() {
-  const { isRole } = useAuth()
+  const { user, isRole } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -146,6 +146,11 @@ export default function WargaPage() {
   })
   const { data: wilayahList = [] } = useWilayahKelompok()
   const { create, update, remove } = useWargaMutations()
+
+  const isPenatua = isRole('PENATUA_KELOMPOK')
+  const kelompokUser = isPenatua && user?.kelompokId
+    ? wilayahList.flatMap((w) => w.kelompoks).find((k) => k.id === user.kelompokId)
+    : null
 
   const canEdit = isRole('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK')
   const canDelete = isRole('SUPERADMIN', 'KEPALA_KANTOR')
@@ -262,8 +267,18 @@ export default function WargaPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Data Warga</h1>
           <p className="text-gray-500 text-sm mt-1">
-            {meta ? `${meta.total} warga terdaftar` : 'Memuat...'}
+            {meta
+              ? isPenatua
+                ? `${meta.total} warga di kelompok Anda`
+                : `${meta.total} warga terdaftar`
+              : 'Memuat...'}
           </p>
+          {isPenatua && kelompokUser && (
+            <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-medium">
+              <MapPin size={11} />
+              {kelompokUser.kode} · {kelompokUser.nama}
+            </span>
+          )}
         </div>
         {canEdit && (
           <button
@@ -309,26 +324,30 @@ export default function WargaPage() {
 
         {showFilter && (
           <div className="px-4 pb-4 border-t pt-3 flex gap-3 flex-wrap">
-            <select
-              value={wilayahId ?? ''}
-              onChange={(e) => { setWilayahId(e.target.value ? Number(e.target.value) : undefined); setKelompokId(undefined); setPage(1) }}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
-            >
-              <option value="">Semua Wilayah</option>
-              {wilayahList.map((w) => <option key={w.id} value={w.id}>{w.nama}</option>)}
-            </select>
-            <select
-              value={kelompokId ?? ''}
-              onChange={(e) => { setKelompokId(e.target.value ? Number(e.target.value) : undefined); setPage(1) }}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
-            >
-              <option value="">Semua Kelompok</option>
-              {wilayahList
-                .filter((w) => !wilayahId || w.id === wilayahId)
-                .flatMap((w) => w.kelompoks.map((k) => (
-                  <option key={k.id} value={k.id}>[{k.kode}] {k.nama}</option>
-                )))}
-            </select>
+            {!isPenatua && (
+              <>
+                <select
+                  value={wilayahId ?? ''}
+                  onChange={(e) => { setWilayahId(e.target.value ? Number(e.target.value) : undefined); setKelompokId(undefined); setPage(1) }}
+                  className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+                >
+                  <option value="">Semua Wilayah</option>
+                  {wilayahList.map((w) => <option key={w.id} value={w.id}>{w.nama}</option>)}
+                </select>
+                <select
+                  value={kelompokId ?? ''}
+                  onChange={(e) => { setKelompokId(e.target.value ? Number(e.target.value) : undefined); setPage(1) }}
+                  className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+                >
+                  <option value="">Semua Kelompok</option>
+                  {wilayahList
+                    .filter((w) => !wilayahId || w.id === wilayahId)
+                    .flatMap((w) => w.kelompoks.map((k) => (
+                      <option key={k.id} value={k.id}>[{k.kode}] {k.nama}</option>
+                    )))}
+                </select>
+              </>
+            )}
             <select
               value={statusKeanggotaan}
               onChange={(e) => { setStatusKeanggotaan(e.target.value); setPage(1) }}
@@ -363,7 +382,7 @@ export default function WargaPage() {
             </select>
             <button
               onClick={() => {
-                setWilayahId(undefined); setKelompokId(undefined)
+                if (!isPenatua) { setWilayahId(undefined); setKelompokId(undefined) }
                 setStatusKeanggotaan(''); setJenisKelamin('')
                 setDataStatus(''); setSearch(''); setSearchInput(''); setPage(1)
               }}

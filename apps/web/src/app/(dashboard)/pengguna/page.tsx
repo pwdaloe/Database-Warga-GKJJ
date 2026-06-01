@@ -56,8 +56,10 @@ function UserForm({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Username <span className="text-red-500">*</span></label>
           <input value={form.username} onChange={(e) => set('username', e.target.value)} required
-            autoComplete="off"
+            autoComplete="off" placeholder="contoh: penatua.rama"
+            pattern="[a-zA-Z0-9._-]+" title="Hanya huruf, angka, titik, underscore, strip — tanpa spasi"
             className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm font-mono outline-none focus:ring-2 focus:ring-brand-500" />
+          <p className="mt-1 text-xs text-gray-400">Huruf, angka, titik, underscore, strip — tanpa spasi</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-500">*</span></label>
@@ -182,7 +184,15 @@ export default function PenggunaPage() {
       setModalOpen(false)
       setEditUser(null)
     } catch (err: any) {
-      setServerError(err?.response?.data?.error ?? err?.message ?? 'Terjadi kesalahan')
+      const apiError = err?.response?.data
+      if (apiError?.details?.length) {
+        const msgs = (apiError.details as { field: string; message: string }[])
+          .map((d) => `${d.field}: ${d.message}`)
+          .join(' · ')
+        setServerError(msgs)
+      } else {
+        setServerError(apiError?.error ?? err?.message ?? 'Terjadi kesalahan')
+      }
     }
   }
 

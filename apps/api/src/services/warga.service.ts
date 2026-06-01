@@ -2,6 +2,35 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '../utils/prisma.js'
 import { AppError } from '../middleware/errorHandler.js'
 import type { JwtPayload } from '../middleware/auth.js'
+import { encryptField, decryptField } from '../utils/crypto.js'
+
+// ── Field redaction per role (UU PDP Pasal 16) ────────────────
+const FULL_ACCESS_ROLES = new Set(['SUPERADMIN', 'KEPALA_KANTOR'])
+
+function sanitizeForRole(warga: Record<string, any>, role: string): Record<string, any> {
+  if (FULL_ACCESS_ROLES.has(role)) return warga
+  const w = { ...warga }
+  // Semua role non-admin: sembunyikan koordinat rumah
+  w.latitude  = null
+  w.longitude = null
+  // Role terbatas: hapus NIK + alamat KTP
+  if (role === 'PENATUA_KELOMPOK' || role === 'VIEWER') {
+    w.nik       = null
+    w.alamatKtp = null
+  }
+  // VIEWER: hapus kontak langsung
+  if (role === 'VIEWER') {
+    w.telepon  = null
+    w.whatsapp = null
+    w.email    = null
+  }
+  return w
+}
+
+// Dekripsi NIK setelah baca dari DB
+function decryptWarga(w: Record<string, any>): Record<string, any> {
+  return { ...w, nik: decryptField(w.nik as string | null) }
+}
 
 export interface WargaFilter {
   search?: string
@@ -91,18 +120,20 @@ export async function listWarga(filter: WargaFilter, user: JwtPayload) {
   if (sudahBaptis !== undefined) where.sudahBaptis = sudahBaptis
 
   if (search) {
+    // NIK tersimpan terenkripsi → cari exact match dengan nilai terenkripsi
+    const encryptedNik = /^\d{10,16}$/.test(search) ? encryptField(search) : null
     where.OR = [
       { namaLengkap: { contains: search, mode: 'insensitive' } },
       { namaPanggilan: { contains: search, mode: 'insensitive' } },
       { nomorInduk: { contains: search, mode: 'insensitive' } },
       { nomorAnggota: { contains: search, mode: 'insensitive' } },
-      { nik: { contains: search, mode: 'insensitive' } },
+      ...(encryptedNik ? [{ nik: encryptedNik }] : []),
       { telepon: { contains: search, mode: 'insensitive' } },
       { whatsapp: { contains: search, mode: 'insensitive' } },
     ]
   }
 
-  const [total, data] = await Promise.all([
+  const [total, rawData] = await Promise.all([
     prisma.warga.count({ where }),
     prisma.warga.findMany({
       where,
@@ -112,6 +143,10 @@ export async function listWarga(filter: WargaFilter, user: JwtPayload) {
       take: limit,
     }),
   ])
+
+  const data = rawData
+    .map(decryptWarga)
+    .map((w) => sanitizeForRole(w, user.role))
 
   return { data, total, page, limit }
 }
@@ -130,7 +165,7 @@ export async function getWargaById(id: number, user: JwtPayload) {
     }
   }
 
-  return warga
+  return sanitizeForRole(decryptWarga(warga as Record<string, any>), user.role)
 }
 
 export interface NewKeluargaInput {
@@ -150,8 +185,14 @@ export async function createWarga(
   userId: number,
   newKeluarga?: NewKeluargaInput,
 ) {
+  // Enkripsi NIK sebelum disimpan
+  const encryptedData = {
+    ...data,
+    nik: data.nik ? encryptField(data.nik as string) : null,
+  }
+
   return prisma.$transaction(async (tx) => {
-    let keluargaId = data.keluargaId as number | null | undefined
+    let keluargaId = encryptedData.keluargaId as number | null | undefined
 
     // Jika Kepala Keluarga tanpa KK yang ada → buat KK baru
     if (data.statusKeluarga === 'KEPALA' && !keluargaId && newKeluarga) {
@@ -171,7 +212,7 @@ export async function createWarga(
     // Buat warga terlebih dahulu, nomorAnggota diisi berdasarkan ID setelah insert
     const warga = await tx.warga.create({
       data: {
-        ...data,
+        ...encryptedData,
         keluargaId,
         nomorAnggota: undefined,   // akan diisi di bawah
         createdBy: userId,
@@ -181,7 +222,7 @@ export async function createWarga(
     })
 
     // Auto-generate nomorAnggota berbasis ID (dijamin unik)
-    if (!data.nomorAnggota) {
+    if (!encryptedData.nomorAnggota) {
       const nomorAnggota = `WRG${String(warga.id).padStart(5, '0')}`
       await tx.warga.update({ where: { id: warga.id }, data: { nomorAnggota } })
       warga.nomorAnggota = nomorAnggota
@@ -204,12 +245,40 @@ export async function updateWarga(
   data: Prisma.WargaUncheckedUpdateInput,
   userId: number,
   user: JwtPayload,
+  newKeluarga?: NewKeluargaInput,
 ) {
   await getWargaById(id, user)
 
+  // Enkripsi NIK jika dikirim
+  const encryptedData = {
+    ...data,
+    ...(data.nik !== undefined ? { nik: data.nik ? encryptField(data.nik as string) : null } : {}),
+  }
+
+  // Warga diubah jadi Kepala KK baru (belum punya KK) → buat KK dalam transaksi
+  if (encryptedData.statusKeluarga === 'KEPALA' && !encryptedData.keluargaId && newKeluarga) {
+    return prisma.$transaction(async (tx) => {
+      const keluarga = await tx.keluarga.create({
+        data: {
+          ...newKeluarga,
+          createdBy: userId,
+          updatedBy: userId,
+        } as Prisma.KeluargaUncheckedCreateInput,
+      })
+      const nomorKeluarga = `KLG${String(keluarga.id).padStart(5, '0')}`
+      await tx.keluarga.update({ where: { id: keluarga.id }, data: { nomorKeluarga, kepalakeluargaId: id } })
+
+      return tx.warga.update({
+        where: { id },
+        data: { ...encryptedData, keluargaId: keluarga.id, updatedBy: userId },
+        include: wargaInclude,
+      })
+    })
+  }
+
   return prisma.warga.update({
     where: { id },
-    data: { ...data, updatedBy: userId },
+    data: { ...encryptedData, updatedBy: userId },
     include: wargaInclude,
   })
 }

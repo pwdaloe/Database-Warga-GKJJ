@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { authenticate, authorize } from '../middleware/auth.js'
 import * as svc from '../services/warga.service.js'
 import { ok, created, paginated } from '../utils/response.js'
+import { prisma } from '../utils/prisma.js'
 
 export const wargaRouter = Router()
 
@@ -82,7 +83,21 @@ wargaRouter.get('/ulang-tahun', async (_req, res) => {
 
 // GET /api/warga/:id
 wargaRouter.get('/:id', async (req, res) => {
-  const warga = await svc.getWargaById(Number(req.params['id']), req.user!)
+  const id = Number(req.params['id'])
+  const warga = await svc.getWargaById(id, req.user!)
+
+  // Audit trail akses data pribadi sensitif (UU PDP Pasal 16 & 49)
+  prisma.auditLog.create({
+    data: {
+      userId:    req.user!.userId,
+      action:    'ACCESS',
+      tabel:     'warga',
+      recordId:  id,
+      ipAddress: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+                 ?? req.socket.remoteAddress ?? null,
+    },
+  }).catch(() => {/* jangan crash kalau log gagal */})
+
   ok(res, warga)
 })
 
@@ -111,7 +126,6 @@ wargaRouter.put(
   '/:id',
   authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
   async (req, res) => {
-    // newKeluarga diabaikan saat update — perubahan kelompok lewat halaman Keluarga
     const { newKeluarga, ...rest } = bodySchema.parse(req.body)
     const warga = await svc.updateWarga(
       Number(req.params['id']),
@@ -123,6 +137,7 @@ wargaRouter.put(
       } as any,
       req.user!.userId,
       req.user!,
+      newKeluarga,
     )
     ok(res, warga)
   },

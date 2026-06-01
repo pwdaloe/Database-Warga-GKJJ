@@ -137,7 +137,7 @@ model Warga {
   jenisKelamin           JenisKelamin         @map("jenis_kelamin")
   tempatLahir            String?              @db.VarChar(100) @map("tempat_lahir")
   tanggalLahir           DateTime?            @db.Date @map("tanggal_lahir")
-  nik                    String?              @unique @db.VarChar(20)
+  nik                    String?              @unique @db.VarChar(64)   // encrypted AES-256
   golonganDarah          GolonganDarah?       @map("golongan_darah")
   fotoUrl                String?              @db.Text @map("foto_url")
   statusKeluarga         StatusDalamKeluarga  @default(LAINNYA) @map("status_keluarga")
@@ -159,6 +159,10 @@ model Warga {
   longitude              Float?
   dataStatus             DataStatus           @default(DRAFT) @map("data_status")
   catatan                String?              @db.Text
+  // ── PDP compliance ─────────────────────────────────────────
+  konsenPDP              Boolean              @default(false) @map("konsen_pdp")
+  tanggalKonsen          DateTime?            @map("tanggal_konsen")
+  retensiHingga          DateTime?            @map("retensi_hingga")   // hapus setelah tanggal ini
   createdBy              Int?                 @map("created_by")
   updatedBy              Int?                 @map("updated_by")
   createdAt              DateTime             @default(now()) @map("created_at")
@@ -356,6 +360,7 @@ enum AuditAction {
   APPROVE
   VALIDATE
   IMPORT
+  ACCESS    // baca data pribadi sensitif — PDP audit trail
 
   @@map("audit_action_enum")
 }

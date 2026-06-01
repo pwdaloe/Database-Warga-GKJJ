@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -151,6 +151,16 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
   const dataStatus = watch('dataStatus')
   const statusKeluarga = watch('statusKeluarga')
   const sudahBaptis = watch('sudahBaptis')
+
+  // Saat user mengubah statusKeluarga ke KEPALA, clear keluargaId lama
+  // agar form menampilkan panel "Keluarga Baru" dan isNewKepala jadi true di submit
+  const prevStatusRef = useRef(statusKeluarga)
+  useEffect(() => {
+    if (prevStatusRef.current !== statusKeluarga && statusKeluarga === 'KEPALA') {
+      setValue('keluargaId', null)
+    }
+    prevStatusRef.current = statusKeluarga
+  }, [statusKeluarga, setValue])
   const sudahSidi = watch('sudahSidi')
   const selectedKeluargaId = watch('keluargaId')
   const fotoUrl = watch('fotoUrl')

@@ -29,9 +29,14 @@ function sanitize(obj: unknown, depth = 0): unknown {
   return result
 }
 
+// Path GET yang mengandung data pribadi — perlu dicatat untuk audit PDP
+const SENSITIVE_GET_PATHS = /^\/(warga|keluarga|users)(\/\d+)?$/
+
 export function activityLogger(req: Request, res: Response, next: NextFunction) {
-  // Hanya log operasi yang mengubah data
-  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+  const isMutation   = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)
+  const isSensitiveGet = req.method === 'GET' && SENSITIVE_GET_PATHS.test(req.path)
+
+  if (!isMutation && !isSensitiveGet) {
     next()
     return
   }
@@ -57,7 +62,7 @@ export function activityLogger(req: Request, res: Response, next: NextFunction) 
       errorMessage = (responseBody as any)?.error ?? (responseBody as any)?.message ?? null
     }
 
-    const bodySnapshot = req.body && Object.keys(req.body).length > 0
+    const bodySnapshot = isMutation && req.body && Object.keys(req.body).length > 0
       ? sanitize(req.body)
       : null
 
