@@ -1,0 +1,19 @@
+{
+  "name": "GKJJ Jemaat",
+  "short_name": "GKJJ",
+  "description": "Sistem Informasi Jemaat GKJ Jakarta",
+  "start_url": "/m/warga",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1e3a5f",
+  "theme_color": "#1e3a5f",
+  "icons": [
+    {
+      "src": "/logo-gkj.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
