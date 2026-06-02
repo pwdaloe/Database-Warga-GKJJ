@@ -135,8 +135,10 @@ export default function MobileWargaDetail() {
           )}
           <div>
             <h1 className="text-white text-xl font-bold leading-tight">{warga.namaLengkap}</h1>
-            {warga.nomorAnggota && (
-              <p className="text-blue-200 text-sm font-mono mt-0.5">{warga.nomorAnggota}</p>
+            {(warga.nomorInduk || warga.nomorAnggota) && (
+              <p className="text-blue-200 text-sm font-mono mt-0.5">
+                {warga.nomorInduk ?? warga.nomorAnggota}
+              </p>
             )}
             <p className="text-blue-200 text-sm mt-1">
               {STATUS_KK[warga.statusKeluarga]} · {usia !== null ? `${usia} tahun` : '—'}
