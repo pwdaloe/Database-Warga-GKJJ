@@ -78,7 +78,7 @@ export function useWilayahKelompok() {
       const res = await api.get('/wilayah')
       return res.data.data as Array<{
         id: number; kode: string; nama: string
-        kelompoks: Array<{ id: number; kode: string; nama: string }>
+        kelompoks: Array<{ id: number; kode: string; nama: string; penatua_nama_temp?: string | null }>
       }>
     },
     staleTime: 5 * 60 * 1000,

@@ -194,8 +194,9 @@ export async function createWarga(
   return prisma.$transaction(async (tx) => {
     let keluargaId = encryptedData.keluargaId as number | null | undefined
 
-    // Jika Kepala Keluarga tanpa KK yang ada → buat KK baru
-    if (data.statusKeluarga === 'KEPALA' && !keluargaId && newKeluarga) {
+    // Jika ada newKeluarga dan belum punya KK → buat KK baru
+    // (berlaku untuk semua status, termasuk LAINNYA dari form mobile)
+    if (!keluargaId && newKeluarga) {
       // Buat dulu tanpa nomorKeluarga → pakai ID sebagai nomor (tidak ada race condition)
       const keluarga = await tx.keluarga.create({
         data: {
