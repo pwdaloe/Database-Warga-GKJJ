@@ -105,9 +105,15 @@ export default function MobileKartuPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-[17px] font-semibold text-gray-900 truncate">{w.namaLengkap}</p>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                      {w.nomorInduk || w.nomorAnggota || '—'}
-                    </p>
+                    {w.nomorInduk ? (
+                      <p className="text-sm text-gray-600 mt-0.5 font-mono font-medium">
+                        {w.nomorInduk}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-300 mt-0.5 italic">
+                        No. Induk belum ada
+                      </p>
+                    )}
                     <p className="text-sm text-gray-400 truncate mt-0.5">
                       {w.keluarga?.kelompok?.nama ?? '—'}
                     </p>
