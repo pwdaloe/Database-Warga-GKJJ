@@ -10,7 +10,6 @@ import { id as localeId } from 'date-fns/locale'
 import { useWargaList } from '@/hooks/useWarga'
 import { useValidasiMutations } from '@/hooks/useValidasiWarga'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
-import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
@@ -349,7 +348,9 @@ export default function ValidasiDataPage() {
         <Pagination
           page={meta.page}
           totalPages={meta.totalPages}
-          onPageChange={(p) => { setPage(p); setSelected(new Set()) }}
+          total={meta.total}
+          limit={20}
+          onChange={(p: number) => { setPage(p); setSelected(new Set()) }}
         />
       )}
 
