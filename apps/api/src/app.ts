@@ -22,6 +22,9 @@ import { activityLogger } from './middleware/activityLogger.js'
 
 const app = express()
 
+// Percayai 1 hop proxy (Nginx) — diperlukan agar express-rate-limit baca IP dari X-Forwarded-For
+app.set('trust proxy', 1)
+
 // Security & compression
 app.use(helmet())
 app.use(compression())
