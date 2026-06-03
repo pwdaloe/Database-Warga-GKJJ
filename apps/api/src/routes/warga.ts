@@ -81,6 +81,21 @@ wargaRouter.get('/ulang-tahun', async (_req, res) => {
   ok(res, data)
 })
 
+// PATCH /api/warga/bulk-status
+wargaRouter.patch(
+  '/bulk-status',
+  authorize('SUPERADMIN', 'KEPALA_KANTOR', 'STAF_ADMIN'),
+  async (req, res) => {
+    const schema = z.object({
+      ids:    z.array(z.number().int().positive()).min(1).max(500),
+      action: z.enum(['validate', 'revert']),
+    })
+    const { ids, action } = schema.parse(req.body)
+    const result = await svc.bulkValidasiWarga(ids, action, req.user!.userId, req.user!)
+    ok(res, result)
+  },
+)
+
 // GET /api/warga/:id
 wargaRouter.get('/:id', async (req, res) => {
   const id = Number(req.params['id'])

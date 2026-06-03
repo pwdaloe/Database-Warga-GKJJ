@@ -15,6 +15,7 @@ import {
   CreditCard,
   UserCog,
   Activity,
+  ShieldCheck,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/auth'
@@ -60,6 +61,12 @@ const NAV_GROUPS: NavGroup[] = [
         href: '/keluarga',
         icon: Home,
         roles: ['SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'],
+      },
+      {
+        label: 'Validasi Data',
+        href: '/validasi-data',
+        icon: ShieldCheck,
+        roles: ['SUPERADMIN', 'KEPALA_KANTOR', 'STAF_ADMIN', 'PENATUA_KELOMPOK'],
       },
       {
         label: 'Kartu Anggota',

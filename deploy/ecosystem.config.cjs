@@ -26,7 +26,7 @@ module.exports = {
     {
       name       : 'gkjj-web',
       cwd        : '/var/www/gkjj/apps/web',
-      script     : 'node_modules/.bin/next',
+      script     : '/var/www/gkjj/node_modules/.bin/next',
       args       : 'start -p 3000',
       interpreter: 'none',
       instances  : 1,

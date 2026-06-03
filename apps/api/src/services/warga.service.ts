@@ -54,6 +54,7 @@ const wargaInclude = {
       },
     },
   },
+  validatedByUser: { select: { id: true, nama: true } },
 } satisfies Prisma.WargaInclude
 
 const wargaDetailInclude = {
@@ -292,6 +293,36 @@ export async function deleteWarga(id: number) {
   if (hasUser) throw new AppError(400, 'Warga ini memiliki akun user. Nonaktifkan akun terlebih dahulu.')
 
   await prisma.warga.delete({ where: { id } })
+}
+
+export async function bulkValidasiWarga(
+  ids: number[],
+  action: 'validate' | 'revert',
+  userId: number,
+  user: JwtPayload,
+) {
+  if (ids.length === 0) throw new AppError(400, 'Tidak ada data yang dipilih')
+  if (ids.length > 500) throw new AppError(400, 'Maksimal 500 data sekaligus')
+
+  // Scope penatua kelompok: pastikan semua ID ada di kelompoknya
+  if (user.role === 'PENATUA_KELOMPOK') {
+    throw new AppError(403, 'Tidak memiliki akses untuk memvalidasi data')
+  }
+
+  const updateData =
+    action === 'validate'
+      ? { dataStatus: 'AKTIF' as const, validatedBy: userId, validatedAt: new Date() }
+      : { dataStatus: 'DRAFT' as const, validatedBy: null, validatedAt: null }
+
+  const result = await prisma.warga.updateMany({
+    where: {
+      id: { in: ids },
+      dataStatus: action === 'validate' ? 'DRAFT' : 'AKTIF',
+    },
+    data: updateData,
+  })
+
+  return { updated: result.count }
 }
 
 export async function getWargaUlangTahunBulanIni() {
