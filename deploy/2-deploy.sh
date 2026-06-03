@@ -126,14 +126,16 @@ else
   warn "Nginx config sudah ada di $NGINX_WEB_DEST, dilewati."
 fi
 
-# ── 9. Restart / Start PM2 ───────────────────────────────────
+# ── 9. Restart / Start PM2 (selalu dari root) ────────────────
 info "Restart aplikasi via PM2..."
 cd "$APP_DIR"
+# Pastikan daemon PM2 milik gkjj tidak ikut berjalan (konflik port)
+sudo -u "$APP_USER" pm2 kill 2>/dev/null || true
 if pm2 list | grep -q "gkjj-"; then
   pm2 reload deploy/ecosystem.config.cjs --update-env
 else
-  sudo -u "$APP_USER" pm2 start deploy/ecosystem.config.cjs
-  pm2 startup systemd -u "$APP_USER" --hp "/home/$APP_USER" | tail -1 | bash || true
+  pm2 start deploy/ecosystem.config.cjs
+  pm2 startup systemd -u root --hp /root | tail -1 | bash || true
 fi
 pm2 save
 
