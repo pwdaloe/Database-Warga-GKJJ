@@ -9,7 +9,7 @@ export const usersRouter = Router()
 usersRouter.use(authenticate)
 usersRouter.use(authorize('SUPERADMIN', 'KEPALA_KANTOR'))
 
-const ROLES = ['SUPERADMIN','KEPALA_KANTOR','MAJELIS','STAF_ADMIN','PENATUA_KELOMPOK','VIEWER'] as const
+export const ROLES = ['SUPERADMIN','KEPALA_KANTOR','MAJELIS','STAF_ADMIN','PENATUA_KELOMPOK','VIEWER'] as const
 
 const userSelect = {
   id: true, nama: true, username: true, email: true,

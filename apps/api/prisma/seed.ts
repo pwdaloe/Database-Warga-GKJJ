@@ -37,6 +37,7 @@ async function main() {
     { wilayahId: wilayahA.id, kode: 'A6', nama: 'Kemayoran I / Sunter',  penatua_nama_temp: 'Jakub Handoko' },
     { wilayahId: wilayahA.id, kode: 'A7', nama: 'Ksatrian',              penatua_nama_temp: 'Yashinta Triwati' },
     { wilayahId: wilayahA.id, kode: 'A8', nama: 'Sari Cempaka',          penatua_nama_temp: 'Teguh Tri Santoso' },
+    { wilayahId: wilayahA.id, kode: 'A9', nama: 'Rawasari',              penatua_nama_temp: 'Yohanes Eko' },
     // Wilayah B
     { wilayahId: wilayahB.id, kode: 'B1', nama: 'Rawabadung',            penatua_nama_temp: 'Suparyanto' },
     { wilayahId: wilayahB.id, kode: 'B2', nama: 'Cipinang Baru',         penatua_nama_temp: 'Lydia' },
@@ -79,6 +80,52 @@ async function main() {
   })
   console.log('  ✓ Superadmin user (username: superadmin)')
   console.log('  ⚠️  Ganti password superadmin segera setelah login pertama!')
+
+  // ── Penatua Kelompok (default akun per kelompok) ────────────
+  const penatuaData = [
+    { kode: 'A1', nama: 'Pramudya Hardjito',              username: 'cempaka.baru',               email: 'cempaka.baru@gkjjakarta.org' },
+    { kode: 'A2', nama: 'Louise Reyna E. Mauruh Maskat',  username: 'utan.kayu',                   email: 'utan.kayu@gkjjakarta.org' },
+    { kode: 'A3', nama: 'Dahlia C. Sinaga',                username: 'kebon.kelapa',                email: 'kebon.kelapa@gkjjakarta.org' },
+    { kode: 'A4', nama: 'Tri Eka Wahyuni',                 username: 'menteng',                    email: 'menteng@gkjjakarta.org' },
+    { kode: 'A5', nama: 'Ernanto Prabowo',                 username: 'percetakan.negara',           email: 'percetakan.negara@gkjjakarta.org' },
+    { kode: 'A6', nama: 'Jakub Handoko',                   username: 'kemayoran.sunter',            email: 'kemayoran.sunter@gkjjakarta.org' },
+    { kode: 'A7', nama: 'Yashinta Triwati',                username: 'ksatrian',                   email: 'ksatrian@gkjjakarta.org' },
+    { kode: 'A8', nama: 'Teguh Tri Santoso',               username: 'sari.cempaka',                email: 'sari.cempaka@gkjjakarta.org' },
+    { kode: 'A9', nama: 'Yohanes Eko',                     username: 'rawasari',                   email: 'rawasari@gkjjakarta.org' },
+    { kode: 'B1', nama: 'Suparyanto',                      username: 'rawabadung',                  email: 'rawabadung@gkjjakarta.org' },
+    { kode: 'B2', nama: 'Lydia',                           username: 'cipinang.baru',               email: 'cipinang.baru@gkjjakarta.org' },
+    { kode: 'B3', nama: 'Firnaningati',                    username: 'kelapa.gading',                email: 'kelapa.gading@gkjjakarta.org' },
+    { kode: 'B4', nama: 'Aryo Aditomo',                    username: 'kampung.ambon',                email: 'kampung.ambon@gkjjakarta.org' },
+    { kode: 'B5', nama: 'Maryono',                         username: 'penggilingan',                email: 'penggilingan@gkjjakarta.org' },
+    { kode: 'B6', nama: 'Martha Ken Larasati',             username: 'rawamangun.timur',            email: 'rawamangun.timur@gkjjakarta.org' },
+    { kode: 'B7', nama: 'Dwiwanto Presantoro',             username: 'marenco',                    email: 'marenco@gkjjakarta.org' },
+    { kode: 'B8', nama: 'Efi Pujiastuti',                  username: 'cipinang.kebembem',           email: 'cipinang.kebembem@gkjjakarta.org' },
+    { kode: 'B9', nama: 'Sanjung Purna',                   username: 'rawamangun.barat',            email: 'rawamangun.barat@gkjjakarta.org' },
+    { kode: 'C1', nama: 'Eko Sutrisno',                    username: 'cipinang.muara',              email: 'cipinang.muara@gkjjakarta.org' },
+    { kode: 'C2', nama: 'Pratelaningsihmirmo',             username: 'pondok.kopi',                 email: 'pondok.kopi@gkjjakarta.org' },
+    { kode: 'C3', nama: 'Wisnu Priambudi',                 username: 'duren.sawit.pondok.kelapa',   email: 'duren.sawit.pondok.kelapa@gkjjakarta.org' },
+    { kode: 'C4', nama: 'Bambang Tugianto',                username: 'pondok.bambu.satu',           email: 'pondok.bambu.satu@gkjjakarta.org' },
+    { kode: 'C5', nama: 'Kurida B. Budiantoro',            username: 'pondok.bambu.dua',            email: 'pondok.bambu.dua@gkjjakarta.org' },
+  ]
+
+  const penatuaPasswordHash = await bcrypt.hash('GKJjakarta2026', 12)
+  for (const p of penatuaData) {
+    const kelompok = await prisma.kelompok.findUniqueOrThrow({ where: { kode: p.kode } })
+    await prisma.user.upsert({
+      where: { username: p.username },
+      update: {},
+      create: {
+        nama: p.nama,
+        username: p.username,
+        email: p.email,
+        passwordHash: penatuaPasswordHash,
+        role: 'PENATUA_KELOMPOK',
+        kelompokId: kelompok.id,
+      },
+    })
+  }
+  console.log(`  ✓ ${penatuaData.length} akun Penatua Kelompok`)
+  console.log('  ⚠️  Password default penatua — minta ganti setelah login pertama!')
 
   console.log('\n✅ Seeding selesai.')
 }

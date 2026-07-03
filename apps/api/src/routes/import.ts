@@ -1,8 +1,10 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import bcrypt from 'bcryptjs'
 import { authenticate, authorize } from '../middleware/auth.js'
 import { prisma } from '../utils/prisma.js'
 import { ok } from '../utils/response.js'
+import { ROLES } from './users.js'
 
 export const importRouter = Router()
 importRouter.use(authenticate)
@@ -38,6 +40,16 @@ function normJK(v: unknown): 'L' | 'P' | null {
 function normEnum(v: unknown, allowed: string[], def: string): string {
   const s = String(v ?? '').trim().toUpperCase().replace(/[^A-Z_]/g, '')
   return allowed.find((a) => a === s) ?? def
+}
+
+// "Duren Sawit - Pondok Kelapa" → "duren.sawit.pondok.kelapa" (spasi/strip jadi titik, buang karakter tidak valid)
+function normUsername(v: unknown): string {
+  return String(v ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s*-\s*/g, '.')
+    .replace(/\s+/g, '.')
+    .replace(/[^a-z0-9._-]/g, '')
 }
 
 // Row schema
@@ -197,6 +209,98 @@ importRouter.post(
         }
 
         log.push({ baris, status: 'berhasil', nama: namaLengkap, nomorAnggota })
+      } catch (err: any) {
+        log.push({ baris, status: 'gagal', nama: namaDisplay, alasan: err.message ?? 'Kesalahan tidak diketahui' })
+      }
+    }
+
+    const berhasil = log.filter((l) => l.status === 'berhasil').length
+    const gagal    = log.filter((l) => l.status === 'gagal').length
+    ok(res, { total: rawRows.length, berhasil, gagal, log })
+  },
+)
+
+// Row schema — pengguna
+const penggunaRowSchema = z.object({
+  namaLengkap:  z.string().optional(),
+  username:     z.string().optional(),
+  email:        z.string().optional(),
+  password:     z.string().optional(),
+  role:         z.string().optional(),
+  kelompokKode: z.string().optional(),
+  _rowIndex:    z.number(),
+})
+
+// POST /api/import/pengguna — batch import (maks 200 rows per call)
+importRouter.post(
+  '/pengguna',
+  authorize('SUPERADMIN', 'KEPALA_KANTOR'),
+  async (req, res) => {
+    const rawRows = z.array(penggunaRowSchema).max(200).parse(req.body.rows)
+
+    type LogEntry = {
+      baris: number; status: 'berhasil' | 'gagal'
+      nama: string; username?: string; alasan?: string
+    }
+    const log: LogEntry[] = []
+    const kelompokCache: Record<string, number | null> = {}
+
+    for (const raw of rawRows) {
+      const baris = raw._rowIndex
+      const namaDisplay = String(raw.namaLengkap ?? '(kosong)').trim()
+
+      try {
+        // ── Validasi wajib ──────────────────────────────────
+        const namaLengkap = String(raw.namaLengkap ?? '').trim()
+        if (namaLengkap.length < 2)
+          throw new Error('Nama lengkap wajib diisi (minimal 2 karakter)')
+
+        const username = normUsername(raw.username)
+        if (username.length < 3)
+          throw new Error(`Username tidak valid: "${raw.username}" — huruf, angka, titik, underscore, strip, minimal 3 karakter`)
+
+        const email = String(raw.email ?? '').trim().toLowerCase()
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+          throw new Error(`Email tidak valid: "${raw.email}"`)
+
+        const password = String(raw.password ?? '')
+        if (password.length < 8)
+          throw new Error('Password wajib diisi (minimal 8 karakter)')
+
+        const role = String(raw.role ?? '').trim().toUpperCase()
+        if (!(ROLES as readonly string[]).includes(role))
+          throw new Error(`Role tidak valid: "${raw.role}" — gunakan salah satu: ${ROLES.join(', ')}`)
+
+        // ── Cek duplikat username / email ───────────────────
+        const existing = await prisma.user.findFirst({
+          where: { OR: [{ username }, { email }] },
+        })
+        if (existing) {
+          const field = existing.username === username ? 'Username' : 'Email'
+          throw new Error(`${field} sudah digunakan oleh: ${existing.nama}`)
+        }
+
+        // ── Resolve kelompok ─────────────────────────────────
+        let kelompokId: number | null = null
+        const kodeStr = raw.kelompokKode ? String(raw.kelompokKode).trim().toUpperCase() : ''
+        if (kodeStr) {
+          if (!(kodeStr in kelompokCache)) {
+            const klp = await prisma.kelompok.findFirst({
+              where: { kode: kodeStr }, select: { id: true },
+            })
+            kelompokCache[kodeStr] = klp?.id ?? null
+          }
+          kelompokId = kelompokCache[kodeStr] ?? null
+          if (!kelompokId)
+            throw new Error(`Kode kelompok "${kodeStr}" tidak ditemukan`)
+        }
+
+        const passwordHash = await bcrypt.hash(password, 12)
+        await prisma.user.create({
+          data: { nama: namaLengkap, username, email, passwordHash, role: role as any, kelompokId },
+        })
+
+        log.push({ baris, status: 'berhasil', nama: namaLengkap, username })
       } catch (err: any) {
         log.push({ baris, status: 'gagal', nama: namaDisplay, alasan: err.message ?? 'Kesalahan tidak diketahui' })
       }

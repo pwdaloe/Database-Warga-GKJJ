@@ -5,13 +5,14 @@ import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import {
   UserCog, Plus, Pencil, Power, PowerOff, KeyRound,
-  Loader2, Shield, CheckCircle2, XCircle,
+  Loader2, Shield, CheckCircle2, XCircle, Upload,
 } from 'lucide-react'
 import { useUserList, useUserMutations, type AppUser } from '@/hooks/useUsers'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { Modal } from '@/components/ui/Modal'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/auth'
 import { cn } from '@/lib/utils'
+import { ImportPenggunaModal } from './ImportPenggunaModal'
 
 const ROLES = [
   'SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS',
@@ -172,6 +173,7 @@ export default function PenggunaPage() {
   const [editUser, setEditUser]             = useState<AppUser | null>(null)
   const [resetUser, setResetUser]           = useState<AppUser | null>(null)
   const [serverError, setServerError]       = useState('')
+  const [importOpen, setImportOpen]         = useState(false)
 
   async function handleSave(formData: any) {
     setServerError('')
@@ -220,12 +222,20 @@ export default function PenggunaPage() {
             {users.length} akun terdaftar · {aktifCount} aktif · {nonAktifCount} nonaktif
           </p>
         </div>
-        <button
-          onClick={() => { setEditUser(null); setServerError(''); setModalOpen(true) }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition"
-        >
-          <Plus size={18} /> Tambah Pengguna
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium border rounded-lg transition"
+          >
+            <Upload size={16} /> Import Excel
+          </button>
+          <button
+            onClick={() => { setEditUser(null); setServerError(''); setModalOpen(true) }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition"
+          >
+            <Plus size={18} /> Tambah Pengguna
+          </button>
+        </div>
       </div>
 
       {/* Tabel */}
@@ -371,6 +381,9 @@ export default function PenggunaPage() {
           />
         )}
       </Modal>
+
+      {/* Modal import excel */}
+      <ImportPenggunaModal open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   )
 }
