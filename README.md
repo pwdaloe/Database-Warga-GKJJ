@@ -3,13 +3,15 @@
 Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
 Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
 
-**Versi:** `v1.1` · **Terakhir diperbarui:** 1 Juni 2026
+**Versi:** `v1.2` · **Terakhir diperbarui:** 4 Juli 2026
 
 ---
 
 ## Daftar Isi
 
 - [Fitur](#fitur)
+- [Aplikasi Mobile (PWA) untuk Penatua Kelompok](#aplikasi-mobile-pwa-untuk-penatua-kelompok)
+- [Pengujian (Testing)](#pengujian-testing)
 - [Keamanan & Kepatuhan PDP](#keamanan--kepatuhan-pdp)
 - [Tech Stack](#tech-stack)
 - [Struktur Proyek](#struktur-proyek)
@@ -50,6 +52,13 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 - **Status dokumen** — alur Draft → Validasi → Aktif → Tidak Aktif
 - **Detail warga** — halaman biodata lengkap, tampilkan foto asli jika ada
 - **Wizard tambah warga** — setelah input Kepala KK, lanjut ke step 2 untuk tambah anggota keluarga
+
+#### Validasi Data
+- Dua tab: **Perlu Validasi** (status Draft) dan **Sudah Divalidasi** (status Aktif)
+- Search + filter wilayah/kelompok (untuk Penatua Kelompok, filter otomatis terkunci ke kelompoknya sendiri)
+- Pilih satu/banyak baris (checkbox) → **Validasi Terpilih** atau **Batalkan Validasi**, dengan dialog konfirmasi
+- Setiap validasi di-stamp: `validatedBy` (siapa) dan `validatedAt` (kapan) pada data warga
+- Hak validasi/batal-validasi hanya untuk **Superadmin, Kepala Kantor, Staf Admin** — Penatua Kelompok bisa melihat status data warga di kelompoknya tapi tidak bisa menekan tombol validasi (double-guard di frontend & backend)
 
 #### Data Keluarga
 - Tambah, edit, hapus data kepala keluarga (KK)
@@ -101,6 +110,13 @@ Wizard 5 langkah untuk import massal data warga dari file Excel:
 - **Sheet 2 — Petunjuk Pengisian**: tabel format & nilai yang diterima per field
 - **Sheet 3 — Referensi Kelompok**: daftar kode, nama kelompok, wilayah, dan penatua dari database
 
+#### Import Pengguna
+Modal upload Excel di halaman **Pengguna** (pola sama seperti import warga, maks 200 baris per batch):
+- Kolom: `namaLengkap`, `username`, `email`, `password`, `role`, `kelompokKode`
+- **Normalisasi otomatis username** — spasi/strip pada input diubah jadi format titik (tahan salah isi)
+- Log hasil per baris (berhasil/gagal + alasan)
+- Akses hanya **Superadmin** dan **Kepala Kantor**
+
 #### Perpindahan *(coming soon)*
 - Pencatatan masuk, keluar, dan meninggal
 
@@ -137,6 +153,42 @@ Wizard 5 langkah untuk import massal data warga dari file Excel:
 - Tabel searchable + filter per kecamatan
 - CRUD: tambah, edit, hapus
 - Data dipakai untuk **autocomplete** field kelurahan di form Keluarga
+
+---
+
+## Aplikasi Mobile (PWA) untuk Penatua Kelompok
+
+Antarmuka ringkas berbasis browser (`/m/...`), dirancang untuk dipakai penatua saat kunjungan rumah — bisa disimpan sebagai ikon di home screen HP (Add to Home Screen di Safari/Chrome).
+
+| Halaman | Fungsi |
+|---|---|
+| `/m/login` | Login versi mobile |
+| `/m/warga` | Daftar warga **di kelompok penatua yang login saja** (otomatis ter-scope, di-enforce di backend) — cari nama, tap untuk detail |
+| `/m/warga/baru` | Form tambah warga ringkas (6 field): nama, jenis kelamin, status keluarga, kelompok (terkunci ke kelompok penatua), status keanggotaan, WhatsApp — data masuk sebagai **Draft**, dilengkapi & divalidasi staf kantor kemudian |
+| `/m/warga/[id]` | Detail + edit terbatas (status keanggotaan, WhatsApp, tanggal lahir, sakramen, alamat domisili) |
+| `/m/kartu` | Cari jemaat → tampilkan kartu digital, cocok untuk verifikasi kehadiran ibadah |
+| `/m/[id]` | Kartu digital publik (lihat [Halaman Publik](#halaman-publik)) |
+
+Panduan langkah-demi-langkah untuk penatua: lihat [`docs/PANDUAN_PENATUA.md`](docs/PANDUAN_PENATUA.md).
+
+---
+
+## Pengujian (Testing)
+
+Test otomatis berbasis **Vitest** di kedua workspace:
+
+| Layer | Test Files | Tests |
+|---|---|---|
+| Backend (`apps/api`) | 5 | 35 (crypto, error handler, auth middleware/service/route) |
+| Frontend (`apps/web`) | 2 | 11 (Badge, Pagination) |
+
+```bash
+npm run test --workspace=apps/api
+npm run test --workspace=apps/web
+npm run test:coverage --workspace=apps/api   # atau apps/web
+```
+
+Status & rencana coverage berikutnya: lihat [`QA_STATUS.md`](QA_STATUS.md).
 
 ---
 
@@ -211,6 +263,7 @@ Database-Warga-GKJJ/
 │   │   ├── prisma/
 │   │   │   ├── schema.prisma       # Skema database
 │   │   │   └── seed-master.ts      # Seed kelurahan & komisi config
+│   │   ├── tests/                  # Vitest — unit & route test (supertest)
 │   │   └── src/
 │   │       ├── middleware/
 │   │       │   ├── auth.ts         # JWT authentication
@@ -218,22 +271,22 @@ Database-Warga-GKJJ/
 │   │       │   └── activityLogger.ts # Request logging middleware
 │   │       ├── routes/
 │   │       │   ├── auth.ts
-│   │       │   ├── warga.ts
+│   │       │   ├── warga.ts        # + PATCH /bulk-status (Validasi Data)
 │   │       │   ├── keluarga.ts
 │   │       │   ├── wilayah.ts
 │   │       │   ├── kelompok.ts
 │   │       │   ├── dashboard.ts    # Stats, komisi chart, peta
 │   │       │   ├── pengaturan.ts   # Master kelurahan & komisi config
-│   │       │   ├── import.ts       # Batch import Excel
+│   │       │   ├── import.ts       # Batch import Excel (warga & pengguna)
 │   │       │   ├── users.ts        # Manajemen pengguna
 │   │       │   ├── logs.ts         # Activity log
 │   │       │   └── public.ts       # Endpoint publik (tanpa auth)
 │   │       ├── services/
-│   │       │   ├── warga.service.ts
+│   │       │   ├── warga.service.ts # + sanitizeForRole, bulkValidasiWarga
 │   │       │   ├── keluarga.service.ts
 │   │       │   └── auth.service.ts
 │   │       └── utils/
-│   │           ├── crypto.ts       # AES-256 enkripsi/dekripsi NIK (PDP)
+│   │           └── crypto.ts       # AES-256 enkripsi/dekripsi NIK (PDP)
 │   └── web/                        # Frontend Next.js
 │       └── src/
 │           ├── app/
@@ -242,13 +295,18 @@ Database-Warga-GKJJ/
 │           │   │   ├── dashboard/  # Dashboard + chart + peta
 │           │   │   ├── warga/      # Data warga + wizard
 │           │   │   ├── keluarga/   # Data keluarga + detail
+│           │   │   ├── validasi-data/ # Validasi/batalkan validasi massal
 │           │   │   ├── kartu/      # Kartu anggota + QR
 │           │   │   ├── wilayah/    # Master wilayah & kelompok
-│           │   │   ├── import/     # Wizard import Excel
-│           │   │   ├── pengguna/   # Manajemen pengguna
+│           │   │   ├── import/     # Wizard import Excel (warga & pengguna)
+│           │   │   ├── pengguna/   # Manajemen pengguna + Import Pengguna
 │           │   │   ├── log/        # Log aktivitas
 │           │   │   └── pengaturan/ # Pengaturan sistem
-│           │   └── m/[id]/         # Kartu digital publik (tanpa auth)
+│           │   └── m/              # PWA mobile untuk Penatua Kelompok
+│           │       ├── login/      # Login mobile
+│           │       ├── (app)/warga/ # Daftar, tambah, edit warga (kelompok sendiri)
+│           │       ├── (app)/kartu/ # Cari & tampilkan kartu digital
+│           │       └── [id]/       # Kartu digital publik (tanpa auth)
 │           ├── components/
 │           │   ├── layout/
 │           │   │   ├── Sidebar.tsx # Navigasi bergroup + v1.0 badge
@@ -256,7 +314,8 @@ Database-Warga-GKJJ/
 │           │   └── ui/             # Modal, Badge, Pagination, FormField
 │           └── hooks/              # Custom React hooks per domain
 ├── database/
-├── docs/
+├── docs/                           # PANDUAN_PRODUK.md, PANDUAN_PENATUA.md, dll.
+├── sprints/                        # Sprint plan untuk eksekusi via skill /sprint
 ├── docker-compose.yml
 └── package.json
 ```
@@ -416,6 +475,7 @@ Authorization: Bearer <token>
 | `POST` | `/warga` | Tambah warga baru (opsional: buat KK baru via `newKeluarga`) |
 | `PUT` | `/warga/:id` | Update data warga |
 | `DELETE` | `/warga/:id` | Hapus warga |
+| `PATCH` | `/warga/bulk-status` | Validasi/batalkan validasi massal (stamp `validatedBy`/`validatedAt`) — Superadmin/Kepala Kantor/Staf Admin |
 
 ### Keluarga
 | Method | Endpoint | Keterangan |
@@ -460,6 +520,7 @@ Authorization: Bearer <token>
 | `GET` | `/logs` | Log aktivitas (filter: status, path, userId) |
 | `DELETE` | `/logs` | Hapus log lama (`?days=90`) |
 | `POST` | `/import/warga` | Import batch warga dari Excel (max 200 baris per call) |
+| `POST` | `/import/pengguna` | Import batch pengguna dari Excel (max 200 baris per call) — Superadmin/Kepala Kantor |
 
 ### Publik (tanpa autentikasi)
 | Method | Endpoint | Keterangan |
@@ -470,14 +531,14 @@ Authorization: Bearer <token>
 
 ## Role & Hak Akses
 
-| Role | Dashboard | Data Warga | Data Keluarga | Kartu Anggota | Wilayah | Import | Pengguna | Log | Pengaturan |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `SUPERADMIN` | ✓ | ✓ penuh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `KEPALA_KANTOR` | ✓ | ✓ penuh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `MAJELIS` | ✓ | ✓ ¹ | ✓ | ✓ | ✓ (baca) | — | — | — | — |
-| `STAF_ADMIN` | ✓ | ✓ ¹ | ✓ | ✓ | — | ✓ | — | — | — |
-| `PENATUA_KELOMPOK` | ✓ | ✓ (kelompoknya) ² | ✓ (kelompoknya) | ✓ | — | — | — | — | — |
-| `VIEWER` | ✓ | — | — | — | — | — | — | — | — |
+| Role | Dashboard | Data Warga | Data Keluarga | Validasi Data | Kartu Anggota | Wilayah | Import | Pengguna | Log | Pengaturan |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `SUPERADMIN` | ✓ | ✓ penuh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `KEPALA_KANTOR` | ✓ | ✓ penuh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `MAJELIS` | ✓ | ✓ ¹ | ✓ | — | ✓ | ✓ (baca) | — | — | — | — |
+| `STAF_ADMIN` | ✓ | ✓ ¹ | ✓ | ✓ | ✓ | — | ✓ | — | — | — |
+| `PENATUA_KELOMPOK` | ✓ | ✓ (kelompoknya) ² | ✓ (kelompoknya) | lihat saja (kelompoknya) | ✓ | — | — | — | — | — |
+| `VIEWER` | ✓ | — | — | — | — | — | — | — | — | — |
 
 **Catatan field redaction (UU PDP):**
 > ¹ **MAJELIS / STAF_ADMIN** — Koordinat GPS (latitude/longitude) disembunyikan  
