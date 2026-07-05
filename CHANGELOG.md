@@ -3,6 +3,31 @@
 
 ---
 
+## [2026-07-05 15:20 WIB] — Sprint 2/3 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Minggu, 5 Juli 2026 pukul 15:20 WIB
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 2 Selesai: Reset Password Mandiri — Backend (Migration, Email Service, Endpoint)
+- Kolom `resetTokenHash` & `resetTokenExpiry` ditambahkan ke model `User` + migration `add_password_reset_token`
+- Migration terpisah `sync_schema_with_existing_features` untuk catch-up schema drift dev DB lokal yang belum pernah tercatat (activity_log, master_kelurahan, komisi_config, kepala_keluarga_id, dsb — fitur sprint-sprint sebelumnya)
+- `email.service.ts` dibuat dengan fallback `jsonTransport` (tidak butuh SMTP asli untuk dev)
+- `requestPasswordReset` & `resetPassword` ditambahkan di `auth.service.ts`, anti user-enumeration (pesan response identik)
+- Endpoint `POST /api/auth/forgot-password` (rate limited 5/15menit) & `POST /api/auth/reset-password` ditambahkan, tanpa auth middleware
+- Env vars SMTP & `APP_URL` ditambahkan ke `.env.example`
+- Test baru: `auth.service.reset.test.ts` & `auth.reset.route.test.ts` — total 46/46 test pass, `type-check` bersih (api & web)
+- Commit: `0e1f457`
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+- Port Postgres dev (5433) bentrok dengan container project lain (`fw_odoo_db`) — di-resolve dengan pindah ke port 5435 (docker-compose.yml, README.md, .env.example diupdate), dikonfirmasi ke user sebelum diubah
+- DB dev lokal drift dari `schema.prisma` (migration history tidak lengkap untuk beberapa fitur lama) — di-resolve dengan `prisma migrate reset` (dikonfirmasi eksplisit ke user karena Prisma AI-safety-gate) lalu reseed data master
+
+### 🏃 Next Sprint
+Sprint 3 — Reset Password Mandiri: Frontend (Desktop & Mobile)
+
+---
+
 ## [2026-07-05 10:47 WIB] — Sprint 2/3 | ⚠️ AT RISK
 
 **Project**: Database Warga GKJJ
