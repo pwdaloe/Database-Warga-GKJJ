@@ -3,7 +3,7 @@
 Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
 Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
 
-**Versi:** `v1.2` · **Terakhir diperbarui:** 4 Juli 2026
+**Versi:** `v1.3` · **Terakhir diperbarui:** 5 Juli 2026
 
 ---
 
@@ -124,6 +124,14 @@ Modal upload Excel di halaman **Pengguna** (pola sama seperti import warga, maks
 
 ### Sistem
 
+#### Reset Password Mandiri (Self-Service)
+- Link **"Lupa password?"** di halaman login desktop & mobile (`/login`, `/m/login`)
+- Alur: masukkan username/email → link reset dikirim via email (berlaku 30 menit) → set password baru → login
+- Response pesan **generik** (anti user-enumeration) — tidak membocorkan apakah username/email terdaftar
+- Rate limit **5 request/15 menit** per IP pada `/auth/forgot-password`
+- Token reset di-hash (SHA-256) sebelum disimpan, sekali pakai (langsung invalid setelah dipakai)
+- Mode dev: `SMTP_HOST` kosong → email di-log ke console (tidak perlu kredensial SMTP asli untuk testing)
+
 #### Manajemen Pengguna
 - Daftar pengguna: nama, username, email, role, kelompok, status aktif, waktu login terakhir
 - Tambah pengguna baru dengan form: nama, username, email, password (min. 8 karakter), role, kelompok
@@ -162,7 +170,9 @@ Antarmuka ringkas berbasis browser (`/m/...`), dirancang untuk dipakai penatua s
 
 | Halaman | Fungsi |
 |---|---|
-| `/m/login` | Login versi mobile |
+| `/m/login` | Login versi mobile, dengan link "Lupa password?" |
+| `/m/forgot-password` | Minta link reset password (self-service) |
+| `/m/reset-password` | Set password baru dari link reset yang diterima |
 | `/m/warga` | Daftar warga **di kelompok penatua yang login saja** (otomatis ter-scope, di-enforce di backend) — cari nama, tap untuk detail |
 | `/m/warga/baru` | Form tambah warga ringkas (6 field): nama, jenis kelamin, status keluarga, kelompok (terkunci ke kelompok penatua), status keanggotaan, WhatsApp — data masuk sebagai **Draft**, dilengkapi & divalidasi staf kantor kemudian |
 | `/m/warga/[id]` | Detail + edit terbatas (status keanggotaan, WhatsApp, tanggal lahir, sakramen, alamat domisili) |
@@ -179,8 +189,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 5 | 35 (crypto, error handler, auth middleware/service/route) |
-| Frontend (`apps/web`) | 2 | 11 (Badge, Pagination) |
+| Backend (`apps/api`) | 7 | 46 (crypto, error handler, auth middleware/service/route, reset password) |
+| Frontend (`apps/web`) | 3 | 15 (Badge, Pagination, ResetPasswordForm) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -410,9 +420,18 @@ CORS_ORIGIN="http://localhost:3000"
 # Enkripsi field sensitif NIK — UU PDP No. 27/2022
 # Generate: openssl rand -hex 32
 ENCRYPTION_KEY="ganti-dengan-random-hex-64-karakter"
+
+# Email (reset password) — kosongkan SMTP_HOST untuk mode dev (email di-log ke console)
+SMTP_HOST=""
+SMTP_PORT="587"
+SMTP_USER=""
+SMTP_PASS=""
+MAIL_FROM="GKJJ <no-reply@gkjjakarta.org>"
+APP_URL="http://localhost:3000"
 ```
 
 > ⚠️ `ENCRYPTION_KEY` wajib diisi. Tanpa nilai ini, server akan gagal start saat ada operasi baca/tulis NIK.
+> `SMTP_HOST` kosong = mode dev (link reset password di-log ke console, tidak benar-benar terkirim). Isi kredensial SMTP asli untuk production.
 
 ### `apps/web/.env.local`
 
@@ -466,6 +485,8 @@ Authorization: Bearer <token>
 | `GET` | `/auth/me` | Data user yang sedang login |
 | `POST` | `/auth/change-password` | Ganti password |
 | `POST` | `/auth/logout` | Logout |
+| `POST` | `/auth/forgot-password` | Minta link reset password (rate limit 5/15 menit, tanpa auth) |
+| `POST` | `/auth/reset-password` | Set password baru dari token reset (tanpa auth) |
 
 ### Warga
 | Method | Endpoint | Keterangan |
