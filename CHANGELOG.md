@@ -3,6 +3,31 @@
 
 ---
 
+## [2026-07-05 15:32 WIB] — Sprint 3/3 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Minggu, 5 Juli 2026 pukul 15:32 WIB
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 3 Selesai: Reset Password Mandiri — Frontend (Desktop & Mobile)
+- `forgotPasswordRequest` & `resetPasswordRequest` ditambahkan di `lib/auth.ts`
+- Link "Lupa password?" ditambahkan di halaman login desktop & mobile
+- Halaman `/forgot-password` & `/reset-password` (desktop) — `useSearchParams` dibungkus `<Suspense>`
+- Halaman `/m/forgot-password` & `/m/reset-password` (mobile), styling konsisten dengan `/m/login`
+- Pesan sukses forgot-password tampil persis dari response API (anti user-enumeration, tidak dibuat pesan sendiri)
+- Validasi zod: password baru minimal 8 karakter, konfirmasi password harus cocok
+- Test baru `ResetPasswordForm.test.tsx`, total 15/15 test pass, `type-check` & `build` bersih
+- **Alur end-to-end diverifikasi manual** via `npm run dev`: forgot-password → link muncul di dev email log → reset-password → login dengan password baru berhasil → token yang sama ditolak saat dipakai ulang
+- Commit: `cf84b0a`
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+Tidak ada blocker saat ini ✅ (sprint ini murni frontend, tidak menyentuh Prisma/Docker)
+
+### 🏃 Next Sprint
+Tidak ada sprint berikutnya terdaftar di `sprints/` — Sprint 1–3 (reset password mandiri, end-to-end) sudah selesai semua. Lihat `RETRO.md` untuk rekomendasi siklus berikutnya (test coverage `import.ts`/`warga.service.ts` sudah dieskalasi ke HIGH).
+
+---
+
 ## [2026-07-05 15:20 WIB] — Sprint 2/3 | ✅ DONE
 
 **Project**: Database Warga GKJJ
