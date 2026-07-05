@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: gkjj_dev_password
       POSTGRES_DB: gkjj_db
     ports:
-      - "5433:5432"  # 5432 sudah dipakai PostgreSQL lokal
+      - "5435:5432"  # 5432 sudah dipakai PostgreSQL lokal, 5433/5434 dipakai project lain
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

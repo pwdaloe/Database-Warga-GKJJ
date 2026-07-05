@@ -351,7 +351,7 @@ npm install
 docker-compose up -d
 ```
 
-Menjalankan **PostgreSQL** di `localhost:5433` (bukan 5432 default — lihat komentar di `docker-compose.yml`, di-remap karena port 5432 sudah dipakai instance PostgreSQL lokal lain).
+Menjalankan **PostgreSQL** di `localhost:5435` (bukan 5432 default — lihat komentar di `docker-compose.yml`, di-remap karena port 5432 sudah dipakai instance PostgreSQL lokal lain, dan 5433/5434 dipakai project lain).
 
 ### 4. Konfigurasi Environment
 
@@ -400,7 +400,7 @@ npm run dev
 ### `apps/api/.env`
 
 ```env
-DATABASE_URL="postgresql://gkjj:gkjj_dev_password@localhost:5433/gkjj_db"
+DATABASE_URL="postgresql://gkjj:gkjj_dev_password@localhost:5435/gkjj_db"
 PORT=4000
 NODE_ENV=development
 JWT_SECRET="ganti-dengan-random-string-minimal-32-karakter"

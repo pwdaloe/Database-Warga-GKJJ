@@ -3,6 +3,40 @@
 
 ---
 
+## [2026-07-05 10:47 WIB] — Sprint 2/3 | ⚠️ AT RISK
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Minggu, 5 Juli 2026 pukul 10:47 WIB
+**Reviewed by**: Claude Code PM Agent
+
+### 📊 Sprint Status
+- **Current**: Sprint 2 — Reset Password Mandiri: Backend (Migration, Email Service, Endpoint)
+- **Progress**: 0/8 Definition of Done items selesai (0%)
+- **Timeline**: ⚠️ AT RISK — sprint baru saja pindah ke Sprint 2 (belum ada commit kode untuk sprint ini), dan prasyarat teknis (Postgres dev) belum jalan sehingga langkah pertama sprint (migration Prisma) belum bisa dieksekusi
+
+### ✅ Done Since Last Review
+- feat(sprint-1): tombol kirim WhatsApp template di kartu anggota mobile (`d63f5a2`) — Sprint 1 selesai & diverifikasi (type-check, build, test 11/11 pass)
+- docs: update CHANGELOG PM log & tracker untuk penyelesaian Sprint 1 (`83c8e49`)
+- improve(skills): kunci qa/devops/sprint/pm ke stack Express+TS+Prisma & Next.js (`2a19771`)
+- `sprints/.current_sprint` sudah maju ke `2`, tapi belum ada kode Sprint 2 (`nodemailer`, `email.service.ts`, `resetTokenHash`, endpoint `forgot-password`) yang dibuat
+
+### ⚠️ Blockers & Risks
+| Severity | Item | Sprint Terdampak |
+|----------|------|-----------------|
+| HIGH | Container Postgres/Redis dev (`docker compose`) belum running — `docker compose ps` kosong meski daemon Docker aktif. Sprint 2 butuh `prisma migrate dev` yang perlu Postgres lokal jalan | Sprint 2 (blocking, task #2) |
+| MED | `import.ts` (bulk-import Excel) & `warga.service.ts` (bulk-validate) masih 0% test coverage — carry-over dari 2 review PM sebelumnya, belum ada file test baru untuk keduanya meski Vitest sudah di-setup | Berjalan di produksi tanpa test — risiko terhadap ~2000 data warga |
+| LOW | Sprint 3 (frontend reset password) explicit menyatakan "jangan jalankan kalau Sprint 2 belum selesai" — pastikan urutan eksekusi dijaga | Sprint 3 |
+
+### 💡 Rekomendasi PM
+1. Jalankan `docker compose up -d` untuk start Postgres & Redis dev sebelum mulai eksekusi Sprint 2 — ini blocker langsung untuk task migration di awal sprint.
+2. Tambah test coverage untuk `import.ts` & `warga.service.ts` (bulk-validate) — sudah tiga kali review berturut-turut tanpa tindak lanjut, dan fitur ini menyentuh data produksi ~2000 warga secara langsung.
+3. Eksekusi Sprint 2 penuh sesuai desain `jsonTransport` fallback (tidak perlu kredensial SMTP asli malam ini) sebelum lanjut ke Sprint 3 — jangan skip verifikasi `type-check` & `test` di akhir sprint.
+
+### 🏃 Next Sprint
+Sprint 3 — Reset Password Mandiri: Frontend (Desktop & Mobile)
+
+---
+
 ## [2026-07-05 10:11 WIB] — Sprint 1/3 | ✅ DONE
 
 **Project**: Database Warga GKJJ
