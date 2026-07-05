@@ -9,13 +9,10 @@ import {
 import QRCode from 'qrcode'
 import { useWargaList } from '@/hooks/useWarga'
 import { cn } from '@/lib/utils'
+import { STATUS_KEANGGOTAAN_LABEL, kirimWhatsApp } from '@/lib/kartuWhatsapp'
 
 // ── Helpers ──────────────────────────────────────────────────
 
-const STATUS_KEANGGOTAAN_LABEL: Record<string, string> = {
-  AKTIF: 'Aktif', NON_AKTIF: 'Non Aktif', KATEKUMEN: 'Katekumen',
-  PINDAH_KELUAR: 'Pindah Keluar', MENINGGAL: 'Meninggal',
-}
 const STATUS_KEANGGOTAAN_COLOR: Record<string, string> = {
   AKTIF: '#16a34a', NON_AKTIF: '#6b7280', KATEKUMEN: '#2563eb',
   PINDAH_KELUAR: '#ea580c', MENINGGAL: '#dc2626',
@@ -136,36 +133,6 @@ async function cetakIdCard(warga: any) {
   if (!win) { alert('Aktifkan popup untuk mencetak kartu.'); return }
   win.document.write(html)
   win.document.close()
-}
-
-function kirimWhatsApp(warga: any) {
-  const raw = (warga.whatsapp || warga.telepon || '').replace(/\D/g, '')
-  const phone = raw.startsWith('0') ? '62' + raw.slice(1) : raw
-  const kelompok = warga.keluarga?.kelompok
-  const wilayah = kelompok?.wilayah
-  const nomorTampil = warga.nomorInduk || warga.nomorAnggota || '-'
-  const memberUrl = `${window.location.origin}/m/${warga.id}`
-  const msg = [
-    `Halo ${warga.namaPanggilan || warga.namaLengkap}! 🙏`,
-    '',
-    `Berikut data keanggotaan Anda di *Jemaat GKJJ*:`,
-    '',
-    `📋 *Nama:* ${warga.namaLengkap}`,
-    `🔢 *No. Induk/Anggota:* ${nomorTampil}`,
-    `🏘️ *Kelompok:* ${kelompok?.nama ?? '-'}${wilayah ? ' · ' + wilayah.nama : ''}`,
-    `✅ *Status:* ${STATUS_KEANGGOTAAN_LABEL[warga.statusKeanggotaan] ?? warga.statusKeanggotaan}`,
-    `${warga.sudahBaptis ? '✓' : '✗'} Baptis   ${warga.sudahSidi ? '✓' : '✗'} Sidi`,
-    '',
-    `🪪 Kartu digital: ${memberUrl}`,
-    '',
-    `Untuk informasi lebih lanjut hubungi kantor gereja. ✝️`,
-  ].join('\n')
-
-  if (!phone) {
-    alert('Nomor WhatsApp / telepon belum terdaftar untuk anggota ini.')
-    return
-  }
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
 }
 
 // ── ID Card preview (on-screen) ──────────────────────────────

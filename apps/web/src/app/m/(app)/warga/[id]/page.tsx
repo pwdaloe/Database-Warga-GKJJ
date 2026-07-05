@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Pencil, CheckCircle2, X } from 'lucide-react'
+import { ArrowLeft, Loader2, Pencil, CheckCircle2, X, MessageCircle } from 'lucide-react'
 import { useWargaDetail, useWargaMutations } from '@/hooks/useWarga'
 import { differenceInYears, format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { kirimWhatsApp } from '@/lib/kartuWhatsapp'
 
 const STATUS_LABEL: Record<string, string> = {
   AKTIF: 'Aktif', NON_AKTIF: 'Non Aktif', KATEKUMEN: 'Katekumen',
@@ -146,6 +147,19 @@ export default function MobileWargaDetail() {
           </div>
         </div>
       </div>
+
+      {/* Kirim Kartu via WhatsApp */}
+      {!editMode && (
+        <div className="px-5 mt-4">
+          <button
+            onClick={() => kirimWhatsApp(warga)}
+            className="w-full h-14 bg-green-600 hover:bg-green-700 text-white text-base font-semibold rounded-2xl flex items-center justify-center gap-2 transition active:scale-[0.98]"
+          >
+            <MessageCircle size={18} />
+            Kirim Kartu via WhatsApp
+          </button>
+        </div>
+      )}
 
       {/* Notifikasi */}
       {saved && (

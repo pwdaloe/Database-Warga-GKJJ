@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, CreditCard, ChevronRight, Loader2 } from 'lucide-react'
+import { Search, CreditCard, ChevronRight, Loader2, MessageCircle } from 'lucide-react'
 import { useWargaList } from '@/hooks/useWarga'
 import { cn } from '@/lib/utils'
+import { kirimWhatsApp } from '@/lib/kartuWhatsapp'
 
 export default function MobileKartuPage() {
   const router = useRouter()
@@ -87,10 +88,13 @@ export default function MobileKartuPage() {
             {wargaList.map((w: any) => {
               const avatarBg = w.jenisKelamin === 'L' ? 'bg-blue-500' : 'bg-pink-500'
               return (
-                <button
+                <div
                   key={w.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => router.push(`/m/${w.id}`)}
-                  className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 text-left hover:shadow-md active:scale-[0.98] transition-all"
+                  onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/m/${w.id}`) }}
+                  className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 text-left hover:shadow-md active:scale-[0.98] transition-all cursor-pointer"
                 >
                   {w.fotoUrl ? (
                     <img
@@ -118,11 +122,21 @@ export default function MobileKartuPage() {
                       {w.keluarga?.kelompok?.nama ?? '—'}
                     </p>
                   </div>
-                  <div className="flex flex-col items-center gap-1 shrink-0">
-                    <CreditCard size={18} className="text-[#1e3a5f]" />
-                    <ChevronRight size={14} className="text-gray-300" />
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); kirimWhatsApp(w) }}
+                      className="p-2 rounded-full bg-green-50 active:scale-95 transition"
+                      aria-label="Kirim kartu via WhatsApp"
+                    >
+                      <MessageCircle size={18} className="text-green-600" />
+                    </button>
+                    <div className="flex flex-col items-center gap-1">
+                      <CreditCard size={18} className="text-[#1e3a5f]" />
+                      <ChevronRight size={14} className="text-gray-300" />
+                    </div>
                   </div>
-                </button>
+                </div>
               )
             })}
           </div>

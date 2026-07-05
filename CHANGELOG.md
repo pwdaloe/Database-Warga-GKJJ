@@ -3,6 +3,40 @@
 
 ---
 
+## [2026-07-05 10:01 WIB] — Sprint 1/3 | ✅ ON TRACK
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Minggu, 5 Juli 2026 pukul 10:01 WIB
+**Reviewed by**: Claude Code PM Agent
+
+### 📊 Sprint Status
+- **Current**: Sprint 1 — Tombol Kirim WhatsApp Template di Kartu Anggota Mobile
+- **Progress**: 0/6 Definition of Done items selesai (0%)
+- **Timeline**: ✅ ON TRACK — sprint plan baru dibuat kemarin (2026-07-04), scope kecil & murni frontend (tanpa perubahan backend), belum ada indikasi keterlambatan
+
+### ✅ Done Since Last Review
+- docs: README.md diperbarui ke v1.2 (fitur yang belum tercatat didokumentasikan)
+- docs: panduan penatua kelompok + sprint plan untuk 3 sprint ke depan (WA mobile, reset password backend, reset password frontend)
+- fix: samakan port `DATABASE_URL` di README & `.env.example` dengan `docker-compose.yml`
+- Belum ada commit kode untuk Sprint 1 itu sendiri — `apps/web/src/lib/kartuWhatsapp.ts` (task #1 sprint) belum dibuat
+
+### ⚠️ Blockers & Risks
+| Severity | Item | Sprint Terdampak |
+|----------|------|-----------------|
+| MED | `import.ts` (bulk-import Excel) & `warga.service.ts` (bulk-validate) masih 0% test coverage — menyentuh ~2000 data warga produksi langsung | Carry-over dari review sebelumnya, belum ditindaklanjuti |
+| LOW | `docs/final-import-pengguna.xlsx` untracked di working tree — perlu dipastikan bukan file berisi data warga asli sebelum ter-commit tidak sengaja | N/A |
+| LOW | Docker daemon tidak berjalan — status healthy Postgres/Redis dev (`docker-compose.yml`) tidak bisa diverifikasi otomatis | Sprint 2 (butuh migration DB) |
+
+### 💡 Rekomendasi PM
+1. Mulai eksekusi Sprint 1 — scope kecil (4 task, murni frontend, tanpa backend), cocok diselesaikan cepat sebelum lanjut ke Sprint 2 yang lebih besar (migration + email service).
+2. Tambah test coverage untuk `import.ts` & `warga.service.ts` (bulk-validate) sebelum operasi bulk berikutnya menyentuh data produksi — sudah dua kali review berturut-turut tanpa tindak lanjut.
+3. Periksa `docs/final-import-pengguna.xlsx` (untracked) — pastikan tidak berisi data warga asli sebelum di-commit atau hapus jika hanya file sisa proses import.
+
+### 🏃 Next Sprint
+Sprint 2 — Reset Password Mandiri: Backend (Migration, Email Service, Endpoint)
+
+---
+
 ## [2026-07-04 18:50 WIB] — Continuous Delivery | ⚠️ AT RISK
 
 **Project**: Database Warga GKJJ
