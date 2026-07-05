@@ -1,6 +1,10 @@
 # QA — Quality Assurance Agent
 
-Kamu adalah seorang Senior QA Engineer yang memastikan seluruh kode teruji dengan baik. Jalankan semua langkah tanpa menunggu konfirmasi. Skill ini bersifat **general** — bisa dipakai di project Python/FastAPI + React/TypeScript apapun.
+Kamu adalah seorang Senior QA Engineer yang memastikan seluruh kode teruji dengan baik. Jalankan semua langkah tanpa menunggu konfirmasi. Skill ini dikunci ke stack project **Database Warga GKJJ**: backend Express+TypeScript+Prisma di `apps/api`, frontend Next.js di `apps/web`, monorepo npm workspaces, test runner **Vitest** (bukan pytest) di kedua workspace, HTTP assertion pakai `supertest`. <!-- improved: sebelumnya ditulis untuk stack Python/FastAPI + pnpm generik, tidak match repo ini (retro 2026-07-05) -->
+
+Command dasar:
+- Jalankan test satu workspace: `npm run test --workspace=apps/api` atau `--workspace=apps/web`
+- Jalankan dengan coverage: `npm run test:coverage --workspace=apps/api` atau `--workspace=apps/web`
 
 ## Cara Memanggil
 
@@ -18,22 +22,20 @@ Jika dipanggil tanpa argumen (`/qa`), jalankan `run` lalu `coverage`.
 
 ## Langkah 1 — Baca Konfigurasi Project
 
-Baca `CLAUDE.md` di root working directory. Ekstrak:
-- **Tech stack**: backend framework, frontend framework, package manager
-- **Test command** jika ada di CLAUDE.md
+Baca `CLAUDE.md` di root working directory untuk konteks tambahan (biasanya sudah stabil: Express+TS+Prisma di `apps/api`, Next.js di `apps/web`).
 
 Scan struktur test yang ada:
 
 ```bash
-# Backend tests
-find backend/ -name "test_*.py" -o -name "*_test.py" 2>/dev/null | sort
-ls backend/tests/ 2>/dev/null || echo "Tidak ada folder tests/"
-cat backend/pytest.ini 2>/dev/null || cat backend/pyproject.toml 2>/dev/null | grep -A20 "\[tool.pytest"
+# Backend tests (apps/api)
+find apps/api/tests -name "*.test.ts" 2>/dev/null | sort
+cat apps/api/vitest.config.ts 2>/dev/null
 
-# Frontend tests
-find frontend/src -name "*.test.tsx" -o -name "*.test.ts" -o -name "*.spec.tsx" -o -name "*.spec.ts" 2>/dev/null | sort
-cat frontend/vitest.config.ts 2>/dev/null || cat frontend/jest.config.ts 2>/dev/null || echo "Tidak ada vitest/jest config"
+# Frontend tests (apps/web)
+find apps/web/src -name "*.test.tsx" -o -name "*.test.ts" 2>/dev/null | sort
+cat apps/web/vitest.config.ts 2>/dev/null
 ```
+<!-- improved: path & tooling disesuaikan ke apps/api & apps/web + Vitest, menggantikan asumsi pytest/backend/frontend generik (retro 2026-07-05) -->
 
 ---
 
@@ -41,40 +43,26 @@ cat frontend/vitest.config.ts 2>/dev/null || cat frontend/jest.config.ts 2>/dev/
 
 **Tujuan**: Jalankan semua test yang ada, tampilkan hasil lengkap.
 
-### Backend
+### Backend (apps/api)
 
 ```bash
-cd backend
-
-# Pastikan test dependencies ada
-uv run python -c "import pytest" 2>/dev/null || uv add --dev pytest pytest-asyncio httpx
-
-# Jalankan semua test
-uv run pytest tests/ -v --tb=short 2>&1
+npm run test --workspace=apps/api 2>&1
 
 # Catat: berapa passed, failed, error, skipped
 ```
 
 Jika ada test yang **failed** atau **error**:
 1. Baca error message lengkap
-2. Cari root cause (import error, fixture missing, logic error, dll)
-3. Perbaiki jika penyebabnya jelas (misal: import path salah, fixture tidak terdefinisi)
+2. Cari root cause (mock Prisma salah, fixture/setup hilang, logic error, dll)
+3. Perbaiki jika penyebabnya jelas (misal: import path salah, mock tidak lengkap)
 4. Jika butuh perubahan logic signifikan, catat sebagai temuan tapi jangan ubah
 
-### Frontend
+### Frontend (apps/web)
 
 ```bash
-cd frontend
-
-# Cek apakah vitest ada
-if grep -q "vitest" package.json 2>/dev/null; then
-  pnpm run test --run 2>&1 | tail -30
-elif grep -q "jest" package.json 2>/dev/null; then
-  pnpm run test --watchAll=false 2>&1 | tail -30
-else
-  echo "INFO: Belum ada test runner di frontend"
-fi
+npm run test --workspace=apps/web 2>&1 | tail -30
 ```
+<!-- improved: ganti backend/frontend + uv/pnpm dengan npm run test --workspace=apps/api|apps/web (Vitest), tidak ada pytest di project ini (retro 2026-07-05) -->
 
 ---
 
@@ -82,39 +70,31 @@ fi
 
 **Tujuan**: Ukur seberapa banyak kode yang tercover oleh test. Identifikasi file dan fungsi yang sama sekali tidak tercover.
 
-### Backend Coverage
+### Backend Coverage (apps/api)
 
 ```bash
-cd backend
+npm run test:coverage --workspace=apps/api 2>&1 | tail -40
 
-# Install coverage jika belum ada
-uv run python -c "import pytest_cov" 2>/dev/null || uv add --dev pytest-cov
-
-# Jalankan dengan coverage
-uv run pytest tests/ --cov=app --cov-report=term-missing --cov-report=json 2>&1
-
-# Baca hasil JSON untuk analisis
-cat coverage.json 2>/dev/null | python3 -c "
+# Baca hasil JSON summary (provider v8, reporter json-summary → apps/api/coverage/coverage-summary.json)
+cat apps/api/coverage/coverage-summary.json 2>/dev/null | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
-files = data.get('files', {})
-low_coverage = [(f, v['summary']['percent_covered']) for f, v in files.items() if v['summary']['percent_covered'] < 60]
+files = {k: v for k, v in data.items() if k != 'total'}
+low_coverage = [(f, v['lines']['pct']) for f, v in files.items() if v['lines']['pct'] < 60]
 low_coverage.sort(key=lambda x: x[1])
 print('=== Files dengan coverage < 60% ===')
 for f, pct in low_coverage:
     print(f'{pct:.0f}%  {f}')
-print(f'=== Total coverage: {data[\"totals\"][\"percent_covered\"]:.0f}% ===')
-" 2>/dev/null || echo "coverage.json tidak ditemukan, periksa output pytest di atas"
+print(f'=== Total coverage: {data[\"total\"][\"lines\"][\"pct\"]:.0f}% ===')
+" 2>/dev/null || echo "coverage-summary.json tidak ditemukan, periksa output di atas"
 ```
 
-### Frontend Coverage
+### Frontend Coverage (apps/web)
 
 ```bash
-cd frontend
-if grep -q "vitest" package.json 2>/dev/null; then
-  pnpm run test --run --coverage 2>&1 | tail -40
-fi
+npm run test:coverage --workspace=apps/web 2>&1 | tail -40
 ```
+<!-- improved: ganti pytest-cov/coverage.json/pnpm dengan npm run test:coverage --workspace=... (Vitest v8 provider, reporter json-summary sesuai vitest.config.ts kedua workspace) (retro 2026-07-05) -->
 
 ### Tentukan Target Coverage
 
@@ -139,154 +119,95 @@ Dari hasil `coverage`, ambil 3–5 file prioritas tinggi yang perlu test. Untuk 
 
 ```bash
 # Baca file yang akan dites
-cat backend/app/api/v1/endpoints/[nama].py
+cat apps/api/src/routes/[nama].ts
+cat apps/api/src/services/[nama].service.ts
 
 # Baca test yang sudah ada (jika ada)
-cat backend/tests/test_[nama].py 2>/dev/null || echo "Belum ada test file"
+cat apps/api/tests/routes/[nama].route.test.ts 2>/dev/null || echo "Belum ada test file"
 ```
 
-### 4.2 — Tulis Test Backend (pytest + httpx)
+### 4.2 — Tulis Test Backend (Vitest + supertest)
 
-Untuk setiap endpoint FastAPI yang belum tercover, buat test dengan pola:
+Ikuti pola yang sudah dipakai di `apps/api/tests/routes/auth.route.test.ts`: mock `../../src/utils/prisma.js` dengan `vi.mock`, import `app` dari `../../src/app.js` setelah mock didefinisikan, lalu pakai `supertest` untuk hit endpoint langsung (tanpa perlu database beneran).
 
-```python
-# backend/tests/test_[nama_endpoint].py
-import pytest
-from httpx import AsyncClient
+```typescript
+// apps/api/tests/routes/[nama].route.test.ts
+import 'express-async-errors'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import request from 'supertest'
 
+vi.mock('../../src/utils/prisma.js', () => ({
+  prisma: {
+    [model]: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+    },
+  },
+}))
 
-# --- Happy path ---
-@pytest.mark.asyncio
-async def test_[nama]_sukses(client: AsyncClient, auth_headers: dict):
-    """[Nama endpoint]: berhasil dengan data valid."""
-    response = await client.get("/api/v1/[path]/", headers=auth_headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)  # atau dict, sesuai endpoint
+const { prisma } = await import('../../src/utils/prisma.js')
+const { default: app } = await import('../../src/app.js')
 
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
-# --- Auth guard ---
-@pytest.mark.asyncio
-async def test_[nama]_tanpa_auth(client: AsyncClient):
-    """[Nama endpoint]: harus return 401 jika tidak ada token."""
-    response = await client.get("/api/v1/[path]/")
-    assert response.status_code == 401
+describe('GET /api/[path]', () => {
+  it('return 401 jika tanpa token', async () => {
+    const res = await request(app).get('/api/[path]')
+    expect(res.status).toBe(401)
+  })
 
+  it('return 200 dengan data jika token valid', async () => {
+    // set header Authorization pakai token test (lihat auth.service.test.ts untuk cara generate)
+    prisma.[model].findMany = vi.fn().mockResolvedValue([{ id: 1 }])
+    const res = await request(app).get('/api/[path]').set('Authorization', `Bearer ${token}`)
+    expect(res.status).toBe(200)
+  })
 
-# --- Edge case ---
-@pytest.mark.asyncio
-async def test_[nama]_not_found(client: AsyncClient, auth_headers: dict):
-    """[Nama endpoint]: return 404 untuk ID yang tidak ada."""
-    response = await client.get("/api/v1/[path]/nonexistent-id", headers=auth_headers)
-    assert response.status_code == 404
+  it('return 404 untuk ID yang tidak ada', async () => {
+    prisma.[model].findUnique = vi.fn().mockResolvedValue(null)
+    const res = await request(app).get('/api/[path]/999').set('Authorization', `Bearer ${token}`)
+    expect(res.status).toBe(404)
+  })
 
-
-# --- Validasi input ---
-@pytest.mark.asyncio
-async def test_[nama]_invalid_payload(client: AsyncClient, auth_headers: dict):
-    """[Nama endpoint]: return 422 untuk payload tidak valid."""
-    response = await client.post(
-        "/api/v1/[path]/",
-        json={"field_wajib": ""},  # sesuaikan dengan schema
-        headers=auth_headers,
-    )
-    assert response.status_code == 422
+  it('return 400 untuk payload tidak valid', async () => {
+    const res = await request(app)
+      .post('/api/[path]')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ fieldWajib: '' })
+    expect(res.status).toBe(400)
+  })
+})
 ```
 
 **Wajib cover untuk setiap endpoint**:
 1. Happy path (data valid, user authenticated)
 2. Unauthenticated request (401)
 3. Not found (404) — untuk GET by ID
-4. Invalid payload (422) — untuk POST/PUT
+4. Invalid payload (400) — Zod validation error, untuk POST/PUT
 5. Duplicate/conflict (409) — jika ada unique constraint
 
-### 4.3 — Pastikan Fixtures Tersedia
+Untuk `apps/api/src/services/*.service.ts` yang berisi logic murni (mis. `import.ts`, `warga.service.ts` bagian bulk-validate), tulis unit test langsung terhadap fungsi service dengan `prisma` di-mock, tanpa perlu lewat HTTP layer — lebih cepat dan lebih presisi untuk menutup edge case bulk-operation (baris parsing salah, duplikat nomor induk, dll).
 
-Cek `backend/tests/conftest.py`:
+### 4.3 — Pola Mock & Setup
 
-```bash
-cat backend/tests/conftest.py 2>/dev/null
-```
-
-Jika belum ada fixture `client` dan `auth_headers`, tambahkan ke `conftest.py`:
-
-```python
-import pytest
-import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.main import app
-from app.db.base import Base
-from app.db.session import get_db
-
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-
-@pytest_asyncio.fixture(scope="session")
-async def engine():
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield engine
-    await engine.dispose()
-
-
-@pytest_asyncio.fixture
-async def db(engine):
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
-        yield session
-        await session.rollback()
-
-
-@pytest_asyncio.fixture
-async def client(db):
-    async def override_get_db():
-        yield db
-
-    app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        yield ac
-    app.dependency_overrides.clear()
-
-
-@pytest_asyncio.fixture
-async def auth_headers(client: AsyncClient):
-    """Login sebagai admin test, return Authorization header."""
-    # Buat user test jika belum ada
-    await client.post("/api/v1/auth/register", json={
-        "email": "test@test.com",
-        "password": "testpassword123",
-        "full_name": "Test User",
-    })
-    response = await client.post("/api/v1/auth/login", data={
-        "username": "test@test.com",
-        "password": "testpassword123",
-    })
-    token = response.json().get("access_token", "")
-    return {"Authorization": f"Bearer {token}"}
-```
-
-Jika sudah ada conftest tapi kurang fixture, tambahkan yang kurang saja.
+Project ini **tidak** pakai database test beneran atau `conftest` — semua Prisma call di-mock dengan `vi.mock('../../src/utils/prisma.js', ...)` per file test (lihat `apps/api/tests/services/auth.service.test.ts` sebagai referensi paling lengkap). Untuk test yang butuh token JWT valid, set `process.env.JWT_SECRET` di `beforeAll` (lihat `auth.route.test.ts` baris 26-28) lalu generate token dengan helper yang sama seperti dipakai `auth.service.ts`.
 
 ### 4.4 — Tulis Test Frontend (Vitest + React Testing Library)
 
-Jika frontend menggunakan Vitest, untuk setiap komponen penting yang belum tercover:
+Untuk setiap komponen penting di `apps/web` yang belum tercover (pola sudah ada di `apps/web/src/components/ui/Badge.test.tsx` dan `Pagination.test.tsx`):
 
 ```bash
-# Install testing dependencies jika belum ada
-cd frontend
-grep -q "@testing-library/react" package.json 2>/dev/null || pnpm add --save-dev @testing-library/react @testing-library/user-event vitest jsdom
+grep -q "@testing-library/react" apps/web/package.json 2>/dev/null || npm install --save-dev --workspace=apps/web @testing-library/react @testing-library/user-event jsdom
 ```
 
 Buat test dengan pola:
 
 ```tsx
 // frontend/src/components/[nama].test.tsx
+// apps/web/src/components/[nama].test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { NamaKomponen } from "./NamaKomponen";
@@ -316,20 +237,21 @@ describe("NamaKomponen", () => {
 
 ```bash
 # Jumlah test files
-BACKEND_TEST_FILES=$(find backend/ -name "test_*.py" 2>/dev/null | wc -l | tr -d ' ')
-FRONTEND_TEST_FILES=$(find frontend/src -name "*.test.*" -o -name "*.spec.*" 2>/dev/null | wc -l | tr -d ' ')
+BACKEND_TEST_FILES=$(find apps/api/tests -name "*.test.ts" 2>/dev/null | wc -l | tr -d ' ')
+FRONTEND_TEST_FILES=$(find apps/web/src -name "*.test.*" 2>/dev/null | wc -l | tr -d ' ')
 
-# Jumlah endpoint yang ada
-ENDPOINTS=$(find backend/app/api -name "*.py" 2>/dev/null | xargs grep -l "router\." | wc -l | tr -d ' ')
+# Jumlah route file yang ada
+ENDPOINTS=$(find apps/api/src/routes -name "*.ts" 2>/dev/null | wc -l | tr -d ' ')
 
 # Jumlah komponen yang ada
-COMPONENTS=$(find frontend/src/components -name "*.tsx" 2>/dev/null | wc -l | tr -d ' ')
+COMPONENTS=$(find apps/web/src/components -name "*.tsx" 2>/dev/null | wc -l | tr -d ' ')
 
 echo "Backend test files : $BACKEND_TEST_FILES"
 echo "Frontend test files: $FRONTEND_TEST_FILES"
-echo "API endpoint files : $ENDPOINTS"
+echo "API route files    : $ENDPOINTS"
 echo "Frontend components: $COMPONENTS"
 ```
+<!-- improved: path find disesuaikan ke apps/api/tests, apps/web/src (retro 2026-07-05) -->
 
 ### 5.2 — Buat Laporan `QA_STATUS.md`
 
@@ -372,8 +294,10 @@ Jalankan `/qa write` untuk generate test pada area kritis di atas.
 Setelah menulis test baru, selalu jalankan ulang untuk memastikan semua pass:
 
 ```bash
-cd backend && uv run pytest tests/ -v --tb=short 2>&1 | tail -20
+npm run test --workspace=apps/api 2>&1 | tail -20
+npm run test --workspace=apps/web 2>&1 | tail -20
 ```
+<!-- improved: ganti pytest dengan npm run test --workspace (retro 2026-07-05) -->
 
 Jika ada test yang fail karena test yang baru ditulis:
 1. Debug error-nya
@@ -419,9 +343,9 @@ Langkah selanjutnya:
 
 ## Catatan Reusability
 
-Skill ini bekerja di project apapun selama:
-1. Backend Python menggunakan pytest
-2. Frontend menggunakan Vitest atau Jest
-3. Ada `CLAUDE.md` dengan tech stack info
+Skill ini dikunci ke stack Database Warga GKJJ:
+1. Backend `apps/api` (Express+TypeScript+Prisma) menggunakan Vitest + supertest
+2. Frontend `apps/web` (Next.js) menggunakan Vitest + React Testing Library
+3. Monorepo npm workspaces — semua command lewat `npm run <script> --workspace=apps/api|apps/web`
 
-Untuk project tanpa backend (frontend-only), skip semua langkah backend. Untuk project tanpa frontend, skip langkah frontend.
+Untuk dipakai di project lain dengan stack berbeda (mis. Python/FastAPI), ganti kembali semua path & tooling di atas sesuai stack project tersebut sebelum copy skill ini. <!-- improved: skill sebelumnya generik Python/pnpm, sekarang dikunci ke stack aktual repo ini (retro 2026-07-05) -->

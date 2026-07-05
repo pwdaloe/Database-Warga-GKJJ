@@ -141,58 +141,28 @@ Jadi severity aktual untuk API keys AI:
 
 ## Langkah 6 — Cek Dependencies
 
-**Backend:**
+<!-- improved: sebelumnya asumsi backend Python (uv/.venv) + frontend pnpm generik, tidak match monorepo npm workspaces apps/api & apps/web di project ini (retro 2026-07-05) -->
+
+**Backend (`apps/api`):**
 ```bash
-if [ -f backend/pyproject.toml ]; then
-  if [ -d backend/.venv ]; then
-    echo "Backend .venv: ✅ ada"
-    # Cek apakah lock file sync
-    cd backend && uv sync --dry-run 2>/dev/null | grep -E "(add|remove|update)" | head -5 || echo "Dependencies up to date ✅"
-    cd ..
-  else
-    echo "Backend .venv: ❌ belum dibuat — jalankan: cd backend && uv sync"
-  fi
+if [ -d apps/api/node_modules ]; then
+  echo "apps/api/node_modules: ✅ ada"
+  # Cek Prisma client sudah di-generate & migration status
+  cd apps/api && npx prisma migrate status 2>&1 | tail -10
+  cd ../..
+else
+  echo "apps/api/node_modules: ❌ belum ada — jalankan: npm install (dari root, npm workspaces)"
 fi
 ```
 
-<!-- improved: tambah passlib/bcrypt compatibility check — retro finding Sprint 3 (2026-06-28) -->
-
-**Backend — Passlib/Bcrypt Compatibility Check:**
+**Frontend (`apps/web`):**
 ```bash
-if [ -d backend/.venv ]; then
-  cd backend
-  # Cek bcrypt versi
-  BCRYPT_VER=$(uv run python -c "import bcrypt; print(bcrypt.__version__)" 2>/dev/null)
-  if [ -n "$BCRYPT_VER" ]; then
-    echo "bcrypt $BCRYPT_VER ✅"
-    # Cek apakah passlib juga ada (konflik dengan bcrypt v5+)
-    PASSLIB_EXISTS=$(uv run python -c "import passlib; print('yes')" 2>/dev/null)
-    if [ "$PASSLIB_EXISTS" = "yes" ]; then
-      MAJOR_VER=$(echo "$BCRYPT_VER" | cut -d. -f1)
-      if [ "$MAJOR_VER" -ge 5 ]; then
-        echo "⚠️  WARNING: passlib + bcrypt v5+ = konflik! passlib tidak support bcrypt v5."
-        echo "   Solusi: gunakan bcrypt langsung (tanpa passlib) untuk password hashing."
-        echo "   Atau: uv add 'bcrypt<5' untuk downgrade (tidak direkomendasikan)"
-      fi
-    fi
-  else
-    echo "INFO: bcrypt belum terinstall (normal jika sprint auth belum diimplementasi)"
-  fi
-  cd ..
-fi
-```
-
-**Frontend:**
-```bash
-if [ -f frontend/package.json ]; then
-  if [ -d frontend/node_modules ]; then
-    echo "Frontend node_modules: ✅ ada"
-    # Cek outdated packages
-    cd frontend && pnpm outdated 2>/dev/null | head -10 || true
-    cd ..
-  else
-    echo "Frontend node_modules: ❌ belum ada — jalankan: cd frontend && pnpm install"
-  fi
+if [ -d apps/web/node_modules ]; then
+  echo "apps/web/node_modules: ✅ ada"
+  cd apps/web && npm outdated 2>/dev/null | head -10 || true
+  cd ../..
+else
+  echo "apps/web/node_modules: ❌ belum ada — jalankan: npm install (dari root, npm workspaces)"
 fi
 ```
 
@@ -303,8 +273,8 @@ Format file:
 
 | Component | Status |
 |-----------|--------|
-| Backend .venv | ✅ ada |
-| Frontend node_modules | ✅ ada |
+| apps/api node_modules | ✅ ada |
+| apps/web node_modules | ✅ ada |
 
 ## 🔀 Git
 
@@ -327,7 +297,7 @@ Format file:
 Hanya kirim email jika ditemukan kondisi berikut:
 - Ada Docker service yang `Exit` atau `unhealthy`
 - `DATABASE_URL` atau `REDIS_URL` kosong
-- `backend/.venv` atau `frontend/node_modules` tidak ada
+- `apps/api/node_modules` atau `apps/web/node_modules` tidak ada
 - Disk usage > 85%
 
 Jika ada issue kritis:

@@ -1,0 +1,102 @@
+{
+  "project": "Database Warga GKJJ",
+  "last_updated": "2026-07-05",
+  "sprints": [
+    {
+      "number": 1,
+      "name": "Tombol Kirim WhatsApp Template di Kartu Anggota Mobile",
+      "commit": "d63f5a2",
+      "status": "done",
+      "blockers_count": 0,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 4,
+      "tasks_done": 4,
+      "completion_pct": 100
+    }
+  ],
+  "recurring_blockers": [
+    {
+      "item": "import.ts (bulk-import Excel) & warga.service.ts (bulk-validate) masih 0% test coverage, menyentuh ~2000 data warga produksi langsung",
+      "occurrences": 2,
+      "severity": "MED",
+      "first_seen": "2026-07-04 (Continuous Delivery review)",
+      "last_seen": "2026-07-05 (Sprint 1 review)",
+      "resolved": false,
+      "root_cause": "/qa coverage subcommand ditulis untuk stack Python/FastAPI + pytest + pnpm (template generik), sedangkan project ini Express/TypeScript + Prisma (apps/api) dan Next.js (apps/web) dengan Vitest + npm workspaces. Perintah pytest/coverage.json/pnpm di qa.md tidak berlaku sama sekali di repo ini, jadi rekomendasi PM untuk menambah test tidak pernah bisa dieksekusi otomatis oleh /qa."
+    },
+    {
+      "item": "Docker daemon tidak berjalan \u2014 status healthy Postgres/Redis dev (docker-compose.yml) tidak terverifikasi",
+      "occurrences": 2,
+      "severity": "LOW",
+      "first_seen": "2026-07-04",
+      "last_seen": "2026-07-05",
+      "resolved": false,
+      "root_cause": "Butuh Docker Desktop dinyalakan manual oleh user, di luar kendali agent \u2014 bukan gap skill, hanya reminder berulang."
+    }
+  ],
+  "skill_improvement_candidates": [
+    {
+      "skill": "qa.md",
+      "issue": "Seluruh isi skill (Langkah 2-4, contoh kode test) ditulis untuk backend Python/FastAPI (pytest, pytest-asyncio, httpx, coverage.json) dan frontend pnpm \u2014 tidak sesuai stack project ini (Express+TS+Prisma di apps/api, Next.js di apps/web, Vitest, npm workspaces). Subcommand 'coverage' tidak bisa jalan sama sekali.",
+      "suggested_fix": "Ganti semua referensi backend/.venv, pytest, pytest-asyncio, httpx, coverage.json, pnpm dengan: apps/api (Vitest + supertest untuk endpoint test), apps/web (Vitest + Testing Library), npm run test --workspace=apps/api -- --coverage / --workspace=apps/web. Sesuaikan path test coverage report Vitest (v8/istanbul json summary) menggantikan parsing coverage.json ala pytest-cov.",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Ganti seluruh referensi pytest/pytest-asyncio/httpx/coverage.json/pnpm dengan npm run test(:coverage) --workspace=apps/api|apps/web (Vitest + supertest), contoh test disesuaikan dengan pola nyata di apps/api/tests (vi.mock prisma) dan apps/web (Testing Library)."
+    },
+    {
+      "skill": "devops.md",
+      "issue": "Pre-flight check memakai backend/.venv, uv sync, uv add bcrypt, frontend/node_modules, pnpm outdated \u2014 semua asumsi stack Python/pnpm generik, path juga salah (harusnya apps/api, apps/web).",
+      "suggested_fix": "Ganti pengecekan .venv/uv dengan apps/api/node_modules & npx prisma generate/migrate status; ganti pnpm dengan npm; ganti path frontend/backend dengan apps/web, apps/api.",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Ganti pengecekan backend/.venv (uv sync) & frontend/node_modules (pnpm) dengan apps/api/node_modules & apps/web/node_modules (npm), tambah npx prisma migrate status, hapus blok passlib/bcrypt Python yang tidak relevan."
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Pre-flight checks Langkah 4 (Python package compatibility: asyncpg, bcrypt, passlib, email-validator; TypeScript baseline pakai frontend/, pnpm; pytest.ini asyncio config) semuanya tidak relevan untuk project ini \u2014 sudah harus diadaptasi manual saat eksekusi Sprint 1 (skip semua Python check, ganti frontend/ jadi apps/web, pnpm jadi npm).",
+      "suggested_fix": "Buat versi pre-flight khusus TypeScript monorepo: cek apps/api/node_modules & apps/web/node_modules (bukan .venv), cek apps/api/.env & apps/web/.env.local, jalankan npx tsc --noEmit di apps/web sebagai baseline, hapus seluruh blok Python (asyncpg/bcrypt/pytest.ini) dari skill ini.",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Hapus pre-flight Python (asyncpg/bcrypt/passlib/pytest.ini asyncio), ganti dengan baseline type-check npm run type-check --workspace=apps/api|apps/web dan cek Prisma migrate status. Perbaiki path .env, aturan implementasi, dan Langkah 7 format/lint ke stack Express+TS/Next.js."
+    },
+    {
+      "skill": "pm.md",
+      "issue": "Langkah 4C (deteksi blocker dependencies) mengecek backend/.venv (uv sync) dan frontend/node_modules (pnpm install) \u2014 path dan tooling salah untuk project ini (apps/api, apps/web, npm).",
+      "suggested_fix": "Ganti dengan: ls apps/api/node_modules, ls apps/web/node_modules (npm install), dan cek apps/api/.env + apps/web/.env.local alih-alih .env tunggal di root.",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Ganti path & tooling deteksi blocker dependency (Langkah 4B/4C) dari backend/.venv+uv & frontend/node_modules+pnpm ke apps/api/node_modules & apps/web/node_modules dengan npm, dan .env check ke apps/api/.env + apps/web/.env.local."
+    }
+  ],
+  "improvement_history": [
+    {
+      "date": "2026-07-05",
+      "skill": "qa.md",
+      "change": "Ganti seluruh referensi pytest/pytest-asyncio/httpx/coverage.json/pnpm dengan npm run test(:coverage) --workspace=apps/api|apps/web (Vitest + supertest), contoh test disesuaikan dengan pola nyata di apps/api/tests (vi.mock prisma) dan apps/web (Testing Library).",
+      "trigger": "RETRO finding 2026-07-05: skill files masih pakai path/tooling template Python/FastAPI+pnpm generik, tidak match stack Express+TS+Prisma (apps/api) / Next.js (apps/web) + npm workspaces + Vitest project ini"
+    },
+    {
+      "date": "2026-07-05",
+      "skill": "devops.md",
+      "change": "Ganti pengecekan backend/.venv (uv sync) & frontend/node_modules (pnpm) dengan apps/api/node_modules & apps/web/node_modules (npm), tambah npx prisma migrate status, hapus blok passlib/bcrypt Python yang tidak relevan.",
+      "trigger": "RETRO finding 2026-07-05: skill files masih pakai path/tooling template Python/FastAPI+pnpm generik, tidak match stack Express+TS+Prisma (apps/api) / Next.js (apps/web) + npm workspaces + Vitest project ini"
+    },
+    {
+      "date": "2026-07-05",
+      "skill": "sprint.md",
+      "change": "Hapus pre-flight Python (asyncpg/bcrypt/passlib/pytest.ini asyncio), ganti dengan baseline type-check npm run type-check --workspace=apps/api|apps/web dan cek Prisma migrate status. Perbaiki path .env, aturan implementasi, dan Langkah 7 format/lint ke stack Express+TS/Next.js.",
+      "trigger": "RETRO finding 2026-07-05: skill files masih pakai path/tooling template Python/FastAPI+pnpm generik, tidak match stack Express+TS+Prisma (apps/api) / Next.js (apps/web) + npm workspaces + Vitest project ini"
+    },
+    {
+      "date": "2026-07-05",
+      "skill": "pm.md",
+      "change": "Ganti path & tooling deteksi blocker dependency (Langkah 4B/4C) dari backend/.venv+uv & frontend/node_modules+pnpm ke apps/api/node_modules & apps/web/node_modules dengan npm, dan .env check ke apps/api/.env + apps/web/.env.local.",
+      "trigger": "RETRO finding 2026-07-05: skill files masih pakai path/tooling template Python/FastAPI+pnpm generik, tidak match stack Express+TS+Prisma (apps/api) / Next.js (apps/web) + npm workspaces + Vitest project ini"
+    }
+  ]
+}

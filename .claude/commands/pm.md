@@ -51,24 +51,26 @@ Jalankan pengecekan berikut secara paralel:
 
 **A. Environment variables kosong:**
 ```bash
-grep -E "^[A-Z_]+=\s*$" .env 2>/dev/null
+grep -E "^[A-Z_]+=\s*$" apps/api/.env 2>/dev/null
+grep -E "^[A-Z_]+=\s*$" apps/web/.env.local 2>/dev/null
 ```
 Setiap variabel kosong adalah potensi blocker — cocokkan dengan sprint mana yang membutuhkannya.
 
 **B. Direktori yang seharusnya ada tapi kosong:**
 ```bash
-find backend/app -type d -empty 2>/dev/null
-find frontend/src -type d -empty 2>/dev/null
+find apps/api/src -type d -empty 2>/dev/null
+find apps/web/src -type d -empty 2>/dev/null
 ```
 
 **C. Dependencies yang belum diinstall:**
 ```bash
-# Backend: cek apakah .venv ada
-ls backend/.venv 2>/dev/null || echo "BLOCKER: backend .venv belum dibuat — jalankan uv sync"
+# Backend (apps/api)
+ls apps/api/node_modules 2>/dev/null | head -1 || echo "BLOCKER: apps/api/node_modules belum ada — jalankan npm install"
 
-# Frontend: cek apakah node_modules ada
-ls frontend/node_modules 2>/dev/null | head -1 || echo "BLOCKER: node_modules belum ada — jalankan pnpm install"
+# Frontend (apps/web)
+ls apps/web/node_modules 2>/dev/null | head -1 || echo "BLOCKER: apps/web/node_modules belum ada — jalankan npm install"
 ```
+<!-- improved: path & tooling diganti ke apps/api & apps/web, npm workspaces — sebelumnya asumsi backend/.venv (uv) & frontend/ (pnpm) generik (retro 2026-07-05) -->
 
 **D. Docker services:**
 ```bash

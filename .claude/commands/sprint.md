@@ -4,10 +4,8 @@ Kamu adalah seorang Senior Full-Stack Engineer yang mengeksekusi sprint secara m
 
 ## Langkah 1 — Baca Konfigurasi Project
 
-Baca `CLAUDE.md` di root working directory. Ekstrak:
-- **Tech stack**: backend language/framework, frontend framework, package manager
-- **Konvensi kode**: format, linting, naming conventions
-- **Package manager**: apakah backend pakai `uv`, `pip`, atau `poetry`; apakah frontend pakai `pnpm`, `npm`, atau `yarn`
+Baca `CLAUDE.md` di root working directory. Project ini dikunci ke stack: backend Express+TypeScript+Prisma di `apps/api`, frontend Next.js di `apps/web`, monorepo **npm workspaces** (bukan uv/pnpm/yarn). <!-- improved: sebelumnya generik multi-package-manager, dikunci ke stack aktual repo ini (retro 2026-07-05) --> Ekstrak juga:
+- **Konvensi kode**: format, linting, naming conventions dari `CLAUDE.md`
 - **Sprint path**: lokasi folder `sprints/`
 
 ## Langkah 2 — Tentukan Sprint yang Aktif
@@ -33,92 +31,47 @@ Gunakan TodoWrite untuk mencatat semua task dari sprint file. Satu task = satu t
 Sebelum mulai coding, pastikan environment siap. Jalankan pengecekan cepat:
 
 ```bash
-# Docker services
+# Docker services (postgres + redis dev, lihat docker-compose.yml)
 docker compose ps 2>/dev/null
 
-# Dependencies backend
-ls backend/.venv 2>/dev/null | head -1 || echo "WARNING: uv sync belum dijalankan"
+# Dependencies backend (apps/api)
+ls apps/api/node_modules 2>/dev/null | head -1 || echo "WARNING: npm install belum dijalankan"
 
-# Dependencies frontend
-ls frontend/node_modules 2>/dev/null | head -1 || echo "WARNING: pnpm install belum dijalankan"
+# Dependencies frontend (apps/web)
+ls apps/web/node_modules 2>/dev/null | head -1 || echo "WARNING: npm install belum dijalankan"
 
-# .env ada?
-ls .env 2>/dev/null || echo "WARNING: .env tidak ditemukan"
+# .env ada? (apps/api/.env untuk backend, apps/web/.env.local untuk frontend)
+ls apps/api/.env 2>/dev/null || echo "WARNING: apps/api/.env tidak ditemukan"
+ls apps/web/.env.local 2>/dev/null || echo "WARNING: apps/web/.env.local tidak ditemukan"
 ```
 
 Jika ada service Docker yang tidak running, jalankan `docker compose up -d` dan tunggu hingga healthy sebelum lanjut.
 
-<!-- improved: tambah 3 pre-flight checks berdasarkan retro findings Sprint 2,3,7,8,10 (2026-06-28) -->
+<!-- improved: hapus pre-flight Python (asyncpg/bcrypt/passlib/pytest.ini) yang tidak relevan — project ini Express+TS+Prisma, bukan Python/FastAPI. Ganti dengan baseline TypeScript untuk kedua workspace (retro 2026-07-05) -->
 
-### Pre-flight: Python Package Compatibility (untuk sprint backend)
+### Pre-flight: TypeScript Baseline (backend & frontend)
 
-Jika sprint mengandung task backend Python, jalankan import test untuk packages kritis **sebelum** mulai coding:
+Jalankan `type-check` di workspace yang relevan dengan sprint **sebelum** mulai coding, untuk mengetahui state awal (baseline) sebelum ada perubahan:
 
 ```bash
-# Cek packages kritis yang sering menyebabkan masalah
-if [ -d backend/.venv ]; then
-  # asyncpg — wajib untuk async SQLAlchemy
-  cd backend && uv run python -c "import asyncpg; print('asyncpg ✅')" 2>/dev/null || \
-    echo "WARNING: asyncpg tidak tersedia — jalankan: cd backend && uv add asyncpg"
+if [ -d apps/api/node_modules ]; then
+  echo "=== apps/api type-check baseline ==="
+  npm run type-check --workspace=apps/api 2>&1 | tail -20 || true
+fi
 
-  # bcrypt — cek versi dan passlib compatibility
-  uv run python -c "
-import bcrypt
-print(f'bcrypt {bcrypt.__version__} ✅')
-try:
-    import passlib
-    print('WARNING: passlib terdeteksi — bisa konflik dengan bcrypt v5+. Gunakan bcrypt langsung.')
-except ImportError:
-    pass
-" 2>/dev/null || echo "INFO: bcrypt belum terinstall (normal jika bukan sprint auth)"
-
-  # pydantic[email] — wajib jika ada EmailStr
-  uv run python -c "import email_validator; print('email-validator ✅')" 2>/dev/null || \
-    echo "INFO: email-validator belum ada — install jika sprint butuh EmailStr: uv add pydantic[email]"
-  cd ..
+if [ -d apps/web/node_modules ]; then
+  echo "=== apps/web type-check baseline ==="
+  npm run type-check --workspace=apps/web 2>&1 | tail -20 || true
 fi
 ```
 
-### Pre-flight: TypeScript Baseline (untuk sprint frontend)
+### Pre-flight: Prisma Schema & Migration (untuk sprint yang menyentuh `apps/api/prisma`)
 
-Jika sprint mengandung task frontend TypeScript, jalankan `tsc --noEmit` **sebelum** mulai coding untuk mengetahui state awal:
-
-```bash
-if [ -d frontend/node_modules ]; then
-  echo "=== TypeScript baseline check ==="
-  cd frontend && pnpm exec tsc --noEmit 2>&1 | head -20 || true
-
-  # Pastikan vite-env.d.ts ada (wajib untuk import.meta.env)
-  if [ ! -f src/vite-env.d.ts ]; then
-    echo "WARNING: src/vite-env.d.ts tidak ada — buat file ini sebelum mulai:"
-    echo '  echo '"'"'/// <reference types="vite/client" />'"'"' > frontend/src/vite-env.d.ts'
-  else
-    echo "vite-env.d.ts ✅"
-  fi
-  cd ..
-fi
-```
-
-### Pre-flight: pytest.ini Asyncio Config (untuk sprint yang mengandung test)
-
-Jika sprint mengandung task test (integration test, e2e), verifikasi konfigurasi asyncio **sebelum** mulai:
+Jika sprint mengandung task migration/schema Prisma, cek status migration **sebelum** mulai:
 
 ```bash
-if ls backend/tests/*.py 2>/dev/null | head -1 | grep -q ".py"; then
-  echo "=== pytest.ini asyncio check ==="
-  if [ -f backend/pytest.ini ]; then
-    grep "asyncio_mode" backend/pytest.ini && echo "asyncio_mode ✅" || \
-      echo "WARNING: asyncio_mode belum dikonfigurasi di pytest.ini — tambahkan:"
-      echo "  asyncio_mode = auto"
-      echo "  asyncio_default_fixture_loop_scope = session"
-      echo "  asyncio_default_test_loop_scope = session"
-  else
-    echo "WARNING: backend/pytest.ini tidak ditemukan — buat file ini untuk asyncpg stability:"
-    echo "  [pytest]"
-    echo "  asyncio_mode = auto"
-    echo "  asyncio_default_fixture_loop_scope = session"
-    echo "  asyncio_default_test_loop_scope = session"
-  fi
+if [ -d apps/api/node_modules ]; then
+  cd apps/api && npx prisma migrate status 2>&1 | tail -10; cd ../..
 fi
 ```
 
@@ -135,12 +88,12 @@ Kerjakan setiap task dari Todo List secara berurutan. Untuk setiap task:
 
 ### Aturan Implementasi
 
-- **Backend Python**: gunakan type hints penuh, async/await untuk DB operations, Pydantic v2 untuk schemas
-- **Frontend TypeScript**: strict mode, functional components + hooks, Tailwind untuk styling
+- **Backend (`apps/api`)**: Express + TypeScript strict mode, Prisma untuk akses data, Zod untuk validasi input
+- **Frontend (`apps/web`)**: Next.js App Router + React 19, functional components + hooks, Tailwind untuk styling
 - **Jangan buat file komentar/dokumentasi** kecuali sprint memintanya
 - **Jika ada package baru dibutuhkan**: install langsung tanpa tanya
-  - Backend: `cd backend && uv add nama-package`
-  - Frontend: `cd frontend && pnpm add nama-package`
+  - Backend: `npm install nama-package --workspace=apps/api`
+  - Frontend: `npm install nama-package --workspace=apps/web`
 - **Jika ada port conflict**: gunakan port alternatif yang tersedia
 - **Jika task ambigu**: interpretasikan sesuai tech stack yang ada di CLAUDE.md, lanjutkan
 
@@ -165,12 +118,13 @@ Semua verifikasi harus ✅ sebelum lanjut ke langkah berikutnya.
 ## Langkah 7 — Format dan Lint
 
 ```bash
-# Backend (jika ada kode Python baru)
-cd backend && uv run ruff format . 2>/dev/null && uv run ruff check . --fix 2>/dev/null; cd ..
+# Backend (apps/api) — type-check, tidak ada ESLint terkonfigurasi di project ini
+npm run type-check --workspace=apps/api 2>&1 | tail -20
 
-# Frontend (jika ada kode TypeScript baru)
-cd frontend && pnpm exec tsc --noEmit 2>/dev/null; cd ..
+# Frontend (apps/web) — type-check (next lint belum dikonfigurasi, skip)
+npm run type-check --workspace=apps/web 2>&1 | tail -20
 ```
+<!-- improved: ganti ruff/pnpm (Python) dengan npm run type-check --workspace, sesuai stack Express+TS/Next.js repo ini (retro 2026-07-05) -->
 
 Perbaiki semua error lint sebelum commit.
 
