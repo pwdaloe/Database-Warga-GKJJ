@@ -133,6 +133,16 @@ Blocker yang muncul lebih dari sekali = masalah sistemik, bukan kebetulan. Untuk
 - Apakah ada skill yang seharusnya mencegah ini?
 - Skill mana yang perlu diupdate?
 
+**Eskalasi otomatis untuk recurring blocker ≥3x:** kalau sebuah blocker di `learning_log.json`
+punya `occurrences >= 3` dan `resolved: false`, ini bukan lagi "catatan naratif yang boleh lewat" —
+rekomendasi biasa sudah terbukti tidak cukup untuk 3 review berturut-turut. Wajib lakukan salah satu:
+1. Usulkan secara eksplisit di section `### 💡 Rekomendasi untuk Siklus Berikutnya` agar item ini
+   dijadikan **task nyata** di sprint berikutnya (bukan sekadar poin rekomendasi lagi), atau
+2. Naikkan severity satu tingkat (mis. MED → HIGH) di `learning_log.json` untuk entry tersebut, agar
+   `/pm` melaporkannya dengan bobot yang sesuai dan tidak terus dianggap "boleh ditunda".
+
+<!-- improved: tambah aturan eskalasi otomatis untuk recurring blocker >=3x occurrence — retro Sprint 2 (2026-07-05), ditemukan blocker test coverage sudah 3x direkomendasikan tanpa tindak lanjut nyata -->
+
 ### B. Pola Git (Masalah Kode)
 Commit dengan kata kunci fix/revert/hotfix = ada sesuatu yang salah pada implementasi pertama. Untuk setiap pola:
 - Di sprint berapa ini terjadi?

@@ -3,6 +3,87 @@
 
 ---
 
+## [2026-07-05] — Retrospektif Sprint 2
+
+**Project**: Database Warga GKJJ
+**Scope**: Sprint 2
+**Reviewed**: Minggu, 5 Juli 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 1 sprint (Sprint 2) |
+| Total tasks | 8 tasks (8/8 selesai) |
+| Fix/revert commits (pasca sprint) | 0 |
+| Unique blockers (Sprint 2) | 2 baru (port conflict, schema drift) |
+| Recurring blockers (muncul >1x, semua sprint) | 1 (test coverage import.ts/warga.service.ts, sekarang 3x) |
+| Skill gap terdeteksi | 3 (sprint.md ×2, devops.md) |
+
+### 🔁 Pola Blocker Sistemik
+
+#### Test coverage `import.ts` & `warga.service.ts` masih 0% — muncul 3 kali (2026-07-04, 2026-07-05 pagi, 2026-07-05 siang)
+- **Severity**: MED (kandidat naik ke HIGH kalau muncul lagi)
+- **Root cause**: `qa.md` sudah diperbaiki sejak retro Sprint 1 agar toolingnya cocok (Vitest, `npm run test --workspace=apps/api -- --coverage`), tapi **tidak pernah benar-benar dijalankan**. Ini bukan lagi gap tooling — ini gap proses: rekomendasi PM tidak pernah menjelma jadi task konkret di sprint manapun.
+- **Skill yang perlu diupdate**: `retro.md` / `pm.md` (lihat kandidat baru di bawah — usulkan eskalasi otomatis setelah 3x occurrence)
+- **Saran perbaikan**: Jadikan ini task eksplisit di sprint berikutnya (atau sprint tersendiri), bukan sekadar catatan naratif yang mudah dilewati.
+
+#### Docker daemon tidak berjalan — sebelumnya muncul 2 kali, **resolved** di Sprint 2
+- Daemon aktif & container sehat sepanjang Sprint 2. Ditandai resolved di `learning_log.json`; kalau muncul lagi nanti dihitung ulang dari awal, bukan lanjutan streak lama.
+
+### 🆕 Blocker Baru di Sprint 2 (baru 1x, tapi berpotensi berulang di mesin dev yang sama)
+
+#### Port Postgres (5433) bentrok dengan container project lain di mesin dev
+- **Severity**: HIGH (blocking, sebelum di-resolve)
+- **Root cause**: `docker-compose.yml` pakai port hardcoded tanpa pre-check ketersediaan port di level OS. Mesin dev ini menjalankan >20 container dari banyak project sekaligus — kolisi port lintas-project adalah risiko nyata, bukan kasus langka.
+- **Resolved**: pindah ke port 5435, dikonfirmasi ke user dulu sebelum ubah `docker-compose.yml`/README/`.env.example`.
+- **Skill yang perlu diupdate**: `devops.md` — tambah pre-check `lsof` untuk port yang dideklarasikan `docker-compose.yml` sebelum `docker compose up -d`.
+
+#### Schema drift: `schema.prisma` lebih maju dari migration history tercatat
+- **Severity**: HIGH (memaksa reset DB dev di tengah sprint)
+- **Root cause**: Sejumlah fitur lama (activity_log, master_kelurahan, komisi_config, nomor_induk, dll) sudah ada di `schema.prisma` dan dipakai kode, tapi tidak pernah punya migration file — kemungkinan diterapkan ke environment lain lewat `prisma db push` langsung. `prisma migrate status` melaporkan "up to date" karena hanya membandingkan DB vs migration history tercatat, bukan vs `schema.prisma` — jadi masalah ini baru ketahuan pertengahan sprint saat `migrate dev` menolak jalan & minta reset.
+- **Resolved**: migration dipecah dua — satu untuk catch-up drift lama (`sync_schema_with_existing_features`), satu lagi murni untuk fitur sprint ini (`add_password_reset_token`). Reset DB dev dikonfirmasi eksplisit ke user (termasuk melewati Prisma AI-agent consent gate dengan `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`).
+- **Skill yang perlu diupdate**: `sprint.md` — tambah pre-check `prisma migrate diff --from-schema-datasource ... --to-schema-datamodel ...` sebelum mulai task migration, supaya drift terdeteksi SEBELUM eksekusi dimulai, bukan di tengah jalan.
+
+### 🐛 Pola Git Bermasalah
+
+- **Pasca Sprint 2 (`0e1f457`)**: 0 fix/revert commit — semua error (migration drift, port conflict) diselesaikan **sebelum** commit, bukan lewat commit susulan. Eksekusi bersih.
+- Tidak ada file yang di-"fix ulang" pasca Sprint 2 — pola berbeda dari sprint-sprint lama pra-sistem (`warga.service.ts`, `warga.ts` sering direvisi berkali-kali sebelum sistem `/sprint` ada).
+
+### 🕳️ Gap Skill Coverage
+
+- **Situasi**: `sprint.md` Langkah 4 (pre-flight Prisma) cuma cek `migrate status`, tidak cukup untuk mendeteksi schema-ahead-of-migrations drift.
+- **Situasi**: `devops.md` tidak cek port availability sebelum `docker compose up` — baru ketahuan gagal setelah dicoba.
+- **Situasi**: Tidak ada dokumentasi soal Prisma AI-agent consent gate (`PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`) di skill manapun — kalau tidak familiar, agent bisa bingung/berhenti di error yang sebenarnya straightforward untuk ditangani (minta konfirmasi eksplisit user, lalu jalankan ulang dengan env var itu).
+- **Tidak di-handle oleh**: `sprint.md`, `devops.md`.
+- **Saran**: Update kedua skill (bukan bikin baru) — lihat tabel kandidat perbaikan di bawah.
+
+### ✅ Yang Berjalan Baik
+
+- Sprint 2 selesai 100% (8/8 task) dalam sekali eksekusi meski ada 2 blocker HIGH di tengah jalan — tidak ada task yang di-skip.
+- Migration drift ditangani dengan benar secara arsitektural: dipisah jadi 2 file migration (catch-up vs fitur baru) alih-alih dicampur jadi satu migration raksasa yang membingungkan riwayat.
+- Konfirmasi user diminta secara eksplisit dan tepat waktu untuk 2 operasi berisiko (ganti port shared infra, reset DB) — sesuai instruksi `CLAUDE.md` soal operasi berisiko, tidak di-skip meski sedang mode otomatis penuh.
+- Prisma AI-agent consent gate dihormati sepenuhnya (tidak dilewati/di-bypass) — konfirmasi baru diminta khusus untuk gate ini, bukan reuse jawaban sebelumnya.
+- 46/46 test pass, `type-check` bersih di kedua workspace — tidak ada regresi ke Sprint 1.
+
+### 🔧 Kandidat Perbaikan Skill
+
+| Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
+|-----------|-----------|---------|-----------------|--------|
+| HIGH | sprint.md | Pre-flight Prisma cuma cek `migrate status`, tidak deteksi schema-ahead-of-migrations drift | Tambah `prisma migrate diff --from-schema-datasource --to-schema-datamodel` sebelum task migration dimulai | ✅ applied (2026-07-05) |
+| MED | sprint.md | Tidak ada dokumentasi Prisma AI-agent consent gate | Tambah section penanganan `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` | ✅ applied (2026-07-05) |
+| MED | devops.md | Tidak cek port availability sebelum `docker compose up` | Tambah pre-check `lsof` untuk port di `docker-compose.yml` | ✅ applied (2026-07-05) — ternyata devops.md sudah punya check ini, fix diterapkan di sprint.md yang belum memanggilnya |
+| MED | retro.md / pm.md | Recurring blocker 3x tanpa tindak lanjut nyata (test coverage) | Auto-usulkan jadi task eksplisit sprint berikutnya setelah occurrence ≥3 | ✅ applied (2026-07-05) — aturan ditambahkan di retro.md, langsung diterapkan: blocker test coverage dinaikkan MED→HIGH |
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. Jalankan `/improve` untuk mengaplikasikan 4 perbaikan skill di atas sebelum Sprint 3 dimulai — Sprint 3 murni frontend (tidak sentuh Prisma/Docker), jadi tidak mendesak, tapi sebaiknya tidak menumpuk utang lagi seperti retro Sprint 1.
+2. Test coverage `import.ts`/`warga.service.ts` sudah 3x direkomendasikan tanpa tindak lanjut — pertimbangkan buat sebagai sprint kecil tersendiri setelah Sprint 3 selesai, alih-alih terus jadi catatan MED yang lewat begitu saja.
+3. Sebelum Sprint 3 (frontend), tidak ada risiko Prisma/Docker — fokus verifikasi `npm run build --workspace=apps/web` karena sprint ini pakai `useSearchParams` yang butuh `<Suspense>` di halaman ter-static-generate (sudah diwanti-wanti di sprint file itu sendiri).
+
+---
+
 ## [2026-07-05] — Retrospektif Sprint 1
 
 **Project**: Database Warga GKJJ

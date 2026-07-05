@@ -13,32 +13,63 @@
       "tasks_total": 4,
       "tasks_done": 4,
       "completion_pct": 100
+    },
+    {
+      "number": 2,
+      "name": "Reset Password Mandiri: Backend (Migration, Email Service, Endpoint)",
+      "commit": "0e1f457",
+      "status": "done",
+      "blockers_count": 2,
+      "high_severity_blockers": 1,
+      "fix_commits": 0,
+      "tasks_total": 8,
+      "tasks_done": 8,
+      "completion_pct": 100
     }
   ],
   "recurring_blockers": [
     {
       "item": "import.ts (bulk-import Excel) & warga.service.ts (bulk-validate) masih 0% test coverage, menyentuh ~2000 data warga produksi langsung",
-      "occurrences": 2,
-      "severity": "MED",
+      "occurrences": 3,
+      "severity": "HIGH",
       "first_seen": "2026-07-04 (Continuous Delivery review)",
-      "last_seen": "2026-07-05 (Sprint 1 review)",
+      "last_seen": "2026-07-05 (Sprint 2 PM review, 10:47 WIB)",
       "resolved": false,
-      "root_cause": "/qa coverage subcommand ditulis untuk stack Python/FastAPI + pytest + pnpm (template generik), sedangkan project ini Express/TypeScript + Prisma (apps/api) dan Next.js (apps/web) dengan Vitest + npm workspaces. Perintah pytest/coverage.json/pnpm di qa.md tidak berlaku sama sekali di repo ini, jadi rekomendasi PM untuk menambah test tidak pernah bisa dieksekusi otomatis oleh /qa."
+      "root_cause": "qa.md sudah diperbaiki (2026-07-05) agar tooling-nya (npm run test --workspace=apps/api -- --coverage, Vitest) sesuai stack project, tapi tidak ada yang benar-benar MENJALANKAN /qa coverage untuk dua file ini — rekomendasi PM terus muncul di CHANGELOG tapi tidak pernah jadi task nyata di sprint manapun. Ini sekarang gap proses (rekomendasi tidak dieksekusi), bukan lagi gap tooling.",
+      "escalation_note": "Severity dinaikkan MED->HIGH pada retro Sprint 2 (2026-07-05) sesuai aturan baru di retro.md: recurring blocker dengan occurrences>=3 & resolved=false otomatis dieskalasi. Wajib jadi task eksplisit di sprint mendatang, bukan sekadar rekomendasi naratif lagi."
     },
     {
-      "item": "Docker daemon tidak berjalan \u2014 status healthy Postgres/Redis dev (docker-compose.yml) tidak terverifikasi",
+      "item": "Docker daemon tidak berjalan — status healthy Postgres/Redis dev (docker-compose.yml) tidak terverifikasi",
       "occurrences": 2,
       "severity": "LOW",
       "first_seen": "2026-07-04",
       "last_seen": "2026-07-05",
-      "resolved": false,
-      "root_cause": "Butuh Docker Desktop dinyalakan manual oleh user, di luar kendali agent \u2014 bukan gap skill, hanya reminder berulang."
+      "resolved": true,
+      "root_cause": "Butuh Docker Desktop dinyalakan manual oleh user, di luar kendali agent — bukan gap skill. Ditandai resolved karena di Sprint 2 daemon sudah aktif dan tidak lagi jadi blocker; kalau muncul lagi di masa depan, jangan dihitung sebagai 'baru', reset ke unresolved."
+    },
+    {
+      "item": "Port service docker-compose.yml (Postgres 5433) bentrok dengan container project lain di mesin dev yang sama (multi-project shared machine)",
+      "occurrences": 1,
+      "severity": "HIGH",
+      "first_seen": "2026-07-05 (Sprint 2 eksekusi)",
+      "last_seen": "2026-07-05 (Sprint 2 eksekusi)",
+      "resolved": true,
+      "root_cause": "docker-compose.yml pakai port hardcoded (5433) tanpa pre-check apakah port itu sudah dipakai proses/container lain di mesin dev. Mesin ini menjalankan banyak project sekaligus (docker ps menunjukkan >20 container dari project lain). Di-resolve dengan pindah ke port 5435 setelah konfirmasi user, tapi tidak ada pengecekan otomatis di skill manapun (devops.md/sprint.md) yang akan menangkap ini SEBELUM 'docker compose up' gagal."
+    },
+    {
+      "item": "Schema drift: schema.prisma sudah punya kolom/enum dari fitur-fitur lama (activity_log, master_kelurahan, komisi_config, nomor_induk, dll) yang TIDAK pernah tercatat sebagai migration file — 'prisma migrate status' melaporkan 'up to date' padahal migration history sebenarnya tertinggal jauh dari schema.prisma",
+      "occurrences": 1,
+      "severity": "HIGH",
+      "first_seen": "2026-07-05 (Sprint 2 eksekusi — saat prisma migrate dev untuk add_password_reset_token)",
+      "last_seen": "2026-07-05 (Sprint 2 eksekusi)",
+      "resolved": true,
+      "root_cause": "Sebelumnya seseorang/proses menerapkan perubahan schema ke database (kemungkinan lewat 'prisma db push' langsung ke environment lain, bukan container docker-compose lokal ini) tanpa pernah membuat migration file — sehingga migration history di repo tidak lengkap. 'prisma migrate status' hanya membandingkan DB vs migration history yang tercatat, BUKAN vs schema.prisma, jadi tidak mendeteksi masalah ini sampai 'migrate dev' dijalankan dan diminta reset. Di-resolve dengan memisahkan migration catch-up ('sync_schema_with_existing_features') dari migration fitur baru ('add_password_reset_token'), dengan konfirmasi eksplisit user untuk 'prisma migrate reset' (termasuk melewati Prisma AI-agent consent gate)."
     }
   ],
   "skill_improvement_candidates": [
     {
       "skill": "qa.md",
-      "issue": "Seluruh isi skill (Langkah 2-4, contoh kode test) ditulis untuk backend Python/FastAPI (pytest, pytest-asyncio, httpx, coverage.json) dan frontend pnpm \u2014 tidak sesuai stack project ini (Express+TS+Prisma di apps/api, Next.js di apps/web, Vitest, npm workspaces). Subcommand 'coverage' tidak bisa jalan sama sekali.",
+      "issue": "Seluruh isi skill (Langkah 2-4, contoh kode test) ditulis untuk backend Python/FastAPI (pytest, pytest-asyncio, httpx, coverage.json) dan frontend pnpm — tidak sesuai stack project ini (Express+TS+Prisma di apps/api, Next.js di apps/web, Vitest, npm workspaces). Subcommand 'coverage' tidak bisa jalan sama sekali.",
       "suggested_fix": "Ganti semua referensi backend/.venv, pytest, pytest-asyncio, httpx, coverage.json, pnpm dengan: apps/api (Vitest + supertest untuk endpoint test), apps/web (Vitest + Testing Library), npm run test --workspace=apps/api -- --coverage / --workspace=apps/web. Sesuaikan path test coverage report Vitest (v8/istanbul json summary) menggantikan parsing coverage.json ala pytest-cov.",
       "priority": "HIGH",
       "applied": true,
@@ -47,7 +78,7 @@
     },
     {
       "skill": "devops.md",
-      "issue": "Pre-flight check memakai backend/.venv, uv sync, uv add bcrypt, frontend/node_modules, pnpm outdated \u2014 semua asumsi stack Python/pnpm generik, path juga salah (harusnya apps/api, apps/web).",
+      "issue": "Pre-flight check memakai backend/.venv, uv sync, uv add bcrypt, frontend/node_modules, pnpm outdated — semua asumsi stack Python/pnpm generik, path juga salah (harusnya apps/api, apps/web).",
       "suggested_fix": "Ganti pengecekan .venv/uv dengan apps/api/node_modules & npx prisma generate/migrate status; ganti pnpm dengan npm; ganti path frontend/backend dengan apps/web, apps/api.",
       "priority": "HIGH",
       "applied": true,
@@ -56,7 +87,7 @@
     },
     {
       "skill": "sprint.md",
-      "issue": "Pre-flight checks Langkah 4 (Python package compatibility: asyncpg, bcrypt, passlib, email-validator; TypeScript baseline pakai frontend/, pnpm; pytest.ini asyncio config) semuanya tidak relevan untuk project ini \u2014 sudah harus diadaptasi manual saat eksekusi Sprint 1 (skip semua Python check, ganti frontend/ jadi apps/web, pnpm jadi npm).",
+      "issue": "Pre-flight checks Langkah 4 (Python package compatibility: asyncpg, bcrypt, passlib, email-validator; TypeScript baseline pakai frontend/, pnpm; pytest.ini asyncio config) semuanya tidak relevan untuk project ini — sudah harus diadaptasi manual saat eksekusi Sprint 1 (skip semua Python check, ganti frontend/ jadi apps/web, pnpm jadi npm).",
       "suggested_fix": "Buat versi pre-flight khusus TypeScript monorepo: cek apps/api/node_modules & apps/web/node_modules (bukan .venv), cek apps/api/.env & apps/web/.env.local, jalankan npx tsc --noEmit di apps/web sebagai baseline, hapus seluruh blok Python (asyncpg/bcrypt/pytest.ini) dari skill ini.",
       "priority": "HIGH",
       "applied": true,
@@ -65,12 +96,48 @@
     },
     {
       "skill": "pm.md",
-      "issue": "Langkah 4C (deteksi blocker dependencies) mengecek backend/.venv (uv sync) dan frontend/node_modules (pnpm install) \u2014 path dan tooling salah untuk project ini (apps/api, apps/web, npm).",
+      "issue": "Langkah 4C (deteksi blocker dependencies) mengecek backend/.venv (uv sync) dan frontend/node_modules (pnpm install) — path dan tooling salah untuk project ini (apps/api, apps/web, npm).",
       "suggested_fix": "Ganti dengan: ls apps/api/node_modules, ls apps/web/node_modules (npm install), dan cek apps/api/.env + apps/web/.env.local alih-alih .env tunggal di root.",
       "priority": "MED",
       "applied": true,
       "applied_date": "2026-07-05",
       "applied_summary": "Ganti path & tooling deteksi blocker dependency (Langkah 4B/4C) dari backend/.venv+uv & frontend/node_modules+pnpm ke apps/api/node_modules & apps/web/node_modules dengan npm, dan .env check ke apps/api/.env + apps/web/.env.local."
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Pre-flight 'Prisma Schema & Migration' (Langkah 4) hanya menjalankan 'prisma migrate status', yang cuma membandingkan DB dengan migration history TERCATAT — tidak mendeteksi kasus schema.prisma sudah lebih maju dari migration files (schema drift dari 'db push' historis tanpa migration file). Baru ketahuan pertengahan sprint saat 'migrate dev' minta reset, memaksa perhentian mendadak untuk minta konfirmasi user.",
+      "suggested_fix": "Tambah pengecekan tambahan sebelum mulai coding jika sprint menyentuh Prisma: jalankan 'npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script' — kalau ada output (non-empty diff), berarti ADA drift pre-existing yang perlu dikomunikasikan ke user SEBELUM mulai task migration, bukan ditemukan di tengah proses. Dokumentasikan juga bahwa migration untuk drift pre-existing harus dipisah dari migration fitur baru sprint ini.",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Tambah pre-check 'prisma migrate diff --from-schema-datasource --to-schema-datamodel' di sprint.md Langkah 4 (Pre-flight Prisma) — kalau ada drift, wajib buat migration catch-up terpisah sebelum migration fitur sprint."
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Tidak ada dokumentasi soal Prisma AI-agent safety gate: 'prisma migrate reset' (dan command destruktif lain) akan menolak jalan untuk AI agent kecuali environment variable PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION diisi dengan teks konfirmasi eksplisit user (bukan konfirmasi implisit/sebelumnya). Tanpa dokumentasi ini, eksekusi otomatis akan berhenti bingung di error yang tidak familiar.",
+      "suggested_fix": "Tambah section 'Menangani Prisma AI-agent consent gate' di sprint.md: kalau command Prisma menampilkan error 'detected that it was invoked by Claude Code / forbidden from performing this action', WAJIB berhenti, sampaikan ke user: command persis, motivasi, penjelasan irreversibility, dev-vs-prod assessment — lalu minta konfirmasi eksplisit BARU (bukan pakai jawaban user sebelumnya), baru jalankan ulang dengan PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"<teks jawaban user>\".",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Tambah section 'Menangani Prisma AI-agent consent gate' di sprint.md dengan 4 langkah persis: berhenti, sampaikan info lengkap ke user, minta konfirmasi eksplisit baru, jalankan ulang dengan PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION."
+    },
+    {
+      "skill": "devops.md",
+      "issue": "Docker service check (docker compose ps) tidak mengecek apakah port yang dideklarasikan docker-compose.yml sudah dipakai proses/container lain di mesin — di mesin dev yang menjalankan banyak project sekaligus, ini menyebabkan 'docker compose up' gagal di tengah sprint dengan pesan error jaringan yang tidak jelas kaitannya dengan 'port sudah dipakai project lain'.",
+      "suggested_fix": "Tambah pre-check: extract port host dari docker-compose.yml (grep pattern '\"PORT:PORT\"'), lalu untuk tiap port jalankan 'lsof -nP -iTCP:PORT -sTCP:LISTEN' sebelum 'docker compose up -d' — kalau port sudah dipakai proses/container LAIN (bukan container project ini sendiri), laporkan sebagai blocker dan tanyakan ke user port pengganti sebelum lanjut, bukan biarkan 'docker compose up' gagal duluan.",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Ternyata devops.md Langkah 4 SUDAH punya pre-check lsof port conflict ini sejak sebelumnya — gap sebenarnya ada di sprint.md yang punya versi pre-flight ringkas sendiri dan tidak memanggil/mereplikasi check ini. Fix diterapkan di sprint.md Langkah 4: tambah pre-check lsof yang sama persis sebelum 'docker compose up -d', supaya sprint agent tidak lagi terkejut port conflict di tengah eksekusi."
+    },
+    {
+      "skill": "retro.md / pm.md",
+      "issue": "Blocker MED test coverage (import.ts/warga.service.ts) sudah direkomendasikan 3x berturut-turut (2026-07-04, 2026-07-05 pagi, 2026-07-05 siang) tanpa pernah benar-benar dieksekusi — rekomendasi PM tidak terhubung ke task/sprint nyata, jadi gampang terus 'lolos' setiap review.",
+      "suggested_fix": "Kalau /retro mendeteksi recurring_blocker dengan occurrences >= 3 dan resolved=false, wajib usulkan agar item itu dijadikan task eksplisit di sprint berikutnya (bukan cuma rekomendasi naratif) — misal auto-suggest menambah section '## Task Tambahan (dari Retro)' di sprint file berikutnya, atau minimal tandai severity naik jadi HIGH setelah 3x occurrence agar tidak terus dianggap 'boleh ditunda'.",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-07-05",
+      "applied_summary": "Tambah aturan eskalasi otomatis di retro.md Langkah 7A: recurring blocker dengan occurrences>=3 & resolved=false wajib diusulkan jadi task sprint eksplisit ATAU dinaikkan severity satu tingkat. Diterapkan langsung: blocker test coverage import.ts/warga.service.ts dinaikkan MED->HIGH di learning_log.json entry ini sendiri."
     }
   ],
   "improvement_history": [
@@ -97,6 +164,24 @@
       "skill": "pm.md",
       "change": "Ganti path & tooling deteksi blocker dependency (Langkah 4B/4C) dari backend/.venv+uv & frontend/node_modules+pnpm ke apps/api/node_modules & apps/web/node_modules dengan npm, dan .env check ke apps/api/.env + apps/web/.env.local.",
       "trigger": "RETRO finding 2026-07-05: skill files masih pakai path/tooling template Python/FastAPI+pnpm generik, tidak match stack Express+TS+Prisma (apps/api) / Next.js (apps/web) + npm workspaces + Vitest project ini"
+    },
+    {
+      "date": "2026-07-05",
+      "skill": "sprint.md",
+      "change": "Tambah pre-check 'prisma migrate diff' untuk deteksi schema drift sebelum task migration, dan section 'Menangani Prisma AI-agent consent gate' (PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION).",
+      "trigger": "RETRO finding Sprint 2 (2026-07-05): 'prisma migrate status' tidak mendeteksi schema.prisma yang lebih maju dari migration history, baru ketahuan saat migrate dev menolak jalan; Prisma AI-agent consent gate tidak terdokumentasi sama sekali"
+    },
+    {
+      "date": "2026-07-05",
+      "skill": "sprint.md",
+      "change": "Tambah pre-check port conflict (lsof) sebelum 'docker compose up -d' di Langkah 4 (devops.md sudah punya check ini, sprint.md versi ringkas belum memanggilnya).",
+      "trigger": "RETRO finding Sprint 2 (2026-07-05): port Postgres dev bentrok dengan container project lain di mesin dev multi-project, baru ketahuan setelah 'docker compose up' gagal"
+    },
+    {
+      "date": "2026-07-05",
+      "skill": "retro.md",
+      "change": "Tambah aturan eskalasi otomatis: recurring blocker dengan occurrences>=3 & resolved=false wajib diusulkan jadi task sprint eksplisit atau dinaikkan severity satu tingkat.",
+      "trigger": "RETRO finding Sprint 2 (2026-07-05): blocker test coverage import.ts/warga.service.ts sudah 3x direkomendasikan tanpa tindak lanjut nyata karena hanya jadi catatan naratif"
     }
   ]
 }

@@ -45,7 +45,29 @@ ls apps/api/.env 2>/dev/null || echo "WARNING: apps/api/.env tidak ditemukan"
 ls apps/web/.env.local 2>/dev/null || echo "WARNING: apps/web/.env.local tidak ditemukan"
 ```
 
-Jika ada service Docker yang tidak running, jalankan `docker compose up -d` dan tunggu hingga healthy sebelum lanjut.
+Jika ada service Docker yang tidak running, **sebelum** menjalankan `docker compose up -d`, cek dulu
+apakah port yang dideklarasikan `docker-compose.yml` sudah dipakai proses/container LAIN di mesin ini
+(mesin dev sering menjalankan banyak project sekaligus — kolisi port lintas-project itu nyata, bukan
+kasus langka):
+
+```bash
+grep -E "^\s+- \"[0-9]+:" docker-compose.yml 2>/dev/null | grep -o '[0-9]*:[0-9]*' | while read mapping; do
+  host_port=$(echo $mapping | cut -d: -f1)
+  owner_pid=$(lsof -ti:$host_port 2>/dev/null | head -1)
+  if [ -n "$owner_pid" ]; then
+    echo "Port $host_port: SUDAH DIPAKAI (PID $owner_pid) — cek dulu apakah ini container project ini sendiri (docker compose ps) atau punya project lain sebelum lanjut"
+  else
+    echo "Port $host_port: FREE"
+  fi
+done
+```
+
+Kalau port sudah dipakai proses/container **lain** (bukan container project ini sendiri yang belum
+jalan), jangan langsung `docker compose up -d` — laporkan ke user dan tanyakan port pengganti (lalu
+update `docker-compose.yml` + semua referensi `DATABASE_URL`/README/`.env.example` secara konsisten)
+sebelum lanjut. Baru setelah port aman, jalankan `docker compose up -d` dan tunggu hingga healthy.
+
+<!-- improved: tambah pre-check port conflict (lsof) sebelum docker compose up — retro Sprint 2 (2026-07-05), port Postgres bentrok dengan container project lain di mesin dev multi-project -->
 
 <!-- improved: hapus pre-flight Python (asyncpg/bcrypt/passlib/pytest.ini) yang tidak relevan — project ini Express+TS+Prisma, bukan Python/FastAPI. Ganti dengan baseline TypeScript untuk kedua workspace (retro 2026-07-05) -->
 
@@ -74,6 +96,46 @@ if [ -d apps/api/node_modules ]; then
   cd apps/api && npx prisma migrate status 2>&1 | tail -10; cd ../..
 fi
 ```
+
+**PENTING — `migrate status` tidak cukup, cek juga drift `schema.prisma` vs migration history:**
+`prisma migrate status` hanya membandingkan database dengan migration file yang **tercatat** — kalau
+`schema.prisma` sudah lebih maju dari migration history (misal karena `prisma db push` pernah
+dipakai langsung di environment lain tanpa membuat migration file), `migrate status` tetap bilang
+"up to date" padahal sebenarnya drift, dan ini baru ketahuan pertengahan sprint saat `migrate dev`
+menolak jalan & minta reset. Jalankan diff eksplisit dulu:
+
+```bash
+if [ -d apps/api/node_modules ]; then
+  cd apps/api
+  DRIFT=$(npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script 2>/dev/null)
+  if [ -n "$DRIFT" ]; then
+    echo "⚠️  DRIFT TERDETEKSI: schema.prisma sudah lebih maju dari migration history:"
+    echo "$DRIFT"
+    echo "Buat migration catch-up TERPISAH untuk drift lama ini sebelum membuat migration fitur sprint ini, supaya riwayat migration tetap bersih."
+  else
+    echo "Tidak ada drift — migration history sinkron dengan schema.prisma ✅"
+  fi
+  cd ../..
+fi
+```
+
+Kalau ada drift pre-existing yang tidak terkait task sprint ini, buat migration file catch-up
+terpisah (nama deskriptif, mis. `sync_schema_with_existing_features`) sebelum membuat migration
+untuk fitur sprint — jangan campur keduanya jadi satu migration.
+
+**Menangani Prisma AI-agent consent gate:** command destruktif seperti `prisma migrate reset` akan
+menolak jalan untuk AI agent dengan pesan `"detected that it was invoked by Claude Code ... forbidden
+from performing this action"`. Ini bukan bug — ini safety gate resmi dari Prisma. Kalau muncul:
+1. **Berhenti**, jangan coba bypass dengan flag lain.
+2. Sampaikan ke user: command persis yang mau dijalankan, motivasi/alasan, penjelasan bahwa ini
+   **menghapus permanen** semua data, dan assessment dev vs production (cek apakah target adalah DB
+   dev lokal atau produksi sebelum bertanya).
+3. Minta konfirmasi **eksplisit baru** dari user (bukan reuse jawaban sebelumnya di konteks lain —
+   Prisma sendiri mensyaratkan ini).
+4. Setelah user setuju, jalankan ulang dengan env var berisi teks persis jawaban user:
+   `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="<jawaban user>" npx prisma migrate reset --force`
+
+<!-- improved: tambah pre-check schema drift (migrate status saja tidak cukup) & dokumentasi Prisma AI-agent consent gate — retro Sprint 2 (2026-07-05), ditemukan saat migrate dev menolak jalan karena drift lama tidak terdeteksi migrate status -->
 
 ## Langkah 5 — Implementasi Semua Task
 
