@@ -1,6 +1,7 @@
 {
   "project": "Database Warga GKJJ",
   "last_updated": "2026-07-05",
+  "note": "Sprint 1-3 (reset password mandiri, end-to-end) selesai per 2026-07-05. sprints/.current_sprint = 4, tidak ada sprint_04.md terdaftar — siklus berikutnya butuh sprint file baru sebelum /sprint bisa jalan lagi.",
   "sprints": [
     {
       "number": 1,
@@ -24,6 +25,18 @@
       "fix_commits": 0,
       "tasks_total": 8,
       "tasks_done": 8,
+      "completion_pct": 100
+    },
+    {
+      "number": 3,
+      "name": "Reset Password Mandiri: Frontend (Desktop & Mobile)",
+      "commit": "cf84b0a",
+      "status": "done",
+      "blockers_count": 0,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 5,
+      "tasks_done": 5,
       "completion_pct": 100
     }
   ],

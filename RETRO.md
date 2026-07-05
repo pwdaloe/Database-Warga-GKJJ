@@ -3,6 +3,79 @@
 
 ---
 
+## [2026-07-05] — Retrospektif Sprint 3 (wrap-up Sprint 1–3: Reset Password Mandiri)
+
+**Project**: Database Warga GKJJ
+**Scope**: Sprint 3, sekaligus wrap-up Sprint 1–3 (seluruh isi `sprints/` sudah selesai)
+**Reviewed**: Minggu, 5 Juli 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 1 sprint (Sprint 3), + wrap-up Sprint 1–3 |
+| Total tasks | 5 tasks (5/5 selesai) |
+| Fix/revert commits (pasca sprint) | 0 |
+| Unique blockers (Sprint 3) | 0 |
+| Recurring blockers (semua sprint) | 1 (test coverage, masih 3x/HIGH, belum ditindaklanjuti) |
+| Skill gap terdeteksi | 0 baru di Sprint 3 |
+
+### 🔁 Pola Blocker Sistemik
+
+#### Test coverage `import.ts` & `warga.service.ts` masih 0% — masih 3x, belum resolved
+- Tidak ada progres baru di Sprint 3 (murni frontend, tidak menyentuh file ini). Severity tetap HIGH
+  sejak eskalasi otomatis di retro Sprint 2. Masih menunggu jadi task eksplisit di sprint mendatang —
+  lihat rekomendasi di bawah, ini poin paling penting yang tersisa dari seluruh siklus reset password.
+
+Tidak ada pola blocker baru dari Sprint 3 — eksekusi bersih tanpa insiden.
+
+### 🐛 Pola Git Bermasalah
+
+- **Pasca Sprint 3 (`cf84b0a`)**: 0 fix/revert commit.
+- **Ringkasan 3 sprint (`d63f5a2`, `0e1f457`, `cf84b0a`)**: total 0 fix/revert commit di ketiganya —
+  konsisten bersih sejak sistem `/sprint` dipakai (dibandingkan era pra-sistem yang punya banyak
+  commit "fix:" susulan untuk file yang sama, mis. `warga.service.ts`/`warga.ts` 7×).
+
+### 🕳️ Gap Skill Coverage
+
+Tidak ada gap baru ditemukan di Sprint 3. Perbaikan dari retro Sprint 2 (`sprint.md`: drift-check
+Prisma, Prisma consent gate, port-conflict check; `retro.md`: eskalasi recurring blocker) tidak
+sempat diuji ulang di Sprint 3 karena sprint ini tidak menyentuh Prisma/Docker — validasi nyata baru
+akan terjadi di sprint berikutnya yang menyentuh backend/migration lagi.
+
+### ✅ Yang Berjalan Baik
+
+- Ketiga sprint (reset password mandiri, end-to-end: backend migration+email+endpoint, lalu
+  frontend desktop+mobile) selesai 100% tanpa satupun fix/revert commit susulan.
+- Alur `/pm → /sprint → /retro → /improve → /sprint (ulang)` berjalan penuh otonom sesuai instruksi,
+  termasuk menangani 2 blocker HIGH di tengah jalan (port conflict, schema drift) dengan konfirmasi
+  eksplisit ke user tanpa henti prosesnya.
+- Verifikasi end-to-end manual (bukan cuma unit test) benar-benar dijalankan untuk alur reset
+  password: forgot-password → link di dev email log → reset-password → login dengan password baru
+  → token ditolak saat dipakai ulang. Ini persis skenario yang diminta di DoD sprint 3.
+- Skill improvement dari retro Sprint 2 langsung diaplikasikan sebelum lanjut sprint berikutnya
+  (siklus self-learning bekerja sesuai desain).
+
+### 🔧 Kandidat Perbaikan Skill
+
+Tidak ada kandidat baru dari Sprint 3. Kandidat lama dari retro Sprint 2 (sprint.md drift-check,
+consent gate, port-check; retro.md eskalasi) sudah applied — lihat entry retro sebelumnya.
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. **Prioritas utama**: buat sprint baru khusus test coverage `import.ts` (bulk-import Excel) &
+   `warga.service.ts` (bulk-validate) — blocker ini HIGH sejak retro Sprint 2 dan sudah 3 review
+   berturut-turut tanpa tindak lanjut nyata. Ini area yang langsung menyentuh ~2000 data warga
+   produksi tanpa jaring pengaman test sama sekali.
+2. Validasi ulang perbaikan `sprint.md` (drift-check Prisma, port-conflict check) di sprint
+   berikutnya yang benar-benar menyentuh Prisma/Docker — Sprint 3 tidak jadi kesempatan untuk
+   memverifikasi perbaikan itu bekerja seperti diharapkan.
+3. Tidak ada sprint baru terdaftar di `sprints/` setelah ini (`sprints/.current_sprint` = 4, tidak
+   ada `sprint_04.md`) — perlu dibuat sprint plan baru sebelum `/sprint` bisa dijalankan lagi.
+
+---
+
 ## [2026-07-05] — Retrospektif Sprint 2
 
 **Project**: Database Warga GKJJ
