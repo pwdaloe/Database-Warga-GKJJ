@@ -103,6 +103,15 @@ export function LoginForm() {
         {isSubmitting && <Loader2 size={16} className="animate-spin" />}
         {isSubmitting ? 'Memproses...' : 'Masuk'}
       </button>
+
+      <p className="text-center">
+        <a
+          href="/forgot-password"
+          className="text-sm text-brand-600 hover:text-brand-700 hover:underline"
+        >
+          Lupa password?
+        </a>
+      </p>
     </form>
   )
 }

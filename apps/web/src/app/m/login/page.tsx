@@ -102,6 +102,12 @@ export default function MobileLoginPage() {
             {loading ? 'Memproses...' : 'Masuk'}
           </button>
         </form>
+
+        <p className="text-center mt-5">
+          <a href="/m/forgot-password" className="text-sm text-[#1e3a5f] font-medium hover:underline">
+            Lupa password?
+          </a>
+        </p>
       </div>
 
       <p className="text-blue-200/60 text-xs mt-8 text-center">

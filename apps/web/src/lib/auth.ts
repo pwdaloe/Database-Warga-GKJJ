@@ -30,6 +30,22 @@ export async function logoutRequest() {
   await api.post('/auth/logout').catch(() => {})
 }
 
+export async function forgotPasswordRequest(usernameOrEmail: string) {
+  const res = await api.post<{ success: boolean; data: { message: string } }>(
+    '/auth/forgot-password',
+    { usernameOrEmail },
+  )
+  return res.data.data
+}
+
+export async function resetPasswordRequest(token: string, passwordBaru: string) {
+  const res = await api.post<{ success: boolean; data: { message: string } }>(
+    '/auth/reset-password',
+    { token, passwordBaru },
+  )
+  return res.data.data
+}
+
 export function saveToken(token: string) {
   localStorage.setItem('token', token)
 }
