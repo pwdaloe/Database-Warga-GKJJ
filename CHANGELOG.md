@@ -3,6 +3,37 @@
 
 ---
 
+## [2026-07-08 20:55 WIB] — Sprint 6/7 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Rabu, 8 Juli 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 6 Selesai: Test Coverage — Bulk Import & Validasi Warga (Backend)
+- Sprint disisipkan sebelum Sprint 7 (Perpindahan Jemaat: Frontend, semula bernomor Sprint 6) —
+  dipicu gate baru di `sprint.md` yang membaca `RETRO.md` sebelum mulai: blocker test coverage
+  `import.ts`/`warga.service.ts` sudah HIGH & muncul 5x retro berturut-turut tanpa pernah jadi
+  sprint eksplisit
+- `apps/api/tests/routes/import.route.test.ts` (18 test): `POST /api/import/warga` &
+  `/api/import/pengguna` — validasi baris, duplikat NIK/nomorInduk/username/email, resolve
+  kelompok & buat KK baru, generate nomorAnggota, batas 200 rows, password ter-hash bukan plaintext
+- `apps/api/tests/services/warga.service.test.ts` (26 test): `listWarga` (scoping
+  `PENATUA_KELOMPOK`, search NIK terenkripsi, redaksi field per role UU PDP Pasal 16),
+  `getWargaById`, `createWarga`/`updateWarga` (enkripsi NIK, transisi konsen PDP,
+  buat KK baru), `deleteWarga`, `bulkValidasiWarga`
+- Coverage naik dari 0%: `import.ts` 5.21% → 91.3%, `warga.service.ts` 3.61% → 97.59%
+- Total test suite: 107/107 pass, `type-check` bersih di `apps/api`
+- Tidak ada perubahan logic di `import.ts`/`warga.service.ts` — murni penambahan test
+- Commit: `54c3e39`
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+Tidak ada blocker ✅
+
+### 🏃 Next Sprint
+Sprint 7 — Perpindahan Jemaat: Frontend (List, Form, Cetak PDF, Email, WhatsApp)
+
+---
+
 ## [2026-07-08 19:42 WIB] — Sprint 5/6 | ✅ DONE
 
 **Project**: Database Warga GKJJ
