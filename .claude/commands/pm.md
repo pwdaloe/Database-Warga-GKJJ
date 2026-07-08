@@ -86,6 +86,21 @@ head -50 CHANGELOG.md 2>/dev/null || echo "CHANGELOG.md belum ada — akan dibua
 
 Gunakan ini untuk memahami history review PM sebelumnya dan hindari duplikasi informasi.
 
+**Cek commit "yatim"** (kerjaan ad-hoc di luar `/sprint` yang belum pernah masuk CHANGELOG):
+
+```bash
+LAST_CHANGELOG_DATE=$(grep -m1 -oE '\[[0-9]{4}-[0-9]{2}-[0-9]{2}' CHANGELOG.md 2>/dev/null | tr -d '[')
+if [ -n "$LAST_CHANGELOG_DATE" ]; then
+  git log --oneline --since="$LAST_CHANGELOG_DATE" --grep="^feat" -E 2>/dev/null | grep -v "feat(sprint-"
+fi
+```
+
+Kalau ada commit `feat:` yang tidak berformat `feat(sprint-N)` dan belum tercermin di CHANGELOG mana
+pun, tawarkan ke user untuk membuat entry CHANGELOG retroaktif untuk commit tersebut sebagai bagian
+dari Langkah 7, supaya riwayat PM tetap lengkap.
+
+<!-- improved: deteksi commit ad-hoc yang tidak pernah dapat entry CHANGELOG — retro Sprint 4-5 (2026-07-08), Sprint 4 (PDP) dikerjakan di luar /sprint dan tidak pernah trigger laporan PM -->
+
 ## Langkah 6 — Susun Analisis PM
 
 Berdasarkan semua data yang terkumpul, buat penilaian untuk setiap kategori:

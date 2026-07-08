@@ -8,6 +8,44 @@ Baca `CLAUDE.md` di root working directory. Project ini dikunci ke stack: backen
 - **Konvensi kode**: format, linting, naming conventions dari `CLAUDE.md`
 - **Sprint path**: lokasi folder `sprints/`
 
+### Cek Rekomendasi Retro yang Belum Ditindaklanjuti (wajib sebelum lanjut Langkah 2)
+
+Baca entry paling atas `RETRO.md` (kalau ada):
+
+```bash
+head -60 RETRO.md 2>/dev/null
+```
+
+Kalau entry tersebut memuat rekomendasi eksplisit "wajib jadi task sprint eksplisit" / "sarankan jadi
+`sprint_XX.md`" untuk sebuah blocker recurring (biasanya ditandai severity HIGH & sudah muncul ≥3
+retro berturut-turut di section `🔁 Pola Blocker Sistemik`), cek apakah sudah ada `sprints/sprint_XX.md`
+yang cocok dengan rekomendasi itu. Kalau **belum ada**, **berhenti** sebelum lanjut ke Langkah 2 —
+laporkan ke user:
+- Rekomendasi retro yang belum ditindaklanjuti (kutip singkat)
+- Sudah berapa kali retro berturut-turut menyatakan ini
+- Tawarkan 2 opsi: (a) buat sprint file baru untuk item itu dulu, atau (b) lanjut sprint yang sudah
+  direncanakan dengan risiko ini dicatat eksplisit di laporan akhir sprint (Langkah 10/11)
+
+Kalau tidak ada rekomendasi "wajib" yang outstanding, atau sudah ada sprint file yang menindaklanjutinya,
+lanjut normal ke Langkah 2 tanpa perlu konfirmasi user.
+
+### Cek Commit "Yatim" (feat: tanpa entry CHANGELOG)
+
+```bash
+LAST_CHANGELOG_DATE=$(grep -m1 -oE '\[[0-9]{4}-[0-9]{2}-[0-9]{2}' CHANGELOG.md 2>/dev/null | tr -d '[')
+if [ -n "$LAST_CHANGELOG_DATE" ]; then
+  git log --oneline --since="$LAST_CHANGELOG_DATE" --grep="^feat" -E 2>/dev/null | grep -v "feat(sprint-"
+fi
+```
+
+Kalau ada commit `feat:` sejak entry CHANGELOG.md terakhir yang **tidak** berformat `feat(sprint-N)`
+(indikasi kerjaan ad-hoc di luar `/sprint`, mis. diminta langsung user di sesi lain), tawarkan ke user
+untuk backfill entry CHANGELOG.md retroaktif untuk commit tersebut sebelum lanjut ke sprint baru —
+supaya riwayat PM tetap lengkap (lihat kasus Sprint 4/PDP yang baru dapat entry CHANGELOG setelah gap
+ini ditemukan).
+
+<!-- improved: tutup loop dari rekomendasi retro ke sprint file nyata + deteksi commit ad-hoc tanpa entry CHANGELOG — retro Sprint 4-5 (2026-07-08), blocker test coverage sudah 5x recurring HIGH tanpa pernah jadi sprint eksplisit, dan Sprint 4 (PDP) sempat tidak dapat entry CHANGELOG karena dikerjakan di luar /sprint -->
+
 ## Langkah 2 — Tentukan Sprint yang Aktif
 
 ```bash
@@ -156,6 +194,13 @@ Kerjakan setiap task dari Todo List secara berurutan. Untuk setiap task:
 - **Jika ada package baru dibutuhkan**: install langsung tanpa tanya
   - Backend: `npm install nama-package --workspace=apps/api`
   - Frontend: `npm install nama-package --workspace=apps/web`
+  - **Kalau `npm install` gagal dengan `EACCES` yang menyebut `~/.npm/_cacache`** (npm cache global
+    root-owned, bug npm versi lama): **jangan** jalankan `sudo chown` otomatis — itu perubahan sistem
+    yang butuh izin eksplisit user. Gunakan cache sementara per-sesi sebagai workaround:
+    `npm install nama-package --workspace=apps/api --cache <scratchpad-dir>/npm-cache`. Sebutkan di
+    laporan akhir sprint bahwa `sudo chown -R $(whoami) ~/.npm` akan memperbaikinya permanen kalau
+    user mau menjalankannya sendiri.
+    <!-- improved: dokumentasikan workaround npm cache EACCES — retro Sprint 4-5 (2026-07-08), ditemukan dari nol saat install pdfkit/date-fns di Sprint 5 -->
 - **Jika ada port conflict**: gunakan port alternatif yang tersedia
 - **Jika task ambigu**: interpretasikan sesuai tech stack yang ada di CLAUDE.md, lanjutkan
 

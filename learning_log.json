@@ -1,8 +1,33 @@
 {
   "project": "Database Warga GKJJ",
-  "last_updated": "2026-07-05",
-  "note": "Sprint 1-3 (reset password mandiri, end-to-end) selesai per 2026-07-05. sprints/.current_sprint = 4, tidak ada sprint_04.md terdaftar — siklus berikutnya butuh sprint file baru sebelum /sprint bisa jalan lagi.",
+  "last_updated": "2026-07-08",
+  "note": "Sprint 4 (Kepatuhan PDP) dikerjakan di luar alur /sprint normal (permintaan langsung user di tengah sesi lain), didokumentasikan retroaktif di sprints/sprint_04.md tapi TIDAK PERNAH dapat entry CHANGELOG.md/email PM karena bypass Langkah 10 sprint.md. Sprint 5 (Perpindahan Jemaat: Backend) selesai penuh via /sprint normal. sprints/.current_sprint = 6, sprint_06.md (Perpindahan Jemaat: Frontend) siap dieksekusi berikutnya.",
   "sprints": [
+    {
+      "number": 4,
+      "name": "Kepatuhan PDP: Cookie Consent, Kebijakan Privasi, Konsen per-Warga",
+      "commit": "1f2d520",
+      "status": "done",
+      "blockers_count": null,
+      "high_severity_blockers": null,
+      "fix_commits": 0,
+      "tasks_total": 4,
+      "tasks_done": 4,
+      "completion_pct": 100,
+      "note": "Dikerjakan di luar alur /sprint normal — tidak ada data blocker/verifikasi terekam karena skill sprint.md (termasuk Langkah 10 CHANGELOG+email) tidak dijalankan untuk sprint ini. Lihat skill_improvement_candidates untuk gap ini."
+    },
+    {
+      "number": 5,
+      "name": "Perpindahan Jemaat: Backend (CRUD, Approval, Surat PDF, Email)",
+      "commit": "514cc4b",
+      "status": "done",
+      "blockers_count": 1,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 9,
+      "tasks_done": 9,
+      "completion_pct": 100
+    },
     {
       "number": 1,
       "name": "Tombol Kirim WhatsApp Template di Kartu Anggota Mobile",
@@ -43,13 +68,23 @@
   "recurring_blockers": [
     {
       "item": "import.ts (bulk-import Excel) & warga.service.ts (bulk-validate) masih 0% test coverage, menyentuh ~2000 data warga produksi langsung",
-      "occurrences": 3,
+      "occurrences": 5,
       "severity": "HIGH",
       "first_seen": "2026-07-04 (Continuous Delivery review)",
-      "last_seen": "2026-07-05 (Sprint 2 PM review, 10:47 WIB)",
+      "last_seen": "2026-07-08 (Retro Sprint 4-5)",
       "resolved": false,
       "root_cause": "qa.md sudah diperbaiki (2026-07-05) agar tooling-nya (npm run test --workspace=apps/api -- --coverage, Vitest) sesuai stack project, tapi tidak ada yang benar-benar MENJALANKAN /qa coverage untuk dua file ini — rekomendasi PM terus muncul di CHANGELOG tapi tidak pernah jadi task nyata di sprint manapun. Ini sekarang gap proses (rekomendasi tidak dieksekusi), bukan lagi gap tooling.",
-      "escalation_note": "Severity dinaikkan MED->HIGH pada retro Sprint 2 (2026-07-05) sesuai aturan baru di retro.md: recurring blocker dengan occurrences>=3 & resolved=false otomatis dieskalasi. Wajib jadi task eksplisit di sprint mendatang, bukan sekadar rekomendasi naratif lagi."
+      "escalation_note": "Severity dinaikkan MED->HIGH pada retro Sprint 2 (2026-07-05). Masih HIGH & unresolved setelah Sprint 3 (frontend, tidak menyentuh file ini), Sprint 4 (PDP, di luar /sprint, tidak menyentuh file ini), dan Sprint 5 (Perpindahan Jemaat backend, file baru bukan file lama ini) — sudah 5 titik review berturut-turut TANPA satupun task nyata dibuat untuk menutup gap ini, padahal aturan eskalasi retro.md sudah mewajibkan ini jadi task eksplisit sejak Sprint 2. Retro ini menegaskan ulang: WAJIB jadi task nyata di sprint berikutnya (bukan sprint_06.md yang sudah fokus frontend Perpindahan Jemaat — usulkan sprint_07.md khusus test coverage, atau task tambahan eksplisit sebelum sprint_06 lain dieksekusi)."
+    },
+    {
+      "item": "npm cache global (~/.npm) berisi file root-owned dari bug npm versi lama, menyebabkan EACCES saat `npm install` package baru (pdfkit, date-fns) di workspace apps/api",
+      "occurrences": 1,
+      "severity": "MED",
+      "first_seen": "2026-07-08 (Sprint 5 eksekusi)",
+      "last_seen": "2026-07-08 (Sprint 5 eksekusi)",
+      "resolved": true,
+      "root_cause": "Sisa bug npm versi lama di mesin dev (bukan spesifik project ini) meninggalkan file cache root-owned di ~/.npm/_cacache. Perbaikan permanen butuh 'sudo chown -R $(whoami) ~/.npm' di mesin user (di luar kendali agent, dan agent dengan benar TIDAK mengeksekusi sudo tanpa izin eksplisit). Di-resolve sementara dengan --cache ke folder scratchpad sesi, tapi ini workaround per-invocation, bukan fix permanen — kalau install package baru lagi di sesi/mesin lain tanpa scratchpad path yang sama, EACCES bisa muncul lagi.",
+      "escalation_note": "Occurrence pertama — belum memenuhi ambang eskalasi otomatis (>=3x). Didokumentasikan sebagai skill_improvement_candidate agar workaround-nya reusable, bukan ditemukan ulang dari nol tiap kali terjadi."
     },
     {
       "item": "Docker daemon tidak berjalan — status healthy Postgres/Redis dev (docker-compose.yml) tidak terverifikasi",
@@ -151,6 +186,33 @@
       "applied": true,
       "applied_date": "2026-07-05",
       "applied_summary": "Tambah aturan eskalasi otomatis di retro.md Langkah 7A: recurring blocker dengan occurrences>=3 & resolved=false wajib diusulkan jadi task sprint eksplisit ATAU dinaikkan severity satu tingkat. Diterapkan langsung: blocker test coverage import.ts/warga.service.ts dinaikkan MED->HIGH di learning_log.json entry ini sendiri."
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Aturan eskalasi retro.md (occurrences>=3 -> wajib jadi task sprint eksplisit) sudah ada sejak retro Sprint 2 (2026-07-05), tapi TIDAK ADA mekanisme di sprint.md yang benar-benar membuat sprint baru dari rekomendasi retro tersebut — akibatnya blocker test coverage import.ts/warga.service.ts sudah HIGH & 'wajib jadi task' selama 3 retro berturut-turut (Sprint 2, 3, dan sekarang Sprint 4-5) tapi tidak pernah benar-benar muncul sebagai sprint_XX.md baru. Eskalasi retro.md berhenti di rekomendasi naratif karena tidak ada skill yang menutup loop dari 'rekomendasi retro' ke 'sprint file baru'.",
+      "suggested_fix": "Tambah Langkah baru di sprint.md (sebelum Langkah 2 tentukan sprint aktif): baca RETRO.md entry paling atas, kalau ada rekomendasi 'wajib jadi task sprint eksplisit' yang belum ditindaklanjuti (tidak ada sprint_XX.md dengan judul/isi yang cocok) DAN nomor sprint yang direkomendasikan lebih kecil dari sprint aktif berikutnya, WAJIB berhenti dan minta user konfirmasi: buat sprint file baru untuk item itu dulu, atau lanjut sprint yang sudah direncanakan dengan risiko yang diketahui dicatat eksplisit di laporan akhir sprint (bukan cuma lolos diam-diam seperti 3x sebelumnya).",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-07-08",
+      "applied_summary": "Tambah subsection baru di sprint.md Langkah 1 (\"Cek Rekomendasi Retro yang Belum Ditindaklanjuti\"): baca RETRO.md, kalau ada rekomendasi wajib-jadi-sprint yang belum ada sprint_XX.md padanan, berhenti dan minta konfirmasi user (buat sprint baru dulu, atau lanjut dengan risiko dicatat eksplisit di laporan akhir)."
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Sprint 4 (Kepatuhan PDP) dikerjakan di luar alur /sprint normal (permintaan langsung user di sesi lain) dan sampai sekarang TIDAK PERNAH dapat entry CHANGELOG.md atau email PM — Langkah 10 (Laporan PM) hanya terpicu kalau /sprint dijalankan penuh dari awal. Kalau user minta kerjaan ad-hoc di luar /sprint, riwayat proyek (CHANGELOG.md, learning_log.json) jadi punya lubang: sprint_04.md sendiri sampai perlu ditulis retroaktif untuk menjaga penomoran konsisten, tapi laporan PM/email-nya tidak pernah menyusul.",
+      "suggested_fix": "Tambah pengecekan ringan di awal Langkah 1 sprint.md (dan/atau pm.md continuous-delivery mode): bandingkan commit 'feat:' sejak entry CHANGELOG.md terakhir dengan commit yang sudah punya entry — kalau ada commit feat yang tidak tertandai 'feat(sprint-N)' dan tidak muncul di CHANGELOG manapun, tawarkan ke user untuk membuat entry CHANGELOG retroaktif (mirip sprint_04.md) sebelum lanjut sprint baru, supaya riwayat PM tetap lengkap.",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-07-08",
+      "applied_summary": "Tambah subsection \"Cek Commit Yatim\" di sprint.md Langkah 1 dan pm.md Langkah 5: bandingkan commit feat: sejak entry CHANGELOG.md terakhir dengan yang sudah tertandai feat(sprint-N); kalau ada commit yatim, tawarkan backfill CHANGELOG retroaktif sebelum lanjut sprint/PM report baru."
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Tidak ada dokumentasi soal npm cache global root-owned (bug npm versi lama) yang menyebabkan EACCES saat 'npm install' package baru di tengah sprint — ditemukan pertama kali di Sprint 5 saat install pdfkit/date-fns. Workaround (temp cache dir) berhasil tapi harus ditemukan dari nol di tengah eksekusi, dan TIDAK menyentuh 'sudo chown' sistem user (dengan benar, karena itu perubahan sistem yang butuh izin eksplisit).",
+      "suggested_fix": "Tambah catatan singkat di sprint.md, bagian 'Jika ada package baru dibutuhkan': kalau 'npm install' gagal dengan EACCES yang menyebut '~/.npm/_cacache' root-owned files, JANGAN jalankan 'sudo chown' otomatis — gunakan '--cache <scratchpad-dir>/npm-cache' sebagai workaround per-sesi, dan sebutkan ke user di laporan akhir sprint bahwa 'sudo chown -R $(whoami) ~/.npm' akan memperbaikinya permanen kalau mereka mau menjalankannya sendiri.",
+      "priority": "LOW",
+      "applied": true,
+      "applied_date": "2026-07-08",
+      "applied_summary": "Tambah sub-bullet di sprint.md Langkah 5 (\"Jika ada package baru dibutuhkan\"): kalau npm install gagal EACCES ~/.npm/_cacache, jangan sudo chown otomatis — pakai --cache <scratchpad-dir>/npm-cache, sebutkan solusi permanen (sudo chown) ke user di laporan akhir."
     }
   ],
   "improvement_history": [
@@ -195,6 +257,18 @@
       "skill": "retro.md",
       "change": "Tambah aturan eskalasi otomatis: recurring blocker dengan occurrences>=3 & resolved=false wajib diusulkan jadi task sprint eksplisit atau dinaikkan severity satu tingkat.",
       "trigger": "RETRO finding Sprint 2 (2026-07-05): blocker test coverage import.ts/warga.service.ts sudah 3x direkomendasikan tanpa tindak lanjut nyata karena hanya jadi catatan naratif"
+    },
+    {
+      "date": "2026-07-08",
+      "skill": "sprint.md",
+      "change": "Tambah pre-flight gate baca RETRO.md sebelum tentukan sprint aktif (stop & konfirmasi user kalau ada rekomendasi wajib-jadi-sprint yang belum ditindaklanjuti); tambah cek commit yatim (feat: tanpa entry CHANGELOG); dokumentasikan workaround npm cache EACCES.",
+      "trigger": "RETRO finding 2026-07-08 (Sprint 4-5): test coverage blocker 5x recurring HIGH tanpa sprint eksplisit; Sprint 4 (PDP) tidak dapat entry CHANGELOG; npm cache EACCES ditemukan dari nol"
+    },
+    {
+      "date": "2026-07-08",
+      "skill": "pm.md",
+      "change": "Tambah cek commit yatim (feat: tanpa entry CHANGELOG) di Langkah 5 sebelum tulis CHANGELOG baru.",
+      "trigger": "RETRO finding 2026-07-08 (Sprint 4-5): Sprint 4 (PDP) dikerjakan di luar /sprint, tidak pernah trigger laporan PM"
     }
   ]
 }

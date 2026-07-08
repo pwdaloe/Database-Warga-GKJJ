@@ -3,6 +3,140 @@
 
 ---
 
+## [2026-07-08] — Retrospektif Sprint 4–5 (Kepatuhan PDP & Perpindahan Jemaat Backend)
+
+**Project**: Database Warga GKJJ
+**Scope**: Sprint 4 (Kepatuhan PDP, di luar alur `/sprint`) dan Sprint 5 (Perpindahan Jemaat: Backend)
+**Reviewed**: Rabu, 8 Juli 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 2 sprint (Sprint 4, Sprint 5) |
+| Total tasks | 13 tasks (13/13 selesai — 4 di Sprint 4, 9 di Sprint 5) |
+| Fix/revert commits (pasca sprint) | 0 |
+| Unique blockers baru | 1 (npm cache EACCES, Sprint 5) — Sprint 4 tidak punya data blocker sama sekali (lihat gap di bawah) |
+| Recurring blockers | 1 (test coverage, sekarang **5x** berturut-turut, masih HIGH & unresolved) |
+| Skill gap terdeteksi | 3 baru (semua di `sprint.md`) |
+
+### 🔁 Pola Blocker Sistemik
+
+#### Test coverage `import.ts` & `warga.service.ts` masih 0% — muncul **5 kali**, masih HIGH, masih belum resolved
+- **Severity**: HIGH (sejak eskalasi otomatis retro Sprint 2, 2026-07-05)
+- **Root cause**: Tidak berubah dari retro sebelumnya — ini murni gap proses, bukan gap tooling.
+  `qa.md` sudah benar secara teknis (Vitest, `npm run test --workspace=apps/api -- --coverage`),
+  tapi tidak ada satupun dari 5 titik review (2026-07-04, dua kali 2026-07-05, Sprint 3, dan
+  sekarang Sprint 4–5) yang benar-benar mengubah rekomendasi ini jadi task nyata di sebuah sprint.
+  Sprint 3 murni frontend (tidak menyentuh file ini), Sprint 4 (PDP) fokus cookie
+  consent/kebijakan privasi, Sprint 5 menyentuh file **baru** (`perpindahan.service.ts`,
+  `surat.service.ts`) bukan `import.ts`/`warga.service.ts` yang lama. Area produksi yang
+  menyentuh ~2000 data warga langsung ini sudah **34+ hari** (sejak 2026-07-04) tanpa jaring
+  pengaman test sama sekali.
+- **Skill yang perlu diupdate**: `sprint.md` — aturan eskalasi di `retro.md` sudah benar sejak
+  Sprint 2, tapi tidak ada mekanisme di `sprint.md` yang menutup loop dari "rekomendasi retro"
+  ke "sprint file baru benar-benar dibuat". Retro terus mendeteksi, tapi tidak ada yang memaksa
+  tindak lanjut sebelum sprint lain jalan duluan.
+- **Saran perbaikan**: tambah langkah pre-flight di `sprint.md` yang membaca entry teratas
+  `RETRO.md` — kalau ada rekomendasi "wajib jadi task eksplisit" yang belum punya sprint file
+  padanan, **berhenti dan minta konfirmasi user** sebelum lanjut ke sprint yang sudah direncanakan
+  (lihat detail di tabel Kandidat Perbaikan Skill). Ini blocker paling kritis yang tersisa dari
+  seluruh siklus retro sejauh ini — sudah waktunya dipaksa lewat proses, bukan terus mengandalkan
+  rekomendasi naratif yang terbukti 5x tidak cukup.
+
+#### npm cache global root-owned (EACCES) — occurrence baru (1x), MED, sudah resolved dengan workaround
+- **Severity**: MED
+- **Root cause**: Bug npm versi lama meninggalkan file cache root-owned di `~/.npm/_cacache` di
+  mesin dev. Muncul saat Sprint 5 menjalankan `npm install pdfkit date-fns` untuk pertama kali.
+  Bukan gap skill sebelumnya karena belum pernah terjadi — tapi berpotensi terulang di sesi/mesin
+  lain kalau tidak didokumentasikan.
+- **Skill yang perlu diupdate**: `sprint.md`, bagian "Jika ada package baru dibutuhkan"
+- **Saran perbaikan**: dokumentasikan workaround (`npm install ... --cache <scratchpad>/npm-cache`)
+  sebagai pola reusable, dengan catatan eksplisit **jangan** menjalankan `sudo chown` otomatis —
+  itu perubahan sistem yang butuh izin eksplisit user. Agent sudah menangani ini dengan benar di
+  Sprint 5 (workaround tanpa sudo), tapi ditemukan dari nol di tengah eksekusi karena tidak
+  terdokumentasi di manapun.
+
+### 🐛 Pola Git Bermasalah
+
+- **Pasca Sprint 4 (`1f2d520`) & Sprint 5 (`514cc4b`)**: 0 fix/revert commit — konsisten dengan
+  Sprint 1–3 sebelumnya (juga 0). Sejak sistem `/sprint` dipakai (Sprint 1 dan seterusnya), **belum
+  pernah ada satupun commit "fix:" susulan** untuk pekerjaan yang dihasilkan sprint agent — berbeda
+  jauh dengan era pra-sistem yang punya banyak commit "fix:" untuk file yang sama berulang kali
+  (`warga.service.ts`/`warga.ts` diubah 8× sepanjang riwayat, kebanyakan sebelum ada `/sprint`).
+- **Tidak ada file yang diubah-ubah berulang secara mencurigakan** di Sprint 4–5 — perubahan schema
+  Prisma di Sprint 5 (`approvedBy`/`validatedBy` ke `User`) bersih dalam satu migration, tidak ada
+  migration susulan untuk memperbaiki migration sebelumnya.
+- **Catatan historis (bukan temuan baru)**: dua commit lawas (`f6e606c`, `d3db31b`, keduanya
+  3 Juni 2026, sebelum era `/sprint`) punya judul persis sama ("tambah fitur Validasi Data warga")
+  dengan diff kecil di antaranya — indikasi commit ganda/koreksi cepat manual oleh user saat itu.
+  Tidak actionable sekarang (pra-sistem, sudah lama), dicatat sekadar untuk konteks.
+
+### 🕳️ Gap Skill Coverage
+
+- **Situasi**: Sprint 4 (Kepatuhan PDP) dikerjakan di luar alur `/sprint` normal atas permintaan
+  langsung user di tengah sesi lain. Pekerjaannya sendiri solid (commit `1f2d520`, 0 fix commit
+  susulan) dan bahkan sudah didokumentasikan retroaktif di `sprints/sprint_04.md` supaya penomoran
+  sprint tetap konsisten dengan Sprint 5–6 (Perpindahan Jemaat). **Tapi** karena `sprint.md` tidak
+  pernah dijalankan penuh untuk sprint ini, Langkah 10 (tulis `CHANGELOG.md` + kirim email PM)
+  tidak pernah terpicu — `CHANGELOG.md` punya lubang total untuk Sprint 4, seolah-olah tidak pernah
+  terjadi kalau hanya dilihat dari riwayat PM.
+- **Tidak di-handle oleh**: `sprint.md` (mengasumsikan selalu dijalankan dari awal), `pm.md`
+  (mode continuous-delivery-nya bisa menangkap ini tapi hanya kalau benar-benar di-invoke — tidak
+  ada yang memicunya otomatis setelah kerjaan ad-hoc selesai).
+- **Saran**: tambah pengecekan ringan di `sprint.md`/`pm.md` yang membandingkan commit `feat:`
+  sejak entry `CHANGELOG.md` terakhir dengan commit yang sudah tertandai `feat(sprint-N)` — kalau
+  ada commit "yatim" (feat tanpa entry CHANGELOG), tawarkan backfill retroaktif sebelum lanjut
+  sprint baru. Detail di tabel Kandidat Perbaikan Skill.
+
+### ✅ Yang Berjalan Baik
+
+- **Zero fix/revert commit** di seluruh 4 sprint yang lewat `/sprint` (Sprint 1, 2, 3, 5) ditambah
+  Sprint 4 yang di luar alur — total 5 rilis fitur beruntun tanpa satupun commit perbaikan susulan.
+- **Pre-check schema drift & Prisma consent gate (hasil retro Sprint 2) tervalidasi nyata di
+  Sprint 5** — sprint pertama yang menyentuh Prisma lagi sejak perbaikan itu diterapkan. Drift
+  check (`prisma migrate diff`) berjalan dan melaporkan "tidak ada drift" dengan benar, migration
+  `perpindahan_approver_ke_user` diterapkan bersih tanpa perlu `migrate reset`/consent gate sama
+  sekali. Perbaikan skill dari retro sebelumnya terbukti bekerja seperti dirancang.
+- **Sprint 5 menangani env issue baru (npm cache EACCES) dengan judgment yang tepat**: tidak
+  mencoba `sudo chown` sistem user tanpa izin, memilih workaround lokal (`--cache` folder
+  scratchpad sesi) yang reversibel dan tidak menyentuh apapun di luar sesi ini.
+- **Test-first discipline konsisten**: Sprint 5 menambahkan 18 test baru (11 service + 7 route)
+  yang memetakan 1-ke-1 ke skenario di Definition of Done sprint file (approve/validate/delete
+  edge case, role-gating tiap endpoint) — bukan sekadar test generik untuk lolos coverage.
+- **Retroaktif dokumentasi sprint (`sprint_04.md`) menunjukkan itikad baik** menjaga konsistensi
+  penomoran meski alur kerja menyimpang dari proses normal — gap yang tersisa (CHANGELOG) adalah
+  soal tooling/proses, bukan kelalaian.
+
+### 🔧 Kandidat Perbaikan Skill
+
+| Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
+|-----------|-----------|---------|-----------------|--------|
+| HIGH | sprint.md | Aturan eskalasi retro.md (occurrences≥3 → wajib task eksplisit) tidak punya mekanisme penutup — sudah 3 retro berturut menyatakan "wajib" tapi tidak ada sprint file yang dibuat untuk test coverage `import.ts`/`warga.service.ts` | Tambah pre-flight di sprint.md: baca entry teratas RETRO.md, kalau ada rekomendasi "wajib jadi task eksplisit" tanpa sprint file padanan, berhenti & minta konfirmasi user sebelum lanjut sprint terjadwal | ✅ applied (2026-07-08) |
+| MED | sprint.md / pm.md | Kerjaan ad-hoc di luar `/sprint` (Sprint 4/PDP) tidak pernah dapat entry CHANGELOG.md/email PM karena Langkah 10 tidak pernah terpicu | Bandingkan commit `feat:` sejak CHANGELOG terakhir vs commit yang sudah tertandai `feat(sprint-N)`; kalau ada commit "yatim", tawarkan backfill CHANGELOG retroaktif sebelum sprint baru mulai | ✅ applied (2026-07-08) |
+| LOW | sprint.md | npm cache global root-owned (EACCES) belum terdokumentasi — ditemukan dari nol di tengah Sprint 5 | Dokumentasikan workaround `--cache <scratchpad>/npm-cache` di bagian "Jika ada package baru dibutuhkan", eksplisit larang `sudo chown` otomatis | ✅ applied (2026-07-08) |
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. **Prioritas tertinggi, tidak bisa ditunda lagi**: buat sprint eksplisit untuk test coverage
+   `import.ts` (bulk-import Excel) & `warga.service.ts` (bulk-validate) — blocker ini sudah HIGH
+   sejak Sprint 2 dan sekarang **5x** review berturut-turut tanpa tindak lanjut nyata. Sarankan
+   ini jadi `sprints/sprint_07.md` (setelah Sprint 6/frontend Perpindahan Jemaat selesai), ATAU
+   sisipkan sebagai task tambahan sebelum Sprint 6 dieksekusi kalau user ingin ditangani lebih
+   cepat. Area ini menyentuh ~2000 data warga produksi langsung tanpa jaring pengaman apapun.
+2. Terapkan kandidat perbaikan HIGH (`sprint.md` baca-RETRO-sebelum-mulai) secepatnya — ini akan
+   mencegah gap #1 di atas terulang untuk blocker recurring lainnya di masa depan, bukan cuma
+   untuk kasus test coverage ini saja.
+3. Backfill entry `CHANGELOG.md` untuk Sprint 4 (Kepatuhan PDP) melalui `/pm` supaya riwayat PM
+   proyek lengkap — saat ini satu-satunya jejak Sprint 4 ada di `sprints/sprint_04.md` dan git log,
+   tidak muncul di `CHANGELOG.md` sama sekali.
+4. Jalankan Sprint 6 (Perpindahan Jemaat: Frontend) berikutnya sesuai urutan — tidak ada blocker
+   yang menghalangi, dan pre-check Prisma/Docker dari retro Sprint 2 sudah terbukti bekerja baik
+   di Sprint 5 kalau Sprint 6 kembali menyentuh backend.
+
+---
+
 ## [2026-07-05] — Retrospektif Sprint 3 (wrap-up Sprint 1–3: Reset Password Mandiri)
 
 **Project**: Database Warga GKJJ
