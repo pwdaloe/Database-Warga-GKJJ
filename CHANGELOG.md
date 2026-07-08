@@ -3,6 +3,30 @@
 
 ---
 
+## [2026-07-08 19:42 WIB] — Sprint 5/6 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Rabu, 8 Juli 2026 pukul 19:42 WIB
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 5 Selesai: Perpindahan Jemaat — Backend (CRUD, Approval, Surat PDF, Email)
+- Migration `perpindahan_approver_ke_user`: `Perpindahan.approvedBy`/`validatedBy` dipindah dari `Warga` ke `User` (staf yang login selalu punya identitas via JWT, tidak semua staf punya baris `Warga`), tambah field `approvedAt`/`validatedAt`
+- `perpindahan.service.ts`: list/get/create/update/approve/validate/delete, 2 tahap sign-off (approve → validate)
+- Sinkronisasi otomatis `warga.statusKeanggotaan` saat **validate** (bukan approve): MASUK→AKTIF, KELUAR→PINDAH_KELUAR, MENINGGAL→MENINGGAL, dalam satu transaksi
+- `surat.service.ts`: generate PDF "Surat Keterangan Pindah/Meninggal Jemaat" via `pdfkit`, dengan 2 baris tanda tangan (nama + jabatan + tanggal) untuk approver dan validator
+- `email.service.ts` di-extend dengan `sendSuratPerpindahanEmail` (lampiran PDF, reuse transporter yang ada)
+- Route `perpindahan.ts`: endpoint CRUD + `approve`/`validate` (role-gated berbeda tingkat) + `surat.pdf` (preview kapan saja) + `kirim-email` (hanya setelah validated)
+- Test baru: `perpindahan.service.test.ts` (11 test) + `perpindahan.route.test.ts` (7 test) — total 63/63 test pass, `type-check` & `build` bersih di `apps/api`
+- Commit: `514cc4b`
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+- npm cache global (`~/.npm`) berisi file root-owned dari bug npm versi lama, menyebabkan `EACCES` saat install `pdfkit`/`date-fns` — di-resolve dengan cache folder sementara tanpa perlu `sudo chown` di mesin user
+
+### 🏃 Next Sprint
+Sprint 6 — Perpindahan Jemaat: Frontend (List, Form, Cetak PDF, Email, WhatsApp)
+
+---
+
 ## [2026-07-05 15:32 WIB] — Sprint 3/3 | ✅ DONE
 
 **Project**: Database Warga GKJJ
