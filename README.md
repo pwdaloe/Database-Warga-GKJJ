@@ -3,7 +3,7 @@
 Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
 Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
 
-**Versi:** `v1.3` · **Terakhir diperbarui:** 5 Juli 2026
+**Versi:** `v1.4` · **Terakhir diperbarui:** 8 Juli 2026
 
 ---
 
@@ -117,8 +117,15 @@ Modal upload Excel di halaman **Pengguna** (pola sama seperti import warga, maks
 - Log hasil per baris (berhasil/gagal + alasan)
 - Akses hanya **Superadmin** dan **Kepala Kantor**
 
-#### Perpindahan *(coming soon)*
-- Pencatatan masuk, keluar, dan meninggal
+#### Perpindahan Jemaat
+Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off** sebelum resmi:
+- **Approve** — persetujuan awal oleh `MAJELIS`/`KEPALA_KANTOR`/`SUPERADMIN`, belum mengubah status keanggotaan warga
+- **Validate** — finalisasi administratif oleh `KEPALA_KANTOR`/`SUPERADMIN`, baru di tahap ini `warga.statusKeanggotaan` disinkronkan otomatis (MASUK→Aktif, KELUAR→Pindah Keluar, MENINGGAL→Meninggal)
+- **Cetak Surat** — generate PDF "Surat Keterangan Pindah/Meninggal Jemaat" (bisa preview draft kapan saja), mencantumkan nama, jabatan, dan tanggal approver serta validator
+- **Kirim Email** — lampirkan PDF surat ke email warga (hanya setelah divalidasi)
+- **Kirim WhatsApp** — ringkasan teks via `wa.me` (tersedia di semua status)
+
+> Backend (API, PDF, email) sudah selesai. Antarmuka pengelolaan di aplikasi web (`/perpindahan`) sedang dalam pengerjaan.
 
 ---
 
@@ -189,7 +196,7 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 7 | 46 (crypto, error handler, auth middleware/service/route, reset password) |
+| Backend (`apps/api`) | 9 | 63 (crypto, error handler, auth middleware/service/route, reset password, perpindahan service/route) |
 | Frontend (`apps/web`) | 3 | 15 (Badge, Pagination, ResetPasswordForm) |
 
 ```bash
@@ -266,6 +273,8 @@ Body snapshot pada `ActivityLog` secara otomatis:
 
 ## Struktur Proyek
 
+> Diagram arsitektur (komponen, alur deploy, autentikasi): [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+
 ```
 Database-Warga-GKJJ/
 ├── apps/
@@ -280,7 +289,7 @@ Database-Warga-GKJJ/
 │   │       │   ├── errorHandler.ts # Prisma & Zod error mapping
 │   │       │   └── activityLogger.ts # Request logging middleware
 │   │       ├── routes/
-│   │       │   ├── auth.ts
+│   │       │   ├── auth.ts         # Login + forgot/reset password
 │   │       │   ├── warga.ts        # + PATCH /bulk-status (Validasi Data)
 │   │       │   ├── keluarga.ts
 │   │       │   ├── wilayah.ts
@@ -290,17 +299,23 @@ Database-Warga-GKJJ/
 │   │       │   ├── import.ts       # Batch import Excel (warga & pengguna)
 │   │       │   ├── users.ts        # Manajemen pengguna
 │   │       │   ├── logs.ts         # Activity log
+│   │       │   ├── perpindahan.ts  # CRUD + approve/validate + surat.pdf + kirim-email
 │   │       │   └── public.ts       # Endpoint publik (tanpa auth)
 │   │       ├── services/
 │   │       │   ├── warga.service.ts # + sanitizeForRole, bulkValidasiWarga
 │   │       │   ├── keluarga.service.ts
-│   │       │   └── auth.service.ts
+│   │       │   ├── auth.service.ts  # + forgot/reset password
+│   │       │   ├── perpindahan.service.ts # 2 tahap sign-off (approve → validate)
+│   │       │   ├── surat.service.ts # Generate PDF surat perpindahan (pdfkit)
+│   │       │   └── email.service.ts # Reset password & surat perpindahan (nodemailer)
 │   │       └── utils/
 │   │           └── crypto.ts       # AES-256 enkripsi/dekripsi NIK (PDP)
 │   └── web/                        # Frontend Next.js
 │       └── src/
 │           ├── app/
-│           │   ├── (auth)/login/   # Halaman login
+│           │   ├── (auth)/login/           # Halaman login
+│           │   ├── (auth)/forgot-password/ # Minta link reset password
+│           │   ├── (auth)/reset-password/  # Set password baru dari link reset
 │           │   ├── (dashboard)/    # Halaman yang memerlukan auth
 │           │   │   ├── dashboard/  # Dashboard + chart + peta
 │           │   │   ├── warga/      # Data warga + wizard
@@ -312,15 +327,20 @@ Database-Warga-GKJJ/
 │           │   │   ├── pengguna/   # Manajemen pengguna + Import Pengguna
 │           │   │   ├── log/        # Log aktivitas
 │           │   │   └── pengaturan/ # Pengaturan sistem
+│           │   ├── kebijakan-cookie/  # Kebijakan cookie (publik, tanpa auth)
+│           │   ├── kebijakan-privasi/ # Kebijakan privasi (publik, tanpa auth)
 │           │   └── m/              # PWA mobile untuk Penatua Kelompok
 │           │       ├── login/      # Login mobile
+│           │       ├── forgot-password/ # Reset password mobile
+│           │       ├── reset-password/
 │           │       ├── (app)/warga/ # Daftar, tambah, edit warga (kelompok sendiri)
 │           │       ├── (app)/kartu/ # Cari & tampilkan kartu digital
 │           │       └── [id]/       # Kartu digital publik (tanpa auth)
 │           ├── components/
 │           │   ├── layout/
 │           │   │   ├── Sidebar.tsx # Navigasi bergroup + v1.0 badge
-│           │   │   └── ProtectedRoute.tsx
+│           │   │   ├── ProtectedRoute.tsx
+│           │   │   └── CookieConsentBanner.tsx # Banner consent site-wide (localStorage)
 │           │   └── ui/             # Modal, Badge, Pagination, FormField
 │           └── hooks/              # Custom React hooks per domain
 ├── database/
@@ -453,6 +473,7 @@ NEXT_PUBLIC_API_URL="http://localhost:4000/api"
 | `Wilayah` | Kumpulan beberapa kelompok |
 | `User` | Akun pengguna sistem |
 | `AuditLog` | Log perubahan & akses data (CREATE, UPDATE, DELETE, APPROVE, VALIDATE, IMPORT, **ACCESS**) |
+| `Perpindahan` | Pencatatan pindah masuk/keluar/meninggal jemaat — 2 tahap sign-off (`approvedBy`/`validatedBy` mengacu ke `User`) |
 | `ActivityLog` | Log seluruh request API mutasi + GET sensitif, beserta status & error |
 | `ImportLog` | Riwayat import Excel |
 | `MasterKelurahan` | Master data kelurahan (autocomplete alamat) |
@@ -470,6 +491,8 @@ npx tsx prisma/seed-master.ts  # Seed data master
 ---
 
 ## API Endpoints
+
+> Referensi lengkap (request/response body, error code per endpoint): [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md)
 
 Base URL: `http://localhost:4000/api`
 
@@ -507,6 +530,19 @@ Authorization: Bearer <token>
 | `PUT` | `/keluarga/:id` | Update keluarga |
 | `DELETE` | `/keluarga/:id` | Hapus keluarga |
 | `POST` | `/keluarga/:id/approve` | Approve keluarga |
+
+### Perpindahan Jemaat
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| `GET` | `/perpindahan` | Daftar perpindahan (filter: `jenis`, `search`, paginasi) |
+| `GET` | `/perpindahan/:id` | Detail perpindahan |
+| `POST` | `/perpindahan` | Catat perpindahan baru — Superadmin/Kepala Kantor/Majelis/Staf Admin |
+| `PUT` | `/perpindahan/:id` | Update data perpindahan |
+| `POST` | `/perpindahan/:id/approve` | Tahap 1 — persetujuan awal (belum mengubah `statusKeanggotaan`) — Superadmin/Kepala Kantor/Majelis |
+| `POST` | `/perpindahan/:id/validate` | Tahap 2 — finalisasi, mengubah `warga.statusKeanggotaan` sesuai jenis — Superadmin/Kepala Kantor |
+| `DELETE` | `/perpindahan/:id` | Hapus perpindahan — Superadmin/Kepala Kantor |
+| `GET` | `/perpindahan/:id/surat.pdf` | Generate/preview PDF Surat Keterangan Pindah/Meninggal |
+| `POST` | `/perpindahan/:id/kirim-email` | Kirim PDF surat ke email warga (hanya setelah divalidasi) |
 
 ### Master Data
 | Method | Endpoint | Keterangan |
@@ -590,6 +626,15 @@ Fondasi URL QR (`{app}/m/{wargaId}`) dirancang untuk mendukung fitur absensi keh
 - Anggota scan QR acara → check-in mandiri
 - Penatua scan kartu anggota → catat kehadiran
 - Laporan kehadiran per acara dan per kelompok
+
+### Kebijakan Cookie & Privasi — `/kebijakan-cookie`, `/kebijakan-privasi`
+
+Halaman **tanpa login**, sesuai UU No. 27/2022 tentang Perlindungan Data Pribadi:
+- `/kebijakan-cookie` — kategori cookie & local storage yang dipakai, dasar pemrosesan, kontak
+- `/kebijakan-privasi` — data yang dikumpulkan, dasar pemrosesan, 7 hak subjek data (Pasal 5–12 UU PDP), keamanan & retensi, kontak
+- Ditautkan dari footer halaman login desktop (`/login`) dan mobile (`/m/login`)
+
+**Cookie Consent Banner** — muncul di kunjungan pertama (site-wide), pilihan "Hanya Esensial" atau "Terima Semua" disimpan di `localStorage` browser pengguna.
 
 ---
 
