@@ -3,8 +3,13 @@
 ## Konteks
 
 Sprint ini melanjutkan Sprint 5 (API `apps/api/src/routes/perpindahan.ts` sudah tersedia lengkap
-dengan endpoint list/create/approve/delete/`surat.pdf`/`kirim-email`). **Jangan jalankan sprint ini
-kalau Sprint 5 belum selesai** — cek `sprints/.current_sprint`, harus sudah ≥ 5.
+dengan endpoint list/create/approve/**validate**/delete/`surat.pdf`/`kirim-email`). **Jangan
+jalankan sprint ini kalau Sprint 5 belum selesai** — cek `sprints/.current_sprint`, harus sudah ≥ 5.
+
+Perpindahan Jemaat punya **2 tahap approval** (keputusan produk, lihat `sprints/sprint_05.md`):
+approve (persetujuan awal, `MAJELIS`/`KEPALA_KANTOR`/`SUPERADMIN`) lalu validate (finalisasi
+administratif, hanya `KEPALA_KANTOR`/`SUPERADMIN` — inilah yang mengubah `statusKeanggotaan`
+warga). UI harus merefleksikan 2 tahap ini secara eksplisit, jangan disederhanakan jadi 1 tombol.
 
 Sidebar frontend **sudah** punya link `/perpindahan` (lihat
 `apps/web/src/components/layout/Sidebar.tsx` grup "Utilitas") — tidak perlu diubah.
@@ -36,8 +41,9 @@ Buat `apps/web/src/hooks/usePerpindahan.ts` mengikuti pola `useWarga.ts`:
   - `create` (`useMutation`, `POST /perpindahan`, invalidate `['perpindahan']` setelah sukses)
   - `update` (`PUT /perpindahan/:id`)
   - `approve` (`POST /perpindahan/:id/approve`)
+  - `validate` (`POST /perpindahan/:id/validate`)
   - `remove` (`DELETE /perpindahan/:id`)
-  - `kirimEmail` (`POST /perpindahan/:id/kirim-email`) — return message dari response untuk ditampilkan sebagai notifikasi
+  - `kirimEmail` (`POST /perpindahan/:id/kirim-email`) — return message dari response untuk ditampilkan sebagai notifikasi; tangkap error 400 "belum divalidasi" dan tampilkan pesannya apa adanya (backend sudah kasih pesan jelas)
 
 ### 2. Lib WhatsApp `perpindahanWhatsapp.ts`
 
@@ -80,12 +86,23 @@ export function kirimPerpindahanWhatsApp(perpindahan: any): void {
 
 - Header + tombol "Catat Perpindahan Baru" (buka `Modal` berisi form, role `STAF_ADMIN` ke atas)
 - Filter: dropdown jenis (`Semua`/`MASUK`/`KELUAR`/`MENINGGAL`), search box nama warga (debounce sederhana seperti pola di `warga/page.tsx` kalau ada, atau langsung on-change)
-- Tabel kolom: Nama Warga, Jenis (Badge warna beda per jenis), Tanggal, Nomor Surat, Status (Badge "Menunggu Approval" abu-abu / "Disetujui" hijau berdasarkan `approvedBy` null atau tidak), Aksi
+- Tabel kolom: Nama Warga, Jenis (Badge warna beda per jenis), Tanggal, Nomor Surat, Status (Badge
+  3 kondisi: "Menunggu Approval" abu-abu jika `approvedBy` null, "Disetujui" kuning/biru jika
+  `approvedBy` terisi tapi `validatedBy` null, "Divalidasi" hijau jika `validatedBy` terisi), Aksi
 - Kolom Aksi (tombol icon, role-gated via `useAuth()`):
   - **Approve** (`CheckCircle2` icon) — hanya tampil kalau `approvedBy` null DAN role `MAJELIS`/`KEPALA_KANTOR`/`SUPERADMIN`. Konfirmasi dulu (`confirm()` browser cukup, ikuti pola sederhana yang sudah ada di project ini untuk aksi konfirmasi kalau ada, kalau tidak ada pola khusus `window.confirm` cukup)
-  - **Cetak Surat** — `window.open(`${API_BASE_URL}/perpindahan/${id}/surat.pdf`, '_blank')`, cek `apps/web/src/lib/api.ts` untuk base URL API yang benar
-  - **Kirim Email** — panggil `kirimEmail` mutation, tampilkan hasil message via `alert()` atau toast kalau project sudah punya sistem toast (cek dulu apakah ada, kalau tidak `alert()` sudah konsisten dengan pola error handling form yang ada)
-  - **Kirim WhatsApp** — panggil `kirimPerpindahanWhatsApp(row)`
+  - **Validate** (`ShieldCheck` icon, tampil terpisah dari Approve) — hanya tampil kalau `approvedBy`
+    **sudah terisi** DAN `validatedBy` masih null DAN role `KEPALA_KANTOR`/`SUPERADMIN`. Konfirmasi
+    dulu (`window.confirm`) — jelaskan di teks konfirmasi bahwa aksi ini akan mengubah status
+    keanggotaan warga, karena ini transaksi yang beneran mengubah data `warga.statusKeanggotaan`.
+  - **Cetak Surat** — `window.open(`${API_BASE_URL}/perpindahan/${id}/surat.pdf`, '_blank')`, cek `apps/web/src/lib/api.ts` untuk base URL API yang benar. Tersedia untuk semua status (preview draft juga boleh).
+  - **Kirim Email** — hanya **aktif/enabled** kalau `validatedBy` sudah terisi (kalau belum, tombol
+    disabled dengan tooltip/title "Validasi dulu sebelum kirim surat resmi" — backend juga sudah
+    menolak dengan 400 kalau dipanggil sebelum waktunya, tapi UI sebaiknya sudah mencegah dari awal).
+    Kalau enabled, panggil `kirimEmail` mutation, tampilkan hasil message via `alert()` atau toast
+    kalau project sudah punya sistem toast (cek dulu apakah ada, kalau tidak `alert()` sudah
+    konsisten dengan pola error handling form yang ada)
+  - **Kirim WhatsApp** — panggil `kirimPerpindahanWhatsApp(row)`, tersedia untuk semua status (ringkasan teks, bukan surat resmi)
   - **Hapus** — hanya kalau `approvedBy` null DAN role `KEPALA_KANTOR`/`SUPERADMIN`, konfirmasi dulu
 - `Pagination` di bawah tabel
 
@@ -131,10 +148,12 @@ Semua harus sukses.
 
 - [ ] Halaman `/perpindahan` menampilkan list dengan filter jenis dan search nama warga, ter-paginasi
 - [ ] Form catat perpindahan baru berfungsi, validasi wajib `wargaId` dan `jenis`
-- [ ] Tombol Approve hanya muncul untuk role yang sesuai dan data yang belum di-approve; setelah approve, badge status berubah dan tabel ter-refresh (invalidate query)
-- [ ] Tombol Cetak Surat membuka PDF surat di tab baru, bisa langsung diprint/save-as-PDF dari browser
-- [ ] Tombol Kirim Email memanggil endpoint kirim-email dan menampilkan hasil (sukses atau pesan error kalau warga belum punya email)
+- [ ] Badge status merefleksikan 3 kondisi: Menunggu Approval / Disetujui (approved, belum validated) / Divalidasi
+- [ ] Tombol Approve hanya muncul untuk role yang sesuai dan data yang belum di-approve; setelah approve, badge berubah ke "Disetujui" (bukan langsung "Divalidasi"), tabel ter-refresh
+- [ ] Tombol Validate hanya muncul untuk data yang sudah approved tapi belum validated, dan role `KEPALA_KANTOR`/`SUPERADMIN` saja; setelah validate, badge berubah ke "Divalidasi" dan `warga.statusKeanggotaan` berubah
+- [ ] Tombol Cetak Surat membuka PDF surat di tab baru untuk semua status (termasuk sebelum validated, sebagai preview draft)
+- [ ] Tombol Kirim Email disabled sampai `validatedBy` terisi; setelah validated, memanggil endpoint kirim-email dan menampilkan hasil (sukses atau pesan error kalau warga belum punya email)
 - [ ] Tombol Kirim WhatsApp membuka `wa.me` dengan pesan ringkasan surat yang benar
 - [ ] Tombol Hapus hanya muncul untuk data yang belum di-approve dan role yang sesuai
-- [ ] Alur lengkap dicoba manual sekali via `npm run dev`: catat perpindahan baru → approve → cek `warga.statusKeanggotaan` berubah di halaman `/warga` → cetak PDF → kirim email (mode dev, cek log server) → kirim WhatsApp (cek link `wa.me` terbuka dengan pesan benar) — catat hasilnya di ringkasan sprint
+- [ ] Alur lengkap dicoba manual sekali via `npm run dev`: catat perpindahan baru → approve (cek `warga.statusKeanggotaan` **belum** berubah) → validate (cek `warga.statusKeanggotaan` **baru** berubah di halaman `/warga`) → cetak PDF → kirim email (mode dev, cek log server) → kirim WhatsApp (cek link `wa.me` terbuka dengan pesan benar) — catat hasilnya di ringkasan sprint
 - [ ] Semua test baru + lama pass, `type-check` dan `build` bersih di `apps/web`
