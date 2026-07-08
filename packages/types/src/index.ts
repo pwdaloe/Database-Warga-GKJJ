@@ -80,6 +80,8 @@ export interface Warga {
   pekerjaan: string | null
   dataStatus: DataStatus
   catatan: string | null
+  konsenPDP: boolean
+  tanggalKonsen: string | null
   keluarga?: Keluarga
 }
 

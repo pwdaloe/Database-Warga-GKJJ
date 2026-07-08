@@ -244,6 +244,20 @@ export default function WargaDetailPage() {
               <InfoRow label="Status Data">
                 <Badge value={warga.dataStatus} type="dataStatus" />
               </InfoRow>
+              <InfoRow label="Konsen PDP">
+                {warga.konsenPDP ? (
+                  <span className="text-green-700 text-sm">
+                    Disetujui
+                    {warga.tanggalKonsen && (
+                      <span className="text-gray-500">
+                        {' '}· {format(new Date(warga.tanggalKonsen), 'd MMM yyyy', { locale: localeId })}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-sm">Belum disetujui</span>
+                )}
+              </InfoRow>
             </dl>
           </div>
 
@@ -442,7 +456,9 @@ export default function WargaDetailPage() {
             pendidikanTerakhir: warga.pendidikanTerakhir,
             pekerjaan: warga.pekerjaan,
             catatan: warga.catatan,
+            konsenPDP: warga.konsenPDP,
           }}
+          tanggalKonsenPDP={warga.tanggalKonsen}
           onSubmit={handleEdit}
           submitLabel="Update Warga"
         />

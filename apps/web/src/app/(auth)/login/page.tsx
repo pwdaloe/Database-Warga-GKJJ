@@ -53,9 +53,12 @@ export default function LoginPage() {
                 <span className="text-xs font-bold text-white tracking-wide">
                   Sistem Informasi Jemaat GKJJ
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-400/20 border border-green-400/40 text-green-300 text-[10px] font-semibold tracking-wider uppercase">
+                <a
+                  href="/kebijakan-privasi"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-400/20 border border-green-400/40 text-green-300 text-[10px] font-semibold tracking-wider uppercase hover:bg-green-400/30 transition-colors"
+                >
                   ✓ PDP Compliant
-                </span>
+                </a>
               </div>
               <p className="text-brand-100 text-[11px] leading-relaxed">
                 Sistem ini telah memenuhi ketentuan{' '}
@@ -80,6 +83,15 @@ export default function LoginPage() {
               className="text-white underline underline-offset-2 hover:text-brand-100 transition-colors"
             >
               gkjjkeu@outlook.com
+            </a>
+          </p>
+          <p className="text-brand-300 text-xs">
+            <a href="/kebijakan-privasi" className="underline underline-offset-2 hover:text-brand-100 transition-colors">
+              Kebijakan Privasi
+            </a>
+            {' · '}
+            <a href="/kebijakan-cookie" className="underline underline-offset-2 hover:text-brand-100 transition-colors">
+              Kebijakan Cookie
             </a>
           </p>
         </div>

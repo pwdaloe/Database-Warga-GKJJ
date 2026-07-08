@@ -52,6 +52,7 @@ const bodySchema = z.object({
   latitude:           z.number().optional().nullable(),
   longitude:          z.number().optional().nullable(),
   catatan:            z.string().optional().nullable(),
+  konsenPDP:          z.boolean().optional(),
 })
 
 // GET /api/warga

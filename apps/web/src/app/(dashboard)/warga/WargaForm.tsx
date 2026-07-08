@@ -77,6 +77,7 @@ const schema = z.object({
   latitude:           z.number().optional().nullable(),
   longitude:          z.number().optional().nullable(),
   catatan:            z.string().optional().nullable(),
+  konsenPDP:          z.boolean().default(false),
 }).superRefine((data, ctx) => {
   if (data.statusKeluarga === 'KEPALA' && !data.keluargaId && !data.newKelompokId) {
     ctx.addIssue({
@@ -97,6 +98,8 @@ interface Props {
   onTambahAnak?: () => void
   onSubmit: (data: WargaFormData) => Promise<void>
   submitLabel?: string
+  /** Tanggal konsen PDP tersimpan di server — ditampilkan read-only, tidak diedit dari form ini */
+  tanggalKonsenPDP?: string | null
 }
 
 async function compressImage(file: File): Promise<string> {
@@ -120,7 +123,7 @@ async function compressImage(file: File): Promise<string> {
   })
 }
 
-export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubmit, submitLabel = 'Simpan' }: Props) {
+export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubmit, submitLabel = 'Simpan', tanggalKonsenPDP }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('identitas')
   const fotoInputRef = useRef<HTMLInputElement>(null)
   const [keluargaSearch, setKeluargaSearch] = useState('')
@@ -142,6 +145,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
       statusKeluarga: 'LAINNYA',
       sudahBaptis: false,
       sudahSidi: false,
+      konsenPDP: false,
       jenisKelamin: undefined,
       ...defaultValues,
       ...(keluargaIdFixed ? { keluargaId: keluargaIdFixed } : {}),
@@ -162,6 +166,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
     prevStatusRef.current = statusKeluarga
   }, [statusKeluarga, setValue])
   const sudahSidi = watch('sudahSidi')
+  const konsenPDP = watch('konsenPDP')
   const selectedKeluargaId = watch('keluargaId')
   const fotoUrl = watch('fotoUrl')
   const alamatDomisili = watch('alamatDomisili')
@@ -404,6 +409,29 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                 <InputField label="Nomor Sidi" {...register('nomorSidi')} error={errors.nomorSidi} />
                 <InputField label="Tanggal Sidi" type="date" {...register('tanggalSidi')} error={errors.tanggalSidi as any} />
               </div>
+            )}
+          </div>
+
+          {/* Konsen PDP */}
+          <div className="space-y-2 p-4 bg-green-50 rounded-xl border border-green-200">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox" id="konsenPDP" {...register('konsenPDP')}
+                className="w-4 h-4 mt-0.5 rounded text-brand-600"
+              />
+              <label htmlFor="konsenPDP" className="text-sm text-gray-700 leading-relaxed">
+                <span className="font-medium">Persetujuan Pemrosesan Data Pribadi (PDP)</span> — jemaat/keluarga
+                telah diberi tahu dan menyetujui pengumpulan &amp; pemrosesan data pribadi ini sesuai{' '}
+                <a href="/kebijakan-privasi" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline underline-offset-2 hover:text-brand-700">
+                  Kebijakan Privasi &amp; UU No. 27/2022 tentang PDP
+                </a>
+                .
+              </label>
+            </div>
+            {konsenPDP && tanggalKonsenPDP && (
+              <p className="text-xs text-green-700 pl-7">
+                Disetujui pada {new Date(tanggalKonsenPDP).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
             )}
           </div>
         </div>

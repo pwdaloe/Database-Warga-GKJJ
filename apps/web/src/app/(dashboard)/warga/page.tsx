@@ -579,7 +579,9 @@ export default function WargaPage() {
               latitude: editData.latitude,
               longitude: editData.longitude,
               catatan: editData.catatan,
+              konsenPDP: editData.konsenPDP,
             } : addingAnakToKeluargaId ? { statusKeluarga: 'ANAK' } : undefined}
+            tanggalKonsenPDP={editData?.tanggalKonsen}
             keluargaIdFixed={addingAnakToKeluargaId ?? undefined}
             onTambahAnak={editData?.keluargaId ? handleTambahAnak : undefined}
             onSubmit={handleSubmit}

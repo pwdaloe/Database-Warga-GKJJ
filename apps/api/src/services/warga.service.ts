@@ -187,9 +187,13 @@ export async function createWarga(
   newKeluarga?: NewKeluargaInput,
 ) {
   // Enkripsi NIK sebelum disimpan
+  // Tanggal konsen PDP ditentukan server (tidak dipercaya dari client) — UU PDP Pasal 20
+  const konsenPDP = data.konsenPDP === true
   const encryptedData = {
     ...data,
     nik: data.nik ? encryptField(data.nik as string) : null,
+    konsenPDP,
+    tanggalKonsen: konsenPDP ? new Date() : null,
   }
 
   return prisma.$transaction(async (tx) => {
@@ -249,12 +253,23 @@ export async function updateWarga(
   user: JwtPayload,
   newKeluarga?: NewKeluargaInput,
 ) {
-  await getWargaById(id, user)
+  const existing = await getWargaById(id, user)
 
   // Enkripsi NIK jika dikirim
+  // Tanggal konsen PDP hanya diisi ulang saat transisi belum-setuju → setuju,
+  // dan dikosongkan saat konsen ditarik (tidak dipercaya dari client) — UU PDP Pasal 9 & 20
+  let tanggalKonsenUpdate: Date | null | undefined
+  if (data.konsenPDP !== undefined) {
+    const konsenPDP = data.konsenPDP === true
+    tanggalKonsenUpdate = konsenPDP
+      ? (existing.konsenPDP ? undefined : new Date())
+      : null
+  }
+
   const encryptedData = {
     ...data,
     ...(data.nik !== undefined ? { nik: data.nik ? encryptField(data.nik as string) : null } : {}),
+    ...(tanggalKonsenUpdate !== undefined ? { tanggalKonsen: tanggalKonsenUpdate } : {}),
   }
 
   // Warga diubah jadi Kepala KK baru (belum punya KK) → buat KK dalam transaksi

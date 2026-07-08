@@ -111,7 +111,10 @@ export default function MobileLoginPage() {
       </div>
 
       <p className="text-blue-200/60 text-xs mt-8 text-center">
-        © {new Date().getFullYear()} GKJJ · Dilindungi UU PDP No. 27/2022
+        © {new Date().getFullYear()} GKJJ · Dilindungi{' '}
+        <a href="/kebijakan-privasi" className="underline underline-offset-2">
+          UU PDP No. 27/2022
+        </a>
       </p>
     </div>
   )
