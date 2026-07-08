@@ -177,8 +177,6 @@ model Warga {
   kelompokSebagaiPenatua   Kelompok[]           @relation("KelompokPenatua")
   keluargaSebagaiKepala    Keluarga[]           @relation("KeluargaKepala")
   perpindahans           Perpindahan[]        @relation("WargaPerpindahan")
-  perpindahanApproved    Perpindahan[]        @relation("PerpindahanApprovedBy")
-  perpindahanValidated   Perpindahan[]        @relation("PerpindahanValidatedBy")
   user                   User?                @relation("WargaUser")
 
   @@index([keluargaId])
@@ -201,13 +199,15 @@ model Perpindahan {
   tanggalPerpindahan  DateTime?        @db.Date @map("tanggal_perpindahan")
   nomorSurat          String?          @db.VarChar(50) @map("nomor_surat")
   approvedBy          Int?             @map("approved_by")
+  approvedAt          DateTime?        @map("approved_at")
   validatedBy         Int?             @map("validated_by")
+  validatedAt         DateTime?        @map("validated_at")
   keterangan          String?          @db.Text
   createdAt           DateTime         @default(now()) @map("created_at")
 
   warga               Warga            @relation("WargaPerpindahan", fields: [wargaId], references: [id])
-  approvedByWarga     Warga?           @relation("PerpindahanApprovedBy", fields: [approvedBy], references: [id])
-  validatedByWarga    Warga?           @relation("PerpindahanValidatedBy", fields: [validatedBy], references: [id])
+  approvedByUser      User?            @relation("PerpindahanApprovedBy", fields: [approvedBy], references: [id])
+  validatedByUser     User?            @relation("PerpindahanValidatedBy", fields: [validatedBy], references: [id])
 
   @@map("perpindahan")
 }
@@ -241,6 +241,8 @@ model User {
   wargasCreated    Warga[]    @relation("WargaCreatedBy")
   wargasUpdated    Warga[]    @relation("WargaUpdatedBy")
   wargasValidated  Warga[]    @relation("WargaValidatedBy")
+  perpindahanApproved  Perpindahan[] @relation("PerpindahanApprovedBy")
+  perpindahanValidated Perpindahan[] @relation("PerpindahanValidatedBy")
 
   @@map("users")
 }

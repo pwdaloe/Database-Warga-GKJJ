@@ -18,6 +18,7 @@ import { pengaturanRouter } from './routes/pengaturan.js'
 import { usersRouter } from './routes/users.js'
 import { publicRouter } from './routes/public.js'
 import { logsRouter } from './routes/logs.js'
+import { perpindahanRouter } from './routes/perpindahan.js'
 import { activityLogger } from './middleware/activityLogger.js'
 
 const app = express()
@@ -72,6 +73,7 @@ app.use('/api/pengaturan', pengaturanRouter)
 app.use('/api/users',      usersRouter)
 app.use('/api/public',     publicRouter)
 app.use('/api/logs',       logsRouter)
+app.use('/api/perpindahan', perpindahanRouter)
 
 // Error handling (harus paling terakhir)
 app.use(notFound)

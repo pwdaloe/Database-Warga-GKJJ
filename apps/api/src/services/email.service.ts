@@ -26,3 +26,26 @@ export async function sendPasswordResetEmail(to: string, nama: string, resetLink
   }
   return info
 }
+
+export async function sendSuratPerpindahanEmail(
+  to: string,
+  namaWarga: string,
+  jenisLabel: string,
+  pdfBuffer: Buffer,
+) {
+  const transporter = getTransporter()
+  const info = await transporter.sendMail({
+    from: process.env.MAIL_FROM ?? 'GKJJ <no-reply@gkjjakarta.org>',
+    to,
+    subject: `Surat ${jenisLabel} — Database Warga GKJJ`,
+    text: `Halo ${namaWarga},\n\nTerlampir surat ${jenisLabel.toLowerCase()} Anda. Simpan email ini sebagai arsip.`,
+    html: `<p>Halo ${namaWarga},</p><p>Terlampir surat ${jenisLabel.toLowerCase()} Anda. Simpan email ini sebagai arsip.</p>`,
+    attachments: [
+      { filename: `surat-${jenisLabel.toLowerCase().replace(/\s+/g, '-')}.pdf`, content: pdfBuffer, contentType: 'application/pdf' },
+    ],
+  })
+  if (!process.env.SMTP_HOST) {
+    console.log(`[DEV EMAIL] Surat ${jenisLabel} untuk ${to} (attachment ${pdfBuffer.length} bytes, tidak benar-benar terkirim)`)
+  }
+  return info
+}
