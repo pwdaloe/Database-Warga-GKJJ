@@ -2,19 +2,26 @@
 
 ## Konteks
 
-Model `Perpindahan` **sudah ada** di `apps/api/prisma/schema.prisma` (migration sudah applied,
-lihat `warga.service.ts` baris `perpindahans: { orderBy: { createdAt: 'desc' as const } }` di
-`WARGA_INCLUDE`). Enum `JenisPerpindahan` punya 3 nilai: `MASUK`, `KELUAR`, `MENINGGAL`. Field
-`approvedBy`/`validatedBy` merujuk ke `Warga` (bukan `User`) — pola ini mirip `validatedBy` di
-model `Warga` sendiri (lihat `warga.service.ts` baris ~314), tapi **beda konteks**: di `Warga`,
-`validatedBy` berdiri sendiri (1 tahap). Di `Perpindahan`, **kedua field ini dipakai untuk alur
-approval 2 tahap** — lihat Keputusan Desain #1 & #2 di bawah, jangan asumsikan polanya identik.
+Model `Perpindahan` **sudah ada** di `apps/api/prisma/schema.prisma` (migration awal
+`20260504140814_init` sudah applied — **tabel ini masih 0 baris**, belum pernah dipakai, jadi aman
+diubah lewat migration baru). Enum `JenisPerpindahan` punya 3 nilai: `MASUK`, `KELUAR`, `MENINGGAL`.
 
-> **Keputusan produk (dikonfirmasi user sebelum sprint ini dimulai)**: proses perpindahan jemaat
-> butuh 2 tahap sign-off sebelum resmi — approve (persetujuan awal) lalu validate (finalisasi
-> administratif) — supaya `validatedBy` yang sudah ada di schema tidak jadi field mati seperti
-> `retensiHingga` sebelumnya. Kop surat PDF pakai placeholder generik dulu (alamat resmi gereja
-> belum tersedia), gampang diganti templatenya nanti.
+> **Keputusan produk (dikonfirmasi user sebelum sprint ini dimulai)**:
+> 1. Proses perpindahan jemaat butuh **2 tahap sign-off** sebelum resmi — approve (persetujuan
+>    awal) lalu validate (finalisasi administratif) — supaya `validatedBy` yang sudah ada di schema
+>    tidak jadi field mati seperti `retensiHingga` sebelumnya.
+> 2. **Nama & tanggal approver/validator wajib muncul di surat PDF** (mis. "Disetujui oleh: Budi
+>    Santoso, Majelis, pada 8 Juli 2026"). Field `approvedBy`/`validatedBy` di schema **saat ini
+>    menunjuk ke `Warga`, bukan `User`** — ini tidak bisa diandalkan karena staf yang approve belum
+>    tentu punya baris `Warga` terkait (cek: 0 dari 24 akun user di database dev saat ini terhubung
+>    ke `Warga` lewat `wargaId`). Skema juga **belum punya field tanggal approve/validate sama
+>    sekali** (`createdAt` cuma tanggal record dibuat, bukan tanggal approve). Ini diperbaiki di
+>    Task 1 sebagai migration baru — lihat detail di bawah.
+> 3. Role yang boleh approve/validate **tetap** `MAJELIS`/`KEPALA_KANTOR`/`SUPERADMIN` (approve) dan
+>    `KEPALA_KANTOR`/`SUPERADMIN` (validate) — `PENATUA_KELOMPOK` **tidak** ditambahkan ke alur ini
+>    (fitur ini tetap desktop-only, tidak ada perubahan scope mobile).
+> 4. Kop surat PDF pakai placeholder generik dulu (alamat resmi gereja belum tersedia), gampang
+>    diganti templatenya nanti.
 
 Sidebar frontend **sudah** punya link ke `/perpindahan` (lihat
 `apps/web/src/components/layout/Sidebar.tsx`, grup "Utilitas") untuk role `SUPERADMIN`,
@@ -53,7 +60,7 @@ Ini fitur pencatatan status keanggotaan jemaat (bukan pindah alamat/domisili):
    Keterangan Pindah/Meninggal Jemaat" secara server-side. Ini dipakai untuk 2 hal: (a) endpoint
    view/download PDF langsung di browser (dipakai tombol "Cetak" di Sprint 6, browser native
    print-to-PDF dari situ, tersedia kapan saja untuk preview draft), dan (b) lampiran email di task
-   4 — **hanya bisa dikirim setelah validated** (lihat task 5, endpoint `kirim-email`).
+   5 — **hanya bisa dikirim setelah validated** (lihat task 6, endpoint `kirim-email`).
 4. **Kop surat PDF**: nama gereja + placeholder alamat generik (tidak ada alamat/kop resmi
    tersimpan di repo ini saat ini) — sudah dikonfirmasi user, template gampang diganti nanti begitu
    ada detail resmi. Jangan blocking sprint ini menunggu itu.
@@ -62,14 +69,71 @@ Ini fitur pencatatan status keanggotaan jemaat (bukan pindah alamat/domisili):
 
 ## Tasks
 
-### 1. Tambah dependency `pdfkit`
+### 1. Migration schema: `approvedBy`/`validatedBy` ke `User` + tambah `approvedAt`/`validatedAt`
+
+**Kerjakan ini lebih dulu sebelum task lain** — task 3 (service) dan 4 (PDF) bergantung pada field
+hasil migration ini. Tabel `perpindahan` masih 0 baris (belum pernah dipakai di production), jadi
+migration ini aman tanpa perlu rencana backfill.
+
+Ubah `apps/api/prisma/schema.prisma`, model `Perpindahan`:
+
+```prisma
+model Perpindahan {
+  id                  Int              @id @default(autoincrement())
+  wargaId             Int              @map("warga_id")
+  jenis               JenisPerpindahan
+  gerejaAsalTujuan    String?          @db.VarChar(200) @map("gereja_asal_tujuan")
+  tanggalPerpindahan  DateTime?        @db.Date @map("tanggal_perpindahan")
+  nomorSurat          String?          @db.VarChar(50) @map("nomor_surat")
+  approvedBy          Int?             @map("approved_by")
+  approvedAt          DateTime?        @map("approved_at")
+  validatedBy         Int?             @map("validated_by")
+  validatedAt         DateTime?        @map("validated_at")
+  keterangan          String?          @db.Text
+  createdAt           DateTime         @default(now()) @map("created_at")
+
+  warga               Warga            @relation("WargaPerpindahan", fields: [wargaId], references: [id])
+  approvedByUser      User?            @relation("PerpindahanApprovedBy", fields: [approvedBy], references: [id])
+  validatedByUser     User?            @relation("PerpindahanValidatedBy", fields: [validatedBy], references: [id])
+
+  @@map("perpindahan")
+}
+```
+
+Alasan pindah dari `Warga` ke `User`: approver/validator adalah **staf yang sedang login**
+(identitasnya selalu tersedia lewat `req.user.userId` dari JWT), bukan warga jemaat. Field lama
+menunjuk ke `Warga` tidak reliable karena staf belum tentu punya baris `Warga` terkait — dengan
+menunjuk ke `User`, nama (`User.nama`) dan role (`User.role`, untuk label jabatan di surat) selalu
+tersedia tanpa syarat tambahan apa pun.
+
+Di model `Warga`, **hapus** 2 baris relasi balik yang sekarang tidak dipakai:
+```prisma
+perpindahanApproved    Perpindahan[]        @relation("PerpindahanApprovedBy")
+perpindahanValidated   Perpindahan[]        @relation("PerpindahanValidatedBy")
+```
+
+Di model `User`, **tambah** relasi balik baru (dekat `wargasValidated` yang sudah ada):
+```prisma
+perpindahanApproved  Perpindahan[] @relation("PerpindahanApprovedBy")
+perpindahanValidated Perpindahan[] @relation("PerpindahanValidatedBy")
+```
+
+Jalankan migration:
+
+```bash
+cd apps/api
+npx prisma migrate dev --name perpindahan_approver_ke_user
+cd ../..
+```
+
+### 2. Tambah dependency `pdfkit`
 
 ```bash
 npm install pdfkit --workspace=apps/api
 npm install -D @types/pdfkit --workspace=apps/api
 ```
 
-### 2. Buat Zod schema & service `perpindahan.service.ts`
+### 3. Buat Zod schema & service `perpindahan.service.ts`
 
 Buat `apps/api/src/services/perpindahan.service.ts`. Ikuti pola `listWarga`/pagination di
 `warga.service.ts` (`Promise.all([prisma.perpindahan.count(...), prisma.perpindahan.findMany(...)])`,
@@ -80,8 +144,8 @@ Include standar untuk setiap query:
 ```ts
 const PERPINDAHAN_INCLUDE = {
   warga: { select: { id: true, namaLengkap: true, namaPanggilan: true, email: true, whatsapp: true, telepon: true, statusKeanggotaan: true } },
-  approvedByWarga: { select: { id: true, namaLengkap: true } },
-  validatedByWarga: { select: { id: true, namaLengkap: true } },
+  approvedByUser: { select: { id: true, nama: true, role: true } },
+  validatedByUser: { select: { id: true, nama: true, role: true } },
 } satisfies Prisma.PerpindahanInclude
 ```
 
@@ -94,26 +158,20 @@ Fungsi yang dibutuhkan:
   `tanggalPerpindahan?`, `nomorSurat?`, `keterangan?`. Validasi `wargaId` ada di tabel `warga`
   (kalau tidak, `AppError(404, 'Warga tidak ditemukan')`). **Tidak** set `approvedBy`/`validatedBy`
   saat create (status awal = pending approval).
-- `approvePerpindahan(id: number, approverWargaId: number | null)`:
+- `approvePerpindahan(id: number, userId: number)`:
   - Ambil perpindahan by id, kalau `approvedBy` sudah terisi → `AppError(400, 'Perpindahan ini sudah di-approve sebelumnya')`
-  - Update `perpindahan.approvedBy = approverWargaId` saja — **tidak** menyentuh `statusKeanggotaan`
-    warga di tahap ini (itu terjadi di `validatePerpindahan`).
-  - Catatan: `approverWargaId` adalah `Warga.id` milik user yang approve, **bukan** `User.id` dari
-    JWT. Kalau user login tidak punya baris `Warga` terkait (banyak akun staf mungkin tidak
-    terhubung ke data warga), izinkan `approvedBy` tetap null dan **jangan** throw — parameter
-    boleh `null`, cukup jalankan update dengan nilai itu. Cek relasi `User` ↔ `Warga` di schema
-    untuk field penghubungnya sebelum implementasi (kemungkinan tidak ada — kalau begitu
-    `approverWargaId` selalu `null`, field ini opsional by design).
-- `validatePerpindahan(id: number, validatorWargaId: number | null)`:
+  - Update `perpindahan.approvedBy = userId`, `approvedAt = new Date()` — **tidak** menyentuh
+    `statusKeanggotaan` warga di tahap ini (itu terjadi di `validatePerpindahan`).
+  - `userId` di sini adalah `User.id` langsung dari `req.user!.userId` (JWT) — **tidak ada lagi**
+    ketergantungan ke baris `Warga` staf, selalu terisi.
+- `validatePerpindahan(id: number, userId: number)`:
   - Ambil perpindahan by id. Kalau `approvedBy` masih null → `AppError(400, 'Perpindahan harus di-approve terlebih dahulu sebelum divalidasi')`.
     Kalau `validatedBy` sudah terisi → `AppError(400, 'Perpindahan ini sudah divalidasi sebelumnya')`.
-  - `prisma.$transaction([...])`: update `perpindahan.validatedBy = validatorWargaId`, DAN update
-    `warga.statusKeanggotaan` sesuai mapping `jenis` di Keputusan Desain #2 di atas.
-  - Sama seperti `approverWargaId`, `validatorWargaId` boleh `null` kalau user login tidak punya
-    baris `Warga` terkait — jangan throw karena ini.
+  - `prisma.$transaction([...])`: update `perpindahan.validatedBy = userId`, `validatedAt = new Date()`,
+    DAN update `warga.statusKeanggotaan` sesuai mapping `jenis` di Keputusan Desain #2 di atas.
 - `deletePerpindahan(id: number)` — kalau `approvedBy` sudah terisi (approved dan/atau validated) → `AppError(400, 'Perpindahan yang sudah di-approve tidak bisa dihapus')`.
 
-### 3. Buat service PDF `surat.service.ts`
+### 4. Buat service PDF `surat.service.ts`
 
 Buat `apps/api/src/services/surat.service.ts`, fungsi `generateSuratPerpindahanPdf(perpindahan): Promise<Buffer>` pakai `pdfkit`:
 
@@ -127,14 +185,23 @@ Buat `apps/api/src/services/surat.service.ts`, fungsi `generateSuratPerpindahanP
   `date-fns` belum ada di `apps/api` — cek dulu, install `date-fns` ke `apps/api` kalau belum ada)
 - Isi: data warga (nama lengkap, nomor induk/anggota), jenis perpindahan, gereja asal/tujuan
   (`gerejaAsalTujuan`), keterangan tambahan
-- Placeholder 2 tanda tangan di bagian bawah (sesuai 2 tahap approval): "Disetujui oleh"
-  (`approvedByWarga.namaLengkap` kalau ada, kalau tidak "_______________") dan "Divalidasi oleh"
-  (`validatedByWarga.namaLengkap` kalau ada, kalau tidak "_______________"). Kalau perpindahan
-  belum divalidasi saat PDF di-generate (preview draft), baris "Divalidasi oleh" boleh tetap kosong
-  — endpoint PDF tidak diblok status, ini murni tampilan.
+- **2 baris tanda tangan di bagian bawah, masing-masing dengan nama + jabatan + tanggal** (ini
+  requirement eksplisit dari user, jangan cuma nama polos):
+  - "Disetujui oleh: `{approvedByUser.nama}`, `{label jabatan}`, pada `{approvedAt, format tanggal Indonesia}`"
+    — kalau `approvedByUser` null (belum di-approve, PDF di-generate untuk preview draft), tulis "_______________"
+  - "Divalidasi oleh: `{validatedByUser.nama}`, `{label jabatan}`, pada `{validatedAt, format tanggal Indonesia}`"
+    — sama, "_______________" kalau belum divalidasi
+  - Label jabatan dari `role` (`SUPERADMIN`/`KEPALA_KANTOR`/`MAJELIS`/dst) — buat mapping Indonesia
+    di `surat.service.ts` sendiri (mirror `ROLE_LABELS` di `apps/web/src/lib/auth.ts`, jangan impor
+    lintas-workspace, cukup duplikasi map kecil ini): `{ SUPERADMIN: 'Super Admin', KEPALA_KANTOR:
+    'Kepala Kantor', MAJELIS: 'Majelis', STAF_ADMIN: 'Staf Administrasi', PENATUA_KELOMPOK: 'Penatua
+    Kelompok', VIEWER: 'Viewer' }`
+  - Format tanggal: `date-fns` `format(date, 'd MMMM yyyy', { locale: id })` — cek dulu apakah
+    `date-fns` sudah ada di `apps/api` (dipakai di frontend, belum tentu di backend), install ke
+    `apps/api` kalau belum ada
 - Return sebagai `Buffer` (kumpulkan chunks dari `doc.on('data', ...)`, resolve di `doc.on('end', ...)`, panggil `doc.end()`)
 
-### 4. Extend `email.service.ts`
+### 5. Extend `email.service.ts`
 
 Tambahkan fungsi baru (jangan ubah `sendPasswordResetEmail` yang sudah ada):
 
@@ -165,7 +232,7 @@ export async function sendSuratPerpindahanEmail(
 
 Reuse `getTransporter()` yang sudah ada di file yang sama (jangan duplikasi).
 
-### 5. Buat route `perpindahan.ts`
+### 6. Buat route `perpindahan.ts`
 
 Buat `apps/api/src/routes/perpindahan.ts`, ikuti pola `kelompok.ts` (Zod body schema, `ok`/`created`/`paginated` helper, `authenticate` + `authorize`):
 
@@ -184,11 +251,17 @@ perpindahanRouter.post('/', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 
 // PUT /api/perpindahan/:id — edit sebelum approved (validasi approvedBy null di service atau di sini)
 perpindahanRouter.put('/:id', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN'), async (req, res) => { ... ok(...) })
 
-// POST /api/perpindahan/:id/approve — tahap 1
-perpindahanRouter.post('/:id/approve', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS'), async (req, res) => { ... ok(...) })
+// POST /api/perpindahan/:id/approve — tahap 1, pakai req.user!.userId (bukan lagi Warga.id)
+perpindahanRouter.post('/:id/approve', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS'), async (req, res) => {
+  const result = await perpindahanService.approvePerpindahan(Number(req.params.id), req.user!.userId)
+  ok(res, result)
+})
 
 // POST /api/perpindahan/:id/validate — tahap 2, lebih ketat dari approve (tanpa MAJELIS)
-perpindahanRouter.post('/:id/validate', authorize('SUPERADMIN', 'KEPALA_KANTOR'), async (req, res) => { ... ok(...) })
+perpindahanRouter.post('/:id/validate', authorize('SUPERADMIN', 'KEPALA_KANTOR'), async (req, res) => {
+  const result = await perpindahanService.validatePerpindahan(Number(req.params.id), req.user!.userId)
+  ok(res, result)
+})
 
 // DELETE /api/perpindahan/:id
 perpindahanRouter.delete('/:id', authorize('SUPERADMIN', 'KEPALA_KANTOR'), async (req, res) => { ... res.status(204).send() })
@@ -216,25 +289,25 @@ perpindahanRouter.post('/:id/kirim-email', authorize('SUPERADMIN', 'KEPALA_KANTO
 
 Sesuaikan detail Zod schema body (`wargaId: z.number().int().positive()`, `jenis: z.enum(['MASUK','KELUAR','MENINGGAL'])`, dst) mengikuti gaya `kelompok.ts`/`keluarga.ts`.
 
-### 6. Daftarkan router di `app.ts`
+### 7. Daftarkan router di `app.ts`
 
 Tambahkan import dan `app.use('/api/perpindahan', perpindahanRouter)` mengikuti pola router lain di `apps/api/src/app.ts`.
 
-### 7. Test service (mock prisma)
+### 8. Test service (mock prisma)
 
 Buat `apps/api/tests/services/perpindahan.service.test.ts`, ikuti pola mocking di
 `apps/api/tests/services/auth.service.test.ts`. Cover minimal:
 
 - `createPerpindahan`: sukses membuat record dengan `approvedBy: null`, `validatedBy: null`
 - `createPerpindahan`: `wargaId` tidak ditemukan → throw `AppError` 404
-- `approvePerpindahan`: sukses → `approvedBy` terisi, `warga.statusKeanggotaan` **tidak berubah**
+- `approvePerpindahan`: sukses → `approvedBy`/`approvedAt` terisi, `warga.statusKeanggotaan` **tidak berubah**
 - `approvePerpindahan`: sudah pernah di-approve → throw `AppError` 400
 - `validatePerpindahan`: belum di-approve (`approvedBy` null) → throw `AppError` 400, tidak ada update yang jalan
-- `validatePerpindahan`: sudah approved, sukses divalidasi → `validatedBy` terisi DAN `warga.statusKeanggotaan` ter-update sesuai mapping jenis (test ketiga jenis: MASUK/KELUAR/MENINGGAL)
+- `validatePerpindahan`: sudah approved, sukses divalidasi → `validatedBy`/`validatedAt` terisi DAN `warga.statusKeanggotaan` ter-update sesuai mapping jenis (test ketiga jenis: MASUK/KELUAR/MENINGGAL)
 - `validatePerpindahan`: sudah pernah divalidasi → throw `AppError` 400, tidak ada update kedua yang jalan
 - `deletePerpindahan`: sudah approved (dengan atau tanpa validated) → throw `AppError` 400
 
-### 8. Test route (supertest, mock service seperti pola `auth.reset.route.test.ts`)
+### 9. Test route (supertest, mock service seperti pola `auth.reset.route.test.ts`)
 
 Buat `apps/api/tests/routes/perpindahan.route.test.ts`. Cover:
 
@@ -256,11 +329,12 @@ Semua harus sukses.
 
 ## Definition of Done
 
+- [ ] Migration baru diterapkan: `Perpindahan.approvedBy`/`validatedBy` menunjuk ke `User` (bukan `Warga`), field `approvedAt`/`validatedAt` tersedia
 - [ ] `apps/api/src/services/perpindahan.service.ts` dengan list/get/create/update/approve/validate/delete
-- [ ] `apps/api/src/services/surat.service.ts` menghasilkan PDF valid (bisa dibuka di PDF viewer, bukan cuma buffer kosong), dengan 2 baris tanda tangan (approve + validate)
+- [ ] `apps/api/src/services/surat.service.ts` menghasilkan PDF valid (bisa dibuka di PDF viewer, bukan cuma buffer kosong), dengan 2 baris tanda tangan berisi **nama + jabatan + tanggal** (approve dan validate)
 - [ ] `email.service.ts` punya `sendSuratPerpindahanEmail` dengan lampiran PDF, reuse transporter yang ada
-- [ ] Approve mengisi `approvedBy` saja, **tidak** mengubah `statusKeanggotaan`
-- [ ] Validate mengisi `validatedBy` DAN mengupdate `warga.statusKeanggotaan` sesuai mapping jenis dalam satu transaksi — hanya bisa dijalankan setelah approved
+- [ ] Approve mengisi `approvedBy`/`approvedAt` dari `req.user!.userId`, **tidak** mengubah `statusKeanggotaan`
+- [ ] Validate mengisi `validatedBy`/`validatedAt` DAN mengupdate `warga.statusKeanggotaan` sesuai mapping jenis dalam satu transaksi — hanya bisa dijalankan setelah approved
 - [ ] Perpindahan yang sudah approved tidak bisa dihapus, di-approve ulang, atau divalidasi ulang
 - [ ] Endpoint `POST /api/perpindahan/:id/validate` dibatasi role `KEPALA_KANTOR`/`SUPERADMIN` (lebih ketat dari approve)
 - [ ] Endpoint `GET /api/perpindahan/:id/surat.pdf` mengembalikan PDF yang bisa dibuka langsung di browser, tersedia sebelum maupun sesudah validated

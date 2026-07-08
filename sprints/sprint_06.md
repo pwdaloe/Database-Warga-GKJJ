@@ -88,7 +88,11 @@ export function kirimPerpindahanWhatsApp(perpindahan: any): void {
 - Filter: dropdown jenis (`Semua`/`MASUK`/`KELUAR`/`MENINGGAL`), search box nama warga (debounce sederhana seperti pola di `warga/page.tsx` kalau ada, atau langsung on-change)
 - Tabel kolom: Nama Warga, Jenis (Badge warna beda per jenis), Tanggal, Nomor Surat, Status (Badge
   3 kondisi: "Menunggu Approval" abu-abu jika `approvedBy` null, "Disetujui" kuning/biru jika
-  `approvedBy` terisi tapi `validatedBy` null, "Divalidasi" hijau jika `validatedBy` terisi), Aksi
+  `approvedBy` terisi tapi `validatedBy` null, "Divalidasi" hijau jika `validatedBy` terisi), Aksi.
+  API `GET /perpindahan` sudah include `approvedByUser`/`validatedByUser` (`{ id, nama, role }`) —
+  tampilkan sebagai teks kecil di bawah badge status, mis. "oleh Budi Santoso (Majelis) · 8 Jul
+  2026" pakai `approvedAt`/`validatedAt`, biar staf tidak perlu buka surat PDF cuma untuk lihat
+  siapa & kapan approve/validate.
 - Kolom Aksi (tombol icon, role-gated via `useAuth()`):
   - **Approve** (`CheckCircle2` icon) — hanya tampil kalau `approvedBy` null DAN role `MAJELIS`/`KEPALA_KANTOR`/`SUPERADMIN`. Konfirmasi dulu (`confirm()` browser cukup, ikuti pola sederhana yang sudah ada di project ini untuk aksi konfirmasi kalau ada, kalau tidak ada pola khusus `window.confirm` cukup)
   - **Validate** (`ShieldCheck` icon, tampil terpisah dari Approve) — hanya tampil kalau `approvedBy`
