@@ -1,140 +1,224 @@
-# Sprint 5 — Perpindahan Jemaat: Frontend (List, Form, Cetak PDF, Email, WhatsApp)
+# Sprint 5 — Perpindahan Jemaat: Backend (CRUD, Approval, Surat PDF, Email)
 
 ## Konteks
 
-Sprint ini melanjutkan Sprint 4 (API `apps/api/src/routes/perpindahan.ts` sudah tersedia lengkap
-dengan endpoint list/create/approve/delete/`surat.pdf`/`kirim-email`). **Jangan jalankan sprint ini
-kalau Sprint 4 belum selesai** — cek `sprints/.current_sprint`, harus sudah ≥ 4.
+Model `Perpindahan` **sudah ada** di `apps/api/prisma/schema.prisma` (migration sudah applied,
+lihat `warga.service.ts` baris `perpindahans: { orderBy: { createdAt: 'desc' as const } }` di
+`WARGA_INCLUDE`). Enum `JenisPerpindahan` punya 3 nilai: `MASUK`, `KELUAR`, `MENINGGAL`. Field
+`approvedBy`/`validatedBy` merujuk ke `Warga` (bukan `User`) — pola ini sudah dipakai untuk
+`validatedBy` di model `Warga` sendiri (lihat `warga.service.ts` baris ~314), jadi ikuti pola yang
+sama.
 
-Sidebar frontend **sudah** punya link `/perpindahan` (lihat
-`apps/web/src/components/layout/Sidebar.tsx` grup "Utilitas") — tidak perlu diubah.
+Sidebar frontend **sudah** punya link ke `/perpindahan` (lihat
+`apps/web/src/components/layout/Sidebar.tsx`, grup "Utilitas") untuk role `SUPERADMIN`,
+`KEPALA_KANTOR`, `MAJELIS`, `STAF_ADMIN` — tapi route API dan halamannya belum ada. Sprint ini
+membangun API-nya; Sprint 6 membangun halamannya.
 
-Pola yang wajib diikuti (jangan perkenalkan library/state management baru):
-- Data fetching: TanStack Query, ikuti pola `apps/web/src/hooks/useWarga.ts` /
-  `apps/web/src/hooks/useKeluarga.ts` (nama hook, query key, invalidasi setelah mutasi)
-- Form: `react-hook-form` + `zod` (`@hookform/resolvers/zod`), komponen `InputField`/`SelectField`
-  dari `apps/web/src/components/ui/FormField.tsx`
-- Tabel & modal: `Modal` dari `components/ui/Modal.tsx`, `Pagination` dari `components/ui/Pagination.tsx`, `Badge` untuk status/jenis
-- Role-gating: `useAuth()` hook, sama seperti dipakai di `apps/web/src/app/(dashboard)/warga/page.tsx`
-- **Ini fitur dashboard admin, bukan halaman jemaat/mobile** — tidak perlu versi `apps/web/src/app/m/...` (beda dengan fitur kartu anggota yang memang untuk jemaat sendiri). Konsisten dengan fitur admin-only lain (`/wilayah`, `/import`, `/log`) yang juga tidak punya versi mobile.
+Ini fitur pencatatan status keanggotaan jemaat (bukan pindah alamat/domisili):
+- `MASUK` — jemaat pindah masuk dari gereja lain (surat keterangan pindah dari gereja asal)
+- `KELUAR` — jemaat pindah keluar ke gereja lain (perlu diterbitkan surat keterangan pindah)
+- `MENINGGAL` — jemaat meninggal dunia (surat keterangan meninggal untuk keperluan administrasi)
 
-**Untuk kirim WhatsApp**: ikuti pola `apps/web/src/lib/kartuWhatsapp.ts` (`wa.me` link dengan pesan
-teks pre-filled, dibuka via `window.open` — **bukan** integrasi API WhatsApp Business, tidak butuh
-kredensial apapun). Karena `wa.me` cuma mendukung teks (tidak bisa attach file), pesan WhatsApp
-berisi ringkasan surat, bukan PDF-nya — kalau warga perlu file PDF, arahkan mereka pakai tombol
-"Kirim Email" atau minta cetak langsung dari admin.
+**Keputusan desain — baca sebelum implementasi:**
+
+1. **Role**: `STAF_ADMIN` (dan di atasnya: `MAJELIS`, `KEPALA_KANTOR`, `SUPERADMIN`) boleh mencatat
+   pengajuan perpindahan. Hanya `MAJELIS`, `KEPALA_KANTOR`, `SUPERADMIN` yang boleh approve. Hapus
+   hanya untuk `KEPALA_KANTOR`/`SUPERADMIN`, dan **hanya** kalau belum di-approve (`approvedBy`
+   masih null) — data yang sudah resmi/approved tidak boleh dihapus, biar jejak administratif utuh.
+2. **Sinkronisasi status keanggotaan**: saat perpindahan di-approve, update
+   `warga.statusKeanggotaan` otomatis dalam satu transaksi:
+   - `MASUK` → `AKTIF`
+   - `KELUAR` → `PINDAH_KELUAR`
+   - `MENINGGAL` → `MENINGGAL`
+3. **Surat PDF**: pakai `pdfkit` (ringan, pure JS, tanpa headless browser) untuk generate "Surat
+   Keterangan Pindah/Meninggal Jemaat" secara server-side. Ini dipakai untuk 2 hal: (a) endpoint
+   view/download PDF langsung di browser (dipakai tombol "Cetak" di Sprint 6, browser native
+   print-to-PDF dari situ), dan (b) lampiran email di task 6.
+4. **Activity log otomatis**: `apps/api/src/middleware/activityLogger.ts` sudah global untuk semua
+   method mutasi (`POST`/`PUT`/`PATCH`/`DELETE`) — tidak perlu tambahan logging manual di route baru.
 
 ## Tasks
 
-### 1. Hook data fetching `usePerpindahan.ts`
+### 1. Tambah dependency `pdfkit`
 
-Buat `apps/web/src/hooks/usePerpindahan.ts` mengikuti pola `useWarga.ts`:
+```bash
+npm install pdfkit --workspace=apps/api
+npm install -D @types/pdfkit --workspace=apps/api
+```
 
-- `usePerpindahanList(filter: { page, limit, jenis?, search? })` — `useQuery`, key
-  `['perpindahan', filter]`, panggil `GET /perpindahan`
-- `usePerpindahanMutations()` — return object berisi:
-  - `create` (`useMutation`, `POST /perpindahan`, invalidate `['perpindahan']` setelah sukses)
-  - `update` (`PUT /perpindahan/:id`)
-  - `approve` (`POST /perpindahan/:id/approve`)
-  - `remove` (`DELETE /perpindahan/:id`)
-  - `kirimEmail` (`POST /perpindahan/:id/kirim-email`) — return message dari response untuk ditampilkan sebagai notifikasi
+### 2. Buat Zod schema & service `perpindahan.service.ts`
 
-### 2. Lib WhatsApp `perpindahanWhatsapp.ts`
+Buat `apps/api/src/services/perpindahan.service.ts`. Ikuti pola `listWarga`/pagination di
+`warga.service.ts` (`Promise.all([prisma.perpindahan.count(...), prisma.perpindahan.findMany(...)])`,
+lalu return lewat helper `paginated()`).
 
-Buat `apps/web/src/lib/perpindahanWhatsapp.ts`, mirror `kartuWhatsapp.ts`:
+Include standar untuk setiap query:
 
 ```ts
-const JENIS_LABEL: Record<string, string> = {
-  MASUK: 'Pindah Masuk', KELUAR: 'Pindah Keluar', MENINGGAL: 'Keterangan Kematian',
-}
+const PERPINDAHAN_INCLUDE = {
+  warga: { select: { id: true, namaLengkap: true, namaPanggilan: true, email: true, whatsapp: true, telepon: true, statusKeanggotaan: true } },
+  approvedByWarga: { select: { id: true, namaLengkap: true } },
+  validatedByWarga: { select: { id: true, namaLengkap: true } },
+} satisfies Prisma.PerpindahanInclude
+```
 
-export function buildPerpindahanWhatsAppMessage(perpindahan: any): string {
-  const jenis = JENIS_LABEL[perpindahan.jenis] ?? perpindahan.jenis
-  return [
-    `Halo ${perpindahan.warga?.namaPanggilan || perpindahan.warga?.namaLengkap}! 🙏`,
-    '',
-    `Berikut ringkasan surat *${jenis}* Anda dari *Jemaat GKJJ*:`,
-    '',
-    `📋 *Nama:* ${perpindahan.warga?.namaLengkap}`,
-    `📄 *Jenis:* ${jenis}`,
-    `🔢 *Nomor Surat:* ${perpindahan.nomorSurat || '-'}`,
-    `🏛️ *Gereja Asal/Tujuan:* ${perpindahan.gerejaAsalTujuan || '-'}`,
-    '',
-    `Surat lengkap (PDF) akan dikirim menyusul via email, atau dapat diambil langsung di kantor gereja. ✝️`,
-  ].join('\n')
-}
+Fungsi yang dibutuhkan:
 
-export function kirimPerpindahanWhatsApp(perpindahan: any): void {
-  const raw = (perpindahan.warga?.whatsapp || perpindahan.warga?.telepon || '').replace(/\D/g, '')
-  const phone = raw.startsWith('0') ? '62' + raw.slice(1) : raw
-  if (!phone) {
-    alert('Nomor WhatsApp / telepon belum terdaftar untuk warga ini.')
-    return
+- `listPerpindahan(filter: { page?, limit?, jenis?, search? })` — `search` mencari di
+  `warga.namaLengkap` (`contains`, `insensitive`) via relasi. Sort default `createdAt desc`.
+- `getPerpindahanById(id: number)` — `include: PERPINDAHAN_INCLUDE`, throw `AppError(404, 'Data perpindahan tidak ditemukan')` kalau null.
+- `createPerpindahan(data, userId)` — body: `wargaId`, `jenis`, `gerejaAsalTujuan?`,
+  `tanggalPerpindahan?`, `nomorSurat?`, `keterangan?`. Validasi `wargaId` ada di tabel `warga`
+  (kalau tidak, `AppError(404, 'Warga tidak ditemukan')`). **Tidak** set `approvedBy`/`validatedBy`
+  saat create (status awal = pending approval).
+- `approvePerpindahan(id: number, approverWargaId: number)`:
+  - Ambil perpindahan by id, kalau `approvedBy` sudah terisi → `AppError(400, 'Perpindahan ini sudah di-approve sebelumnya')`
+  - `prisma.$transaction([...])`: update `perpindahan.approvedBy = approverWargaId`, DAN update
+    `warga.statusKeanggotaan` sesuai mapping `jenis` di Keputusan Desain #2 di atas
+  - Catatan: `approverWargaId` di sini adalah `Warga.id` milik user yang approve, **bukan** `User.id`
+    dari JWT. Kalau user login tidak punya baris `Warga` terkait (banyak akun staf mungkin tidak
+    terhubung ke data warga), izinkan `approvedBy` tetap null dan **jangan** throw — cukup jalankan
+    update status keanggotaan saja. Cek relasi `User` ↔ `Warga` di schema untuk field penghubungnya
+    sebelum implementasi (kemungkinan tidak ada — kalau begitu set `approvedBy: null` selalu, ini
+    field opsional by design).
+- `deletePerpindahan(id: number)` — kalau `approvedBy` sudah terisi → `AppError(400, 'Perpindahan yang sudah di-approve tidak bisa dihapus')`.
+
+### 3. Buat service PDF `surat.service.ts`
+
+Buat `apps/api/src/services/surat.service.ts`, fungsi `generateSuratPerpindahanPdf(perpindahan): Promise<Buffer>` pakai `pdfkit`:
+
+- Kop surat: nama gereja (`GKJ Jakarta` / "Gereja Kristen Jawa Jakarta" — cek `README.md`/kop yang
+  sudah dipakai di tempat lain kalau ada referensi, kalau tidak ada gunakan teks generik "Gereja
+  Kristen Jawa Jakarta (GKJJ)"), alamat placeholder secukupnya
+- Judul sesuai jenis: "SURAT KETERANGAN PINDAH KELUAR JEMAAT" / "SURAT KETERANGAN PINDAH MASUK
+  JEMAAT" / "SURAT KETERANGAN KEMATIAN"
+- Nomor surat (`nomorSurat` atau "-" kalau kosong), tanggal (`tanggalPerpindahan`, format Indonesia
+  `date-fns` + locale `id` seperti dipakai di frontend, atau format manual di backend kalau
+  `date-fns` belum ada di `apps/api` — cek dulu, install `date-fns` ke `apps/api` kalau belum ada)
+- Isi: data warga (nama lengkap, nomor induk/anggota), jenis perpindahan, gereja asal/tujuan
+  (`gerejaAsalTujuan`), keterangan tambahan
+- Placeholder tanda tangan majelis di bagian bawah (nama `approvedByWarga.namaLengkap` kalau ada,
+  kalau tidak tulis "_______________")
+- Return sebagai `Buffer` (kumpulkan chunks dari `doc.on('data', ...)`, resolve di `doc.on('end', ...)`, panggil `doc.end()`)
+
+### 4. Extend `email.service.ts`
+
+Tambahkan fungsi baru (jangan ubah `sendPasswordResetEmail` yang sudah ada):
+
+```ts
+export async function sendSuratPerpindahanEmail(
+  to: string,
+  namaWarga: string,
+  jenisLabel: string,
+  pdfBuffer: Buffer,
+) {
+  const transporter = getTransporter()
+  const info = await transporter.sendMail({
+    from: process.env.MAIL_FROM ?? 'GKJJ <no-reply@gkjjakarta.org>',
+    to,
+    subject: `Surat ${jenisLabel} — Database Warga GKJJ`,
+    text: `Halo ${namaWarga},\n\nTerlampir surat ${jenisLabel.toLowerCase()} Anda. Simpan email ini sebagai arsip.`,
+    html: `<p>Halo ${namaWarga},</p><p>Terlampir surat ${jenisLabel.toLowerCase()} Anda. Simpan email ini sebagai arsip.</p>`,
+    attachments: [
+      { filename: `surat-${jenisLabel.toLowerCase().replace(/\s+/g, '-')}.pdf`, content: pdfBuffer, contentType: 'application/pdf' },
+    ],
+  })
+  if (!process.env.SMTP_HOST) {
+    console.log(`[DEV EMAIL] Surat ${jenisLabel} untuk ${to} (attachment ${pdfBuffer.length} bytes, tidak benar-benar terkirim)`)
   }
-  const msg = buildPerpindahanWhatsAppMessage(perpindahan)
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+  return info
 }
 ```
 
-### 3. Halaman list `apps/web/src/app/(dashboard)/perpindahan/page.tsx`
+Reuse `getTransporter()` yang sudah ada di file yang sama (jangan duplikasi).
 
-- Header + tombol "Catat Perpindahan Baru" (buka `Modal` berisi form, role `STAF_ADMIN` ke atas)
-- Filter: dropdown jenis (`Semua`/`MASUK`/`KELUAR`/`MENINGGAL`), search box nama warga (debounce sederhana seperti pola di `warga/page.tsx` kalau ada, atau langsung on-change)
-- Tabel kolom: Nama Warga, Jenis (Badge warna beda per jenis), Tanggal, Nomor Surat, Status (Badge "Menunggu Approval" abu-abu / "Disetujui" hijau berdasarkan `approvedBy` null atau tidak), Aksi
-- Kolom Aksi (tombol icon, role-gated via `useAuth()`):
-  - **Approve** (`CheckCircle2` icon) — hanya tampil kalau `approvedBy` null DAN role `MAJELIS`/`KEPALA_KANTOR`/`SUPERADMIN`. Konfirmasi dulu (`confirm()` browser cukup, ikuti pola sederhana yang sudah ada di project ini untuk aksi konfirmasi kalau ada, kalau tidak ada pola khusus `window.confirm` cukup)
-  - **Cetak Surat** — `window.open(`${API_BASE_URL}/perpindahan/${id}/surat.pdf`, '_blank')`, cek `apps/web/src/lib/api.ts` untuk base URL API yang benar
-  - **Kirim Email** — panggil `kirimEmail` mutation, tampilkan hasil message via `alert()` atau toast kalau project sudah punya sistem toast (cek dulu apakah ada, kalau tidak `alert()` sudah konsisten dengan pola error handling form yang ada)
-  - **Kirim WhatsApp** — panggil `kirimPerpindahanWhatsApp(row)`
-  - **Hapus** — hanya kalau `approvedBy` null DAN role `KEPALA_KANTOR`/`SUPERADMIN`, konfirmasi dulu
-- `Pagination` di bawah tabel
+### 5. Buat route `perpindahan.ts`
 
-### 4. Form catat perpindahan `PerpindahanForm.tsx`
+Buat `apps/api/src/routes/perpindahan.ts`, ikuti pola `kelompok.ts` (Zod body schema, `ok`/`created`/`paginated` helper, `authenticate` + `authorize`):
 
-Buat `apps/web/src/app/(dashboard)/perpindahan/PerpindahanForm.tsx` (komponen dipakai di dalam `Modal`):
+```ts
+perpindahanRouter.use(authenticate)
 
-- Field `wargaId`: pilih warga — cek apakah ada komponen search-select warga yang reusable di project (lihat `WargaForm.tsx` atau hook pencarian warga yang dipakai di form lain, mis. saat assign `kepalaKeluarga`). Reuse kalau ada; kalau tidak ada, buat select sederhana dengan search text yang query `useWargaList` dengan `search` filter dan render hasil sebagai daftar pilihan
-- Field `jenis`: `SelectField` dengan opsi `MASUK`/`KELUAR`/`MENINGGAL`
-- Field `gerejaAsalTujuan`: `InputField` teks, opsional
-- Field `tanggalPerpindahan`: input date, opsional
-- Field `nomorSurat`: `InputField` teks, opsional
-- Field `keterangan`: textarea, opsional
-- Validasi Zod: `wargaId` wajib (`z.number({ required_error: '...' })`), `jenis` wajib (`z.enum([...], { required_error: 'Pilih jenis perpindahan' })`), sisanya optional
-- Submit → panggil `create` mutation, tutup modal setelah sukses, tampilkan error dari `err.response.data.error` mengikuti pola `LoginForm.tsx`/form lain di project
+// GET /api/perpindahan — semua role yang punya akses menu (termasuk VIEWER, read-only)
+perpindahanRouter.get('/', async (req, res) => { ... paginated(...) })
 
-### 5. Test component
+// GET /api/perpindahan/:id
+perpindahanRouter.get('/:id', async (req, res) => { ... ok(...) })
 
-Buat `apps/web/src/app/(dashboard)/perpindahan/PerpindahanForm.test.tsx` mengikuti pola
-`Badge.test.tsx`/`Pagination.test.tsx` (Vitest + React Testing Library). Cover:
+// POST /api/perpindahan
+perpindahanRouter.post('/', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN'), async (req, res) => { ... created(...) })
 
-- Submit tanpa pilih `wargaId` → muncul pesan error validasi, mutation **tidak** terpanggil (mock hook `usePerpindahanMutations`)
-- Submit tanpa pilih `jenis` → muncul pesan error validasi
-- Submit dengan data valid → mutation `create` dipanggil dengan payload yang benar
+// PUT /api/perpindahan/:id — edit sebelum approved (validasi approvedBy null di service atau di sini)
+perpindahanRouter.put('/:id', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN'), async (req, res) => { ... ok(...) })
 
-### 6. Test util WhatsApp
+// POST /api/perpindahan/:id/approve
+perpindahanRouter.post('/:id/approve', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS'), async (req, res) => { ... ok(...) })
 
-Buat `apps/web/src/lib/perpindahanWhatsapp.test.ts` mengikuti pola test util yang sudah ada (kalau
-`kartuWhatsapp.ts` punya test, ikuti pola yang sama; kalau belum ada, buat test sederhana untuk
-`buildPerpindahanWhatsAppMessage` — assert pesan mengandung nama warga, jenis, dan nomor surat yang benar).
+// DELETE /api/perpindahan/:id
+perpindahanRouter.delete('/:id', authorize('SUPERADMIN', 'KEPALA_KANTOR'), async (req, res) => { ... res.status(204).send() })
+
+// GET /api/perpindahan/:id/surat.pdf — stream PDF, authenticate saja (semua role yang bisa lihat menu)
+perpindahanRouter.get('/:id/surat.pdf', async (req, res) => {
+  const perpindahan = await perpindahanService.getPerpindahanById(Number(req.params.id))
+  const pdfBuffer = await suratService.generateSuratPerpindahanPdf(perpindahan)
+  res.setHeader('Content-Type', 'application/pdf')
+  res.setHeader('Content-Disposition', `inline; filename="surat-perpindahan-${req.params.id}.pdf"`)
+  res.send(pdfBuffer)
+})
+
+// POST /api/perpindahan/:id/kirim-email
+perpindahanRouter.post('/:id/kirim-email', authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN'), async (req, res) => {
+  const perpindahan = await perpindahanService.getPerpindahanById(Number(req.params.id))
+  if (!perpindahan.warga.email) throw new AppError(400, 'Warga ini belum memiliki alamat email terdaftar')
+  const pdfBuffer = await suratService.generateSuratPerpindahanPdf(perpindahan)
+  const jenisLabel = { MASUK: 'Keterangan Pindah Masuk', KELUAR: 'Keterangan Pindah Keluar', MENINGGAL: 'Keterangan Kematian' }[perpindahan.jenis]
+  await emailService.sendSuratPerpindahanEmail(perpindahan.warga.email, perpindahan.warga.namaLengkap, jenisLabel, pdfBuffer)
+  ok(res, { message: 'Surat berhasil dikirim ke email warga' })
+})
+```
+
+Sesuaikan detail Zod schema body (`wargaId: z.number().int().positive()`, `jenis: z.enum(['MASUK','KELUAR','MENINGGAL'])`, dst) mengikuti gaya `kelompok.ts`/`keluarga.ts`.
+
+### 6. Daftarkan router di `app.ts`
+
+Tambahkan import dan `app.use('/api/perpindahan', perpindahanRouter)` mengikuti pola router lain di `apps/api/src/app.ts`.
+
+### 7. Test service (mock prisma)
+
+Buat `apps/api/tests/services/perpindahan.service.test.ts`, ikuti pola mocking di
+`apps/api/tests/services/auth.service.test.ts`. Cover minimal:
+
+- `createPerpindahan`: sukses membuat record dengan `approvedBy: null`
+- `createPerpindahan`: `wargaId` tidak ditemukan → throw `AppError` 404
+- `approvePerpindahan`: sukses → `warga.statusKeanggotaan` ter-update sesuai mapping jenis (test ketiga jenis: MASUK/KELUAR/MENINGGAL)
+- `approvePerpindahan`: sudah pernah di-approve → throw `AppError` 400, tidak ada update kedua yang jalan
+- `deletePerpindahan`: sudah approved → throw `AppError` 400
+
+### 8. Test route (supertest, mock service seperti pola `auth.reset.route.test.ts`)
+
+Buat `apps/api/tests/routes/perpindahan.route.test.ts`. Cover:
+
+- `POST /api/perpindahan` tanpa role yang sesuai → 403
+- `POST /api/perpindahan` body invalid (jenis bukan enum valid) → 400
+- `POST /api/perpindahan/:id/kirim-email` dengan `warga.email` null → 400 dengan pesan yang jelas
 
 ## Verifikasi
 
 ```bash
-npm run type-check --workspace=apps/web
-npm run test --workspace=apps/web
-npm run build --workspace=apps/web
+npm run type-check --workspace=apps/api
+npm run test --workspace=apps/api
+npm run build --workspace=apps/api
 ```
 
 Semua harus sukses.
 
 ## Definition of Done
 
-- [ ] Halaman `/perpindahan` menampilkan list dengan filter jenis dan search nama warga, ter-paginasi
-- [ ] Form catat perpindahan baru berfungsi, validasi wajib `wargaId` dan `jenis`
-- [ ] Tombol Approve hanya muncul untuk role yang sesuai dan data yang belum di-approve; setelah approve, badge status berubah dan tabel ter-refresh (invalidate query)
-- [ ] Tombol Cetak Surat membuka PDF surat di tab baru, bisa langsung diprint/save-as-PDF dari browser
-- [ ] Tombol Kirim Email memanggil endpoint kirim-email dan menampilkan hasil (sukses atau pesan error kalau warga belum punya email)
-- [ ] Tombol Kirim WhatsApp membuka `wa.me` dengan pesan ringkasan surat yang benar
-- [ ] Tombol Hapus hanya muncul untuk data yang belum di-approve dan role yang sesuai
-- [ ] Alur lengkap dicoba manual sekali via `npm run dev`: catat perpindahan baru → approve → cek `warga.statusKeanggotaan` berubah di halaman `/warga` → cetak PDF → kirim email (mode dev, cek log server) → kirim WhatsApp (cek link `wa.me` terbuka dengan pesan benar) — catat hasilnya di ringkasan sprint
-- [ ] Semua test baru + lama pass, `type-check` dan `build` bersih di `apps/web`
+- [ ] `apps/api/src/services/perpindahan.service.ts` dengan list/get/create/update/approve/delete
+- [ ] `apps/api/src/services/surat.service.ts` menghasilkan PDF valid (bisa dibuka di PDF viewer, bukan cuma buffer kosong)
+- [ ] `email.service.ts` punya `sendSuratPerpindahanEmail` dengan lampiran PDF, reuse transporter yang ada
+- [ ] Approve perpindahan mengupdate `warga.statusKeanggotaan` sesuai mapping jenis dalam satu transaksi
+- [ ] Perpindahan yang sudah approved tidak bisa dihapus atau di-approve ulang
+- [ ] Endpoint `GET /api/perpindahan/:id/surat.pdf` mengembalikan PDF yang bisa dibuka langsung di browser
+- [ ] Endpoint `POST /api/perpindahan/:id/kirim-email` menolak dengan pesan jelas kalau warga belum punya email
+- [ ] Semua test baru + lama pass, type-check dan build bersih di `apps/api`
