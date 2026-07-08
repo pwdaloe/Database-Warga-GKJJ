@@ -2,7 +2,7 @@
 
 **Status: ✅ SELESAI** — dikerjakan di luar alur `/sprint` normal (permintaan langsung dari user
 di tengah sesi lain), baru didokumentasikan retroaktif di sini agar penomoran sprint tetap
-konsisten dengan `sprints/sprint_05.md`/`sprint_06.md` (Perpindahan Jemaat) yang sudah lebih dulu
+konsisten dengan `sprints/sprint_05.md`/`sprint_07.md` (Perpindahan Jemaat) yang sudah lebih dulu
 menempati nomor 4-5 sebelum sprint ini digeser.
 
 ## Konteks
@@ -10,8 +10,10 @@ menempati nomor 4-5 sebelum sprint ini digeser.
 Sprint ini awalnya tidak diberi nomor (commit `feat: kepatuhan PDP — ...` tanpa label sprint),
 karena saat dikerjakan `sprints/sprint_04.md` & `sprint_05.md` sudah lebih dulu diisi rencana
 Perpindahan Jemaat dari sesi lain. Setelah disinkronkan, sprint Perpindahan Jemaat digeser ke
-Sprint 5 (backend) & Sprint 6 (frontend), dan pekerjaan PDP ini menempati slot Sprint 4 sesuai
-urutan pengerjaan aktual (PDP selesai lebih dulu, sebelum Perpindahan Jemaat mulai dikerjakan).
+Sprint 5 (backend) & Sprint 6 (frontend) — Sprint 6 kemudian digeser lagi ke Sprint 7 saat Sprint 6
+disisipkan untuk test coverage `import.ts`/`warga.service.ts` (lihat `sprints/sprint_06.md`,
+2026-07-08) — dan pekerjaan PDP ini menempati slot Sprint 4 sesuai urutan pengerjaan aktual (PDP
+selesai lebih dulu, sebelum Perpindahan Jemaat mulai dikerjakan).
 
 ## Tasks (sudah selesai)
 

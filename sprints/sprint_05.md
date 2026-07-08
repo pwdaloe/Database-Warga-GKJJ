@@ -26,7 +26,8 @@ diubah lewat migration baru). Enum `JenisPerpindahan` punya 3 nilai: `MASUK`, `K
 Sidebar frontend **sudah** punya link ke `/perpindahan` (lihat
 `apps/web/src/components/layout/Sidebar.tsx`, grup "Utilitas") untuk role `SUPERADMIN`,
 `KEPALA_KANTOR`, `MAJELIS`, `STAF_ADMIN` — tapi route API dan halamannya belum ada. Sprint ini
-membangun API-nya; Sprint 6 membangun halamannya.
+membangun API-nya; Sprint 7 membangun halamannya (semula Sprint 6, digeser saat Sprint 6
+disisipkan untuk test coverage `import.ts`/`warga.service.ts`, lihat `sprints/sprint_06.md`).
 
 Ini fitur pencatatan status keanggotaan jemaat (bukan pindah alamat/domisili):
 - `MASUK` — jemaat pindah masuk dari gereja lain (surat keterangan pindah dari gereja asal)
@@ -58,7 +59,7 @@ Ini fitur pencatatan status keanggotaan jemaat (bukan pindah alamat/domisili):
    di finalisasi administratif terakhir.
 3. **Surat PDF**: pakai `pdfkit` (ringan, pure JS, tanpa headless browser) untuk generate "Surat
    Keterangan Pindah/Meninggal Jemaat" secara server-side. Ini dipakai untuk 2 hal: (a) endpoint
-   view/download PDF langsung di browser (dipakai tombol "Cetak" di Sprint 6, browser native
+   view/download PDF langsung di browser (dipakai tombol "Cetak" di Sprint 7, browser native
    print-to-PDF dari situ, tersedia kapan saja untuk preview draft), dan (b) lampiran email di task
    5 — **hanya bisa dikirim setelah validated** (lihat task 6, endpoint `kirim-email`).
 4. **Kop surat PDF**: nama gereja + placeholder alamat generik (tidak ada alamat/kop resmi
