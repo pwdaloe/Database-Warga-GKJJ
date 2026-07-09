@@ -222,6 +222,20 @@ Setelah semua task selesai, jalankan perintah verifikasi dari section `## Verifi
 
 Semua verifikasi harus ✅ sebelum lanjut ke langkah berikutnya.
 
+**Kalau sprint menyentuh `apps/web` dan DoD meminta uji interaktif ("coba manual via `npm run dev`",
+klik tombol, lihat badge/modal) tapi sesi ini tidak punya browser/screenshot tool tersedia**: jangan
+klaim UI sudah diverifikasi. Fallback ke:
+1. `type-check` + `test` + `build` di `apps/web` (sudah mencakup unit/component test untuk logic UI)
+2. Kalau DoD melibatkan alur yang juga punya endpoint API, simulasikan alur end-to-end lewat `curl`
+   langsung ke `apps/api` (login → aksi → verifikasi efek samping di DB via endpoint lain) sebagai
+   pengganti klik UI — lihat pola verifikasi Sprint 7 (Perpindahan Jemaat) di `CHANGELOG.md` untuk
+   contoh konkret
+3. **Wajib** nyatakan secara eksplisit di laporan akhir sprint (Langkah 10/11) bahwa interaksi UI
+   (klik, tampilan visual badge/modal) belum divalidasi visual di browser — jangan biarkan laporan
+   akhir terbaca seolah-olah semuanya sudah dicoba manual di browser kalau kenyataannya tidak
+
+<!-- improved: tambah fallback verifikasi UI saat tidak ada browser tool tersedia — retro Sprint 6-7 (2026-07-09), Sprint 7 menangani ini dengan baik secara ad-hoc tapi belum jadi standar baku di skill -->
+
 ## Langkah 7 — Format dan Lint
 
 ```bash

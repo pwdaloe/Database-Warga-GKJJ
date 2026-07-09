@@ -3,6 +3,143 @@
 
 ---
 
+## [2026-07-09] — Retrospektif Sprint 6–7 (Test Coverage & Perpindahan Jemaat Frontend)
+
+**Project**: Database Warga GKJJ
+**Scope**: Sprint 6 (Test Coverage: Bulk Import & Validasi Warga) dan Sprint 7 (Perpindahan Jemaat: Frontend)
+**Reviewed**: Kamis, 9 Juli 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 2 sprint (Sprint 6, Sprint 7) |
+| Total tasks | 11 tasks (11/11 selesai — 5 di Sprint 6, 6 di Sprint 7) |
+| Fix/revert commits (pasca sprint) | 0 |
+| Recurring blocker diresolusi siklus ini | 1 (test coverage `import.ts`/`warga.service.ts`, 5x HIGH → **resolved**) |
+| Unique blockers baru | 1 (dev server API stale di mesin user, Sprint 7, LOW, workaround diterapkan) |
+| Skill gap terdeteksi | 1 baru (fallback verifikasi UI saat tidak ada browser tool) |
+
+### 🎉 Sorotan: Kedua Gate dari `/improve` (2026-07-08) Terbukti Bekerja di Percobaan Pertama
+
+Retro sebelumnya (2026-07-08) menutup dengan dua perbaikan skill yang belum pernah diuji nyata:
+gate "baca RETRO.md sebelum mulai sprint" dan gate "cek commit yatim". Sprint 6-7 adalah kesempatan
+pertama keduanya benar-benar dijalankan, dan **keduanya bekerja persis seperti dirancang**:
+
+1. **Gate RETRO.md**: saat `/sprint` dijalankan dengan `sprints/.current_sprint = 6` (menunjuk ke
+   `sprint_06.md` lama, Perpindahan Jemaat Frontend), agent membaca entry teratas `RETRO.md`,
+   mendeteksi rekomendasi "wajib jadi sprint eksplisit" untuk test coverage yang sudah 5x HIGH, dan
+   **berhenti untuk minta konfirmasi user** — persis seperti didesain. User memilih "buat sprint dulu",
+   agent merenumbering sprint lama jadi `sprint_07.md` dan mengisi `sprint_06.md` baru khusus test
+   coverage. Blocker yang mangkrak 5 retro berturut-turut sejak 2026-07-05 akhirnya tuntas hari yang
+   sama gate-nya aktif.
+2. **Gate commit yatim**: pada eksekusi Sprint 7, gate ini mendeteksi commit `1f2d520` (Sprint 4/PDP,
+   2026-07-08) yang belum pernah dapat entry `CHANGELOG.md`, menawarkan backfill ke user, dan setelah
+   disetujui menulis entry retroaktif (`b33897f`) sebelum melanjutkan sprint baru. Gap yang
+   diidentifikasi di retro sebelumnya tertutup dalam siklus berikutnya, bukan menunggu retro lagi.
+
+Ini validasi konkret bahwa siklus `/retro → /improve → /sprint` benar-benar self-correcting: temuan
+retro tidak berhenti di rekomendasi naratif, tapi memaksa tindakan nyata di eksekusi berikutnya.
+
+### 🔁 Pola Blocker Sistemik
+
+#### Test coverage `import.ts` & `warga.service.ts` — **RESOLVED** setelah 5x HIGH berturut-turut
+- **Status**: ✅ Resolved di Sprint 6 (2026-07-09)
+- **Hasil**: `import.ts` naik dari 5.21% → 91.3% lines, `warga.service.ts` dari 3.61% → 97.59% lines.
+  44 test baru (18 route + 26 service), semua pass, tidak ada perubahan logic produksi (murni
+  penambahan test sesuai batasan sprint).
+- **Pelajaran**: akar masalahnya bukan kurangnya tooling (Vitest sudah benar sejak lama), murni gap
+  proses — tidak ada mekanisme yang memaksa rekomendasi retro jadi sprint nyata. Gate baru di
+  `sprint.md` (lihat sorotan di atas) adalah fix yang tepat sasaran untuk kelas masalah ini,
+  bukan cuma untuk kasus ini saja.
+
+#### Dev server API stale (proses lama tanpa hot-reload) — occurrence baru (1x), LOW, resolved dengan workaround
+- **Severity**: LOW
+- **Root cause**: Dev server `apps/api` milik user di port 4000 adalah proses `tsx` (tanpa flag
+  `watch`) yang sudah berjalan sejak 2026-07-05 — empat sprint sebelum Sprint 5-7 (Perpindahan
+  Jemaat, Import test coverage) menambahkan route baru. Karena tidak ada hot-reload, proses ini
+  tidak pernah mengenali route `/api/perpindahan` sama sekali, mengembalikan 404. Bukan bug kode —
+  proses ini murni warisan sesi dev manual user yang lupa di-restart.
+- **Penanganan**: Agent dengan tepat **tidak mematikan proses yang bukan dimulai sesi ini** (sesuai
+  prinsip kehati-hatian terhadap proses yang mungkin milik pekerjaan user), dan sebagai gantinya
+  menjalankan instance verifikasi sementara di port lain (4099), memverifikasi alur end-to-end penuh
+  lewat API tersebut, lalu mematikan instance sementara itu sendiri setelah selesai — bersih, tidak
+  menyentuh proses user.
+- **Skill yang perlu diupdate**: tidak perlu — penanganan ad-hoc ini sudah benar dan aman. Cukup
+  dicatat sebagai pola reusable kalau situasi serupa terulang (dev server user stale, jangan
+  restart/kill otomatis, pakai port sementara untuk verifikasi).
+
+### 🕳️ Gap Skill Coverage
+
+- **Situasi**: Sprint 7 (frontend, Next.js) tidak punya akses browser tool (tidak ada Playwright/
+  Puppeteer/screenshot capability tersedia di sesi ini). DoD sprint file secara eksplisit meminta
+  "alur lengkap dicoba manual sekali via `npm run dev`" yang mengasumsikan interaksi browser nyata
+  (klik tombol, lihat badge, buka modal). Agent menangani ini dengan baik — verifikasi alur backend
+  penuh lewat API langsung (curl), menjalankan seluruh test unit/component, dan **secara eksplisit
+  mengungkapkan ke user** bahwa interaksi UI (klik, visual badge/modal) belum tervalidasi visual —
+  tapi ini murni inisiatif dari instruksi umum skill `/verify` ("if you can't test the UI, say so
+  explicitly"), bukan sesuatu yang diantisipasi `sprint.md` sendiri.
+- **Tidak di-handle oleh**: `sprint.md` Langkah 6 ("Jalankan Verifikasi Sprint") — tidak ada
+  fallback eksplisit untuk kasus tidak ada browser tool tersedia di sprint frontend.
+- **Saran**: tambah catatan di `sprint.md` Langkah 6: kalau tidak ada browser/screenshot tool
+  tersedia untuk sprint yang menyentuh `apps/web`, fallback ke (a) type-check + test + build,
+  (b) simulasi alur backend end-to-end via curl kalau relevan, (c) **wajib** nyatakan secara
+  eksplisit di laporan akhir sprint bahwa interaksi UI belum divalidasi visual — supaya ini jadi
+  standar konsisten, bukan tergantung insiatif individual tiap eksekusi.
+
+### 🐛 Pola Git Bermasalah
+
+- **Sejak retro 2026-07-08 (`a05cb27`) sampai sekarang**: 0 fix/revert commit — pola bersih ini
+  konsisten sejak Sprint 1 (total sekarang 6 sprint via `/sprint` + Sprint 4 ad-hoc, semuanya 0 fix
+  commit susulan).
+- **`apps/web/tsconfig.tsbuildinfo`** berubah di 9 commit terpisah sepanjang riwayat — ini file
+  build artifact TypeScript yang seharusnya di-`.gitignore`, bukan di-commit berulang. Tidak
+  menyebabkan masalah fungsional, tapi murni noise di git history. Bukan gap skill (tidak terkait
+  proses sprint), murni housekeeping repo — direkomendasikan dibersihkan sekali oleh user/di sprint
+  mendatang, bukan diagendakan sebagai skill improvement.
+- **`960a7cf docs: sinkronkan README...`** dan beberapa commit `docs(sprint):` terjadi di luar
+  `/sprint` (commit dokumentasi manual antar-sesi) — tidak actionable karena bukan `feat:` (gate
+  commit yatim sengaja hanya menyasar `feat:`, bukan `docs:`), dan dokumentasi memang wajar
+  dikerjakan di luar alur sprint formal.
+
+### ✅ Yang Berjalan Baik
+
+- **Kedua gate baru dari `/improve` (2026-07-08) tervalidasi bekerja sempurna** pada percobaan
+  pertama — lihat sorotan di atas. Ini bukti nyata siklus self-learning proyek ini berfungsi.
+- **Zero fix/revert commit** tetap konsisten di seluruh sprint sejak sistem `/sprint` dipakai.
+- **Sprint 6 (test coverage) dieksekusi presisi**: coverage naik drastis (>90% untuk kedua file)
+  tanpa menyentuh logic produksi sama sekali — persis sesuai batasan yang ditulis di sprint file
+  ("murni menambah test, bukan refactor").
+- **Renumbering sprint (6→7) ditangani rapi**: semua cross-reference di `sprint_04.md`, `sprint_05.md`
+  diupdate konsisten, catatan penomoran ditambahkan di kedua file yang terpengaruh — mengikuti pola
+  yang sudah terbukti baik dari renumbering PDP sebelumnya.
+- **Penanganan dev server stale milik user dengan hati-hati** (lihat detail di atas) — tidak mengambil
+  langkah destruktif (kill proses asing) tanpa izin, memilih workaround yang aman & reversibel.
+- **Disclosure jujur soal keterbatasan verifikasi UI** — tidak mengklaim "sudah diverifikasi di
+  browser" padahal tidak, melaporkan apa adanya ke user.
+
+### 🔧 Kandidat Perbaikan Skill
+
+| Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
+|-----------|-----------|---------|-----------------|--------|
+| MED | sprint.md | Tidak ada fallback eksplisit di Langkah 6 untuk verifikasi sprint frontend ketika browser tool tidak tersedia | Tambah catatan: fallback ke type-check+test+build & simulasi backend via curl, wajib disclose eksplisit ke user bahwa UI belum divalidasi visual | ✅ applied (2026-07-09) |
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. Terapkan kandidat perbaikan MED (fallback verifikasi UI tanpa browser tool) di `sprint.md` —
+   dampaknya kecil per-insiden tapi akan terus berulang di setiap sprint frontend selama sesi tidak
+   punya akses browser.
+2. (Opsional, bukan skill) Bersihkan `apps/web/tsconfig.tsbuildinfo` dari git tracking — tambahkan ke
+   `.gitignore` dan `git rm --cached` sekali saja, supaya tidak terus muncul sebagai "modified" di
+   commit-commit berikutnya yang tidak terkait.
+3. Tidak ada sprint terjadwal berikutnya (Sprint 1-7 semua selesai) — saat merencanakan sprint baru
+   lewat `/pm`, pertimbangkan gap dari audit `/eval` Sprint 4 yang belum dijadwalkan: visibilitas
+   status konsen PDP di list `/warga`, dan keputusan kebijakan retensi data (`retensiHingga`,
+   **NEEDS MORE INFO** dari pengurus gereja).
+
+---
+
 ## [2026-07-08] — Retrospektif Sprint 4–5 (Kepatuhan PDP & Perpindahan Jemaat Backend)
 
 **Project**: Database Warga GKJJ

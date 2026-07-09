@@ -1,7 +1,7 @@
 {
   "project": "Database Warga GKJJ",
-  "last_updated": "2026-07-08",
-  "note": "Sprint 4 (Kepatuhan PDP) dikerjakan di luar alur /sprint normal (permintaan langsung user di tengah sesi lain), didokumentasikan retroaktif di sprints/sprint_04.md tapi TIDAK PERNAH dapat entry CHANGELOG.md/email PM karena bypass Langkah 10 sprint.md. Sprint 5 (Perpindahan Jemaat: Backend) selesai penuh via /sprint normal. sprints/.current_sprint = 6, sprint_06.md (Perpindahan Jemaat: Frontend) siap dieksekusi berikutnya.",
+  "last_updated": "2026-07-09",
+  "note": "Sprint 6 (Test Coverage) dan Sprint 7 (Perpindahan Jemaat Frontend) selesai penuh via /sprint. Kedua gate baru dari /improve 2026-07-08 (baca-RETRO-sebelum-mulai, cek-commit-yatim) tervalidasi bekerja pada percobaan pertama: blocker test coverage 5x HIGH akhirnya resolved, dan commit yatim Sprint 4/PDP akhirnya dapat entry CHANGELOG retroaktif. sprints/.current_sprint = 8, belum ada sprint_08.md terjadwal.",
   "sprints": [
     {
       "number": 4,
@@ -63,18 +63,45 @@
       "tasks_total": 5,
       "tasks_done": 5,
       "completion_pct": 100
+    },
+    {
+      "number": 6,
+      "name": "Test Coverage: Bulk Import & Validasi Warga (Backend)",
+      "commit": "54c3e39",
+      "status": "done",
+      "blockers_count": 0,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 5,
+      "tasks_done": 5,
+      "completion_pct": 100,
+      "note": "Disisipkan sebelum Sprint 7 lewat gate baru sprint.md (baca RETRO.md). Menutup blocker recurring test coverage import.ts/warga.service.ts yang sudah 5x HIGH. Coverage: import.ts 5.21%->91.3%, warga.service.ts 3.61%->97.59%."
+    },
+    {
+      "number": 7,
+      "name": "Perpindahan Jemaat: Frontend (List, Form, Cetak PDF, Email, WhatsApp)",
+      "commit": "5bfa313",
+      "status": "done",
+      "blockers_count": 1,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 6,
+      "tasks_done": 6,
+      "completion_pct": 100,
+      "note": "Verifikasi UI interaktif tidak bisa dilakukan (tidak ada browser tool di sesi ini) — fallback ke verifikasi backend end-to-end via curl (server sementara di port lain) + type-check/test/build, dengan disclosure eksplisit ke user soal keterbatasan ini."
     }
   ],
   "recurring_blockers": [
     {
       "item": "import.ts (bulk-import Excel) & warga.service.ts (bulk-validate) masih 0% test coverage, menyentuh ~2000 data warga produksi langsung",
-      "occurrences": 5,
+      "occurrences": 6,
       "severity": "HIGH",
       "first_seen": "2026-07-04 (Continuous Delivery review)",
-      "last_seen": "2026-07-08 (Retro Sprint 4-5)",
-      "resolved": false,
+      "last_seen": "2026-07-09 (Sprint 6 — resolved)",
+      "resolved": true,
       "root_cause": "qa.md sudah diperbaiki (2026-07-05) agar tooling-nya (npm run test --workspace=apps/api -- --coverage, Vitest) sesuai stack project, tapi tidak ada yang benar-benar MENJALANKAN /qa coverage untuk dua file ini — rekomendasi PM terus muncul di CHANGELOG tapi tidak pernah jadi task nyata di sprint manapun. Ini sekarang gap proses (rekomendasi tidak dieksekusi), bukan lagi gap tooling.",
-      "escalation_note": "Severity dinaikkan MED->HIGH pada retro Sprint 2 (2026-07-05). Masih HIGH & unresolved setelah Sprint 3 (frontend, tidak menyentuh file ini), Sprint 4 (PDP, di luar /sprint, tidak menyentuh file ini), dan Sprint 5 (Perpindahan Jemaat backend, file baru bukan file lama ini) — sudah 5 titik review berturut-turut TANPA satupun task nyata dibuat untuk menutup gap ini, padahal aturan eskalasi retro.md sudah mewajibkan ini jadi task eksplisit sejak Sprint 2. Retro ini menegaskan ulang: WAJIB jadi task nyata di sprint berikutnya (bukan sprint_06.md yang sudah fokus frontend Perpindahan Jemaat — usulkan sprint_07.md khusus test coverage, atau task tambahan eksplisit sebelum sprint_06 lain dieksekusi)."
+      "escalation_note": "Severity dinaikkan MED->HIGH pada retro Sprint 2 (2026-07-05). Masih HIGH & unresolved setelah Sprint 3 (frontend, tidak menyentuh file ini), Sprint 4 (PDP, di luar /sprint, tidak menyentuh file ini), dan Sprint 5 (Perpindahan Jemaat backend, file baru bukan file lama ini) — sudah 5 titik review berturut-turut TANPA satupun task nyata dibuat untuk menutup gap ini, padahal aturan eskalasi retro.md sudah mewajibkan ini jadi task eksplisit sejak Sprint 2. Retro ini menegaskan ulang: WAJIB jadi task nyata di sprint berikutnya (bukan sprint_06.md yang sudah fokus frontend Perpindahan Jemaat — usulkan sprint_07.md khusus test coverage, atau task tambahan eksplisit sebelum sprint_06 lain dieksekusi).",
+      "resolution_note": "Resolved di Sprint 6 (2026-07-09), dipicu gate baru sprint.md hasil retro 2026-07-08. import.ts naik 5.21%->91.3% lines, warga.service.ts 3.61%->97.59% lines. 44 test baru, 0 perubahan logic produksi."
     },
     {
       "item": "npm cache global (~/.npm) berisi file root-owned dari bug npm versi lama, menyebabkan EACCES saat `npm install` package baru (pdfkit, date-fns) di workspace apps/api",
@@ -112,6 +139,26 @@
       "last_seen": "2026-07-05 (Sprint 2 eksekusi)",
       "resolved": true,
       "root_cause": "Sebelumnya seseorang/proses menerapkan perubahan schema ke database (kemungkinan lewat 'prisma db push' langsung ke environment lain, bukan container docker-compose lokal ini) tanpa pernah membuat migration file — sehingga migration history di repo tidak lengkap. 'prisma migrate status' hanya membandingkan DB vs migration history yang tercatat, BUKAN vs schema.prisma, jadi tidak mendeteksi masalah ini sampai 'migrate dev' dijalankan dan diminta reset. Di-resolve dengan memisahkan migration catch-up ('sync_schema_with_existing_features') dari migration fitur baru ('add_password_reset_token'), dengan konfirmasi eksplisit user untuk 'prisma migrate reset' (termasuk melewati Prisma AI-agent consent gate)."
+    },
+    {
+      "item": "Dev server apps/api milik user (port 4000) adalah proses tsx lama tanpa watch/hot-reload, sudah 4 sprint stale (sejak 2026-07-05) sehingga tidak mengenali route baru (Perpindahan, Import)",
+      "occurrences": 1,
+      "severity": "LOW",
+      "first_seen": "2026-07-09 (Sprint 7 verifikasi manual)",
+      "last_seen": "2026-07-09 (Sprint 7 verifikasi manual)",
+      "resolved": true,
+      "root_cause": "Proses dev server manual milik user, bukan dimulai oleh agent, tidak pernah di-restart sejak 4 sprint lalu. Bukan bug kode.",
+      "escalation_note": "Occurrence pertama, ditangani dengan aman (instance verifikasi sementara di port lain, tidak mematikan proses user). Tidak perlu perubahan skill — cukup pola reusable kalau situasi serupa terulang."
+    },
+    {
+      "item": "Tidak ada browser/screenshot tool tersedia untuk verifikasi UI interaktif sprint frontend — sprint.md Langkah 6 mengasumsikan akses browser nyata tanpa fallback eksplisit",
+      "occurrences": 1,
+      "severity": "MED",
+      "first_seen": "2026-07-09 (Sprint 7)",
+      "last_seen": "2026-07-09 (Sprint 7)",
+      "resolved": false,
+      "root_cause": "sprint.md Langkah 6 (Verifikasi Sprint) tidak punya panduan eksplisit untuk kasus sesi tanpa browser tool — penanganan yang benar (fallback ke curl + disclosure) saat ini murni dari instruksi umum skill /verify, bukan dari sprint.md sendiri.",
+      "escalation_note": "Occurrence pertama. Berpotensi berulang di setiap sprint frontend selanjutnya kalau sesi tidak punya browser tool — didokumentasikan sebagai skill_improvement_candidate agar jadi standar konsisten."
     }
   ],
   "skill_improvement_candidates": [
@@ -213,6 +260,15 @@
       "applied": true,
       "applied_date": "2026-07-08",
       "applied_summary": "Tambah sub-bullet di sprint.md Langkah 5 (\"Jika ada package baru dibutuhkan\"): kalau npm install gagal EACCES ~/.npm/_cacache, jangan sudo chown otomatis — pakai --cache <scratchpad-dir>/npm-cache, sebutkan solusi permanen (sudo chown) ke user di laporan akhir."
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Langkah 6 (Jalankan Verifikasi Sprint) tidak punya fallback eksplisit untuk sprint yang menyentuh apps/web ketika sesi tidak punya browser/screenshot tool. Sprint 7 menangani ini dengan baik (fallback ke curl end-to-end + type-check/test/build + disclosure eksplisit ke user), tapi itu inisiatif individual dari instruksi umum skill /verify, bukan panduan baku di sprint.md.",
+      "suggested_fix": "Tambah catatan di sprint.md Langkah 6: kalau sprint menyentuh apps/web dan tidak ada browser/screenshot tool tersedia di sesi ini, fallback ke (a) type-check + test + build, (b) simulasi alur backend end-to-end via curl kalau DoD melibatkan alur API, (c) wajib nyatakan eksplisit di laporan akhir sprint bahwa interaksi UI (klik, visual) belum divalidasi visual.",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-07-09",
+      "applied_summary": "Tambah subsection di sprint.md Langkah 6: kalau sprint menyentuh apps/web dan tidak ada browser tool, fallback ke type-check+test+build, simulasi alur via curl kalau relevan, dan wajib disclose eksplisit ke user bahwa UI belum divalidasi visual."
     }
   ],
   "improvement_history": [
@@ -269,6 +325,12 @@
       "skill": "pm.md",
       "change": "Tambah cek commit yatim (feat: tanpa entry CHANGELOG) di Langkah 5 sebelum tulis CHANGELOG baru.",
       "trigger": "RETRO finding 2026-07-08 (Sprint 4-5): Sprint 4 (PDP) dikerjakan di luar /sprint, tidak pernah trigger laporan PM"
+    },
+    {
+      "date": "2026-07-09",
+      "skill": "sprint.md",
+      "change": "Tambah fallback verifikasi UI di Langkah 6 saat sesi tidak punya browser/screenshot tool: type-check+test+build, simulasi alur via curl, dan wajib disclosure eksplisit ke user.",
+      "trigger": "RETRO finding 2026-07-09 (Sprint 6-7): Sprint 7 menangani ketiadaan browser tool dengan baik secara ad-hoc, tapi belum jadi standar baku di sprint.md"
     }
   ]
 }
