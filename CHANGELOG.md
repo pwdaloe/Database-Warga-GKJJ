@@ -58,6 +58,41 @@ Sprint 6 — Perpindahan Jemaat: Frontend (List, Form, Cetak PDF, Email, WhatsAp
 
 ---
 
+## [2026-07-08 18:57 WIB] — Sprint 4/7 | ✅ DONE (backfill retroaktif)
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Rabu, 8 Juli 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+> **Catatan**: entry ini ditulis retroaktif pada 2026-07-09 (saat eksekusi Sprint 7), dipicu gate
+> "cek commit yatim" baru di `sprint.md`. Sprint 4 dikerjakan 2026-07-08 di luar alur `/sprint`
+> normal (permintaan langsung user di tengah sesi lain, commit `1f2d520` tanpa label sprint), lalu
+> didokumentasikan retroaktif di `sprints/sprint_04.md` — tapi laporan PM/CHANGELOG-nya baru
+> menyusul sekarang. Lihat `RETRO.md` entry 2026-07-08 (section "Gap Skill Coverage") untuk detail
+> gap ini.
+
+### ✅ Sprint 4 Selesai: Kepatuhan PDP — Cookie Consent, Kebijakan Privasi, Konsen per-Warga
+- Halaman `/kebijakan-cookie` dan `/kebijakan-privasi` (UU PDP No. 27/2022), bisa diakses tanpa login
+- Cookie consent banner site-wide (pilihan "Hanya Esensial"/"Terima Semua" di `localStorage`), link kebijakan di footer login desktop & mobile
+- Field `konsenPDP`/`tanggalKonsen` per-warga disambungkan penuh: `tanggalKonsen` ditentukan server (bukan client), hanya diisi ulang saat transisi belum-setuju → setuju, dikosongkan saat consent ditarik
+- Checkbox konsen PDP di form warga (desktop) + tampilan status di halaman detail warga
+- Skill baru `/eval` untuk evaluasi usulan fitur sebelum sprint planning, langsung diuji dengan audit kepatuhan PDP (`evals/EVAL_pdp-data-warga-jemaat_2026-07-08.md`) — menemukan 2 gap belum dikerjakan (lihat Rekomendasi)
+- Verifikasi manual end-to-end via curl: create/tarik/re-consent PDP semua sesuai ekspektasi; type-check & build bersih di `apps/api`/`apps/web`
+- Commit: `1f2d520`
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+Tidak ada blocker ✅
+
+### 💡 Rekomendasi PM
+1. Gap dari audit `/eval`: visibilitas status konsen (badge/filter) di list `/warga` belum ada (effort kecil)
+2. Kebijakan retensi (`retensiHingga`) butuh keputusan pengurus gereja dulu sebelum bisa dirancang teknis — **NEEDS MORE INFO**, bukan keputusan sepihak engineering
+3. (Sudah ditindaklanjuti di Sprint 6) Test coverage `warga.service.ts`/`import.ts` — resolved 2026-07-08/09, lihat entry Sprint 6/7 di atas
+
+### 🏃 Next Sprint
+Sprint 5 — Perpindahan Jemaat: Backend (CRUD, Approval, Surat PDF, Email)
+
+---
+
 ## [2026-07-05 15:32 WIB] — Sprint 3/3 | ✅ DONE
 
 **Project**: Database Warga GKJJ
