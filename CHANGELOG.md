@@ -3,6 +3,40 @@
 
 ---
 
+## [2026-07-09 08:05 WIB] — Sprint 7/7 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Kamis, 9 Juli 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 7 Selesai: Perpindahan Jemaat — Frontend (List, Form, Cetak PDF, Email, WhatsApp)
+- `hooks/usePerpindahan.ts`: list + mutations (create/update/approve/validate/remove/kirimEmail)
+- `lib/perpindahanWhatsapp.ts`: build pesan & kirim WhatsApp ringkasan surat
+- Halaman `/perpindahan`: filter jenis+search, badge status 3 kondisi (Menunggu
+  Approval/Disetujui/Divalidasi) dengan info nama & tanggal approver/validator, aksi
+  role-gated (Approve/Validate/Cetak PDF/Kirim Email/Kirim WhatsApp/Hapus)
+- `PerpindahanForm.tsx`: search-select warga, validasi wargaId & jenis wajib
+- Test baru: `PerpindahanForm.test.tsx` (3 test) + `perpindahanWhatsapp.test.ts` (4 test) —
+  total test suite `apps/web` 22/22 pass, `type-check` & `build` bersih
+- Verifikasi end-to-end manual via API (server dev sementara, port terpisah dari dev
+  server user yang stale): catat → approve (status warga belum berubah) → validate
+  (status → PINDAH_KELUAR) → cetak PDF (valid, 1995 bytes) → kirim email (dev log
+  terkonfirmasi) — semua sesuai DoD
+- Commit: `5bfa313`
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+- Dev server API milik user di port 4000 ternyata proses lama (sejak 5 Juli, sebelum
+  Sprint 5-7 ada) tanpa hot-reload aktif — tidak dikenali route Perpindahan/Import
+  terbaru. Tidak disentuh (bukan proses yang dimulai sesi ini); verifikasi manual
+  dilakukan lewat instance sementara di port lain. User disarankan restart dev server
+  API-nya sendiri kalau ingin mencoba fitur ini secara interaktif.
+
+### 🏃 Next Sprint
+Belum ada sprint terjadwal berikutnya (Sprint 1-7 semua selesai). Rekomendasi retro
+2026-07-08 masih berlaku untuk siklus berikutnya — lihat `RETRO.md`.
+
+---
+
 ## [2026-07-08 20:55 WIB] — Sprint 6/7 | ✅ DONE
 
 **Project**: Database Warga GKJJ
