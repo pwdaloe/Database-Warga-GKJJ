@@ -43,7 +43,9 @@ logsRouter.get('/', async (req, res) => {
     }),
   ])
 
-  ok(res, { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } })
+  const serialized = data.map((row) => ({ ...row, id: row.id.toString() }))
+
+  ok(res, { data: serialized, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } })
 })
 
 // DELETE /api/logs — hapus log lebih tua dari N hari (default 90)
