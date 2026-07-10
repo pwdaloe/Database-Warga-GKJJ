@@ -5,6 +5,7 @@ import { authenticate, authorize } from '../middleware/auth.js'
 import { prisma } from '../utils/prisma.js'
 import { ok } from '../utils/response.js'
 import { ROLES } from './users.js'
+import { encryptField } from '../utils/crypto.js'
 
 export const importRouter = Router()
 importRouter.use(authenticate)
@@ -40,6 +41,13 @@ function normJK(v: unknown): 'L' | 'P' | null {
 function normEnum(v: unknown, allowed: string[], def: string): string {
   const s = String(v ?? '').trim().toUpperCase().replace(/[^A-Z_]/g, '')
   return allowed.find((a) => a === s) ?? def
+}
+
+// Validasi panjang kolom sebelum insert — pesan Postgres untuk error ini
+// ("value too long for type varchar") tidak selalu menyebutkan nama kolomnya.
+function checkLen(value: string | null, max: number, label: string): void {
+  if (value && value.length > max)
+    throw new Error(`${label} terlalu panjang (maks ${max} karakter, terisi ${value.length}): "${value.slice(0, 40)}..."`)
 }
 
 // "Duren Sawit - Pondok Kelapa" → "duren.sawit.pondok.kelapa" (spasi/strip jadi titik, buang karakter tidak valid)
@@ -108,20 +116,24 @@ importRouter.post(
         const namaLengkap = String(raw.namaLengkap ?? '').trim()
         if (namaLengkap.length < 2)
           throw new Error('Nama lengkap wajib diisi (minimal 2 karakter)')
+        checkLen(namaLengkap, 150, 'Nama Lengkap')
 
         const jk = normJK(raw.jenisKelamin)
         if (!jk)
           throw new Error(`Jenis kelamin tidak valid: "${raw.jenisKelamin}" — isi L atau P`)
 
         // ── Cek duplikat NIK ────────────────────────────────
-        const nik = raw.nik ? String(raw.nik).replace(/\s/g, '') : null
-        if (nik && nik.length > 0) {
+        const nikRaw = raw.nik ? String(raw.nik).replace(/\s/g, '') : null
+        checkLen(nikRaw, 20, 'NIK')
+        const nik = nikRaw ? encryptField(nikRaw) : null
+        if (nik) {
           const ex = await prisma.warga.findUnique({ where: { nik } })
           if (ex) throw new Error(`NIK sudah terdaftar pada: ${ex.namaLengkap}`)
         }
 
         // ── Cek duplikat nomorInduk ─────────────────────────
         const nomorInduk = raw.nomorInduk ? String(raw.nomorInduk).trim() : null
+        checkLen(nomorInduk, 30, 'No. Induk Warga')
         if (nomorInduk) {
           const ex = await prisma.warga.findFirst({ where: { nomorInduk } })
           if (ex) throw new Error(`No. Induk "${nomorInduk}" sudah dipakai oleh: ${ex.namaLengkap}`)
@@ -171,30 +183,45 @@ importRouter.post(
           ? String(raw.golonganDarah).trim().toUpperCase() as any
           : null
 
+        const namaPanggilan      = raw.namaPanggilan      ? String(raw.namaPanggilan).trim()      || null : null
+        const tempatLahir        = raw.tempatLahir        ? String(raw.tempatLahir).trim()        || null : null
+        const tempatBaptis       = raw.tempatBaptis       ? String(raw.tempatBaptis).trim()        || null : null
+        const nomorSidi          = raw.nomorSidi          ? String(raw.nomorSidi).trim()           || null : null
+        const telepon            = raw.telepon            ? String(raw.telepon).trim()             || null : null
+        const whatsapp           = raw.whatsapp           ? String(raw.whatsapp).trim()            || null : null
+        const email              = raw.email              ? String(raw.email).trim().toLowerCase() || null : null
+        const pendidikanTerakhir = raw.pendidikanTerakhir ? String(raw.pendidikanTerakhir).trim()  || null : null
+        const pekerjaan          = raw.pekerjaan          ? String(raw.pekerjaan).trim()            || null : null
+
+        checkLen(namaPanggilan, 50, 'Nama Panggilan')
+        checkLen(tempatLahir, 100, 'Tempat Lahir')
+        checkLen(tempatBaptis, 150, 'Tempat Baptis')
+        checkLen(nomorSidi, 30, 'No. Sidi')
+        checkLen(telepon, 20, 'Telepon')
+        checkLen(whatsapp, 20, 'WhatsApp')
+        checkLen(email, 100, 'Email')
+        checkLen(pendidikanTerakhir, 50, 'Pendidikan Terakhir')
+        checkLen(pekerjaan, 100, 'Pekerjaan')
+
         // Buat warga dulu tanpa nomorAnggota → set berdasar ID setelah insert
         const warga = await prisma.warga.create({
           data: {
-            keluargaId, nomorInduk, namaLengkap,
-            namaPanggilan:     raw.namaPanggilan ? String(raw.namaPanggilan).trim() || null : null,
+            keluargaId, nomorInduk, namaLengkap, namaPanggilan,
             jenisKelamin:      jk,
             nik:               nik || null,
             alamatKtp:         raw.alamatKtp     ? String(raw.alamatKtp).trim()     || null : null,
-            tempatLahir:       raw.tempatLahir  ? String(raw.tempatLahir).trim()  || null : null,
+            tempatLahir,
             tanggalLahir:      parseDate(raw.tanggalLahir  as any),
             golonganDarah:     golDarah,
             statusKeluarga:    statusKK    as any,
             statusKeanggotaan: statusAnggota as any,
             sudahBaptis:       normBool(raw.sudahBaptis),
             tanggalBaptis:     parseDate(raw.tanggalBaptis as any),
-            tempatBaptis:      raw.tempatBaptis  ? String(raw.tempatBaptis).trim()  || null : null,
+            tempatBaptis,
             sudahSidi:         normBool(raw.sudahSidi),
-            nomorSidi:         raw.nomorSidi     ? String(raw.nomorSidi).trim()     || null : null,
+            nomorSidi,
             tanggalSidi:       parseDate(raw.tanggalSidi   as any),
-            telepon:           raw.telepon       ? String(raw.telepon).trim()       || null : null,
-            whatsapp:          raw.whatsapp      ? String(raw.whatsapp).trim()      || null : null,
-            email:             raw.email         ? String(raw.email).trim().toLowerCase() || null : null,
-            pendidikanTerakhir: raw.pendidikanTerakhir ? String(raw.pendidikanTerakhir).trim() || null : null,
-            pekerjaan:         raw.pekerjaan     ? String(raw.pekerjaan).trim()     || null : null,
+            telepon, whatsapp, email, pendidikanTerakhir, pekerjaan,
             catatan:           raw.catatan       ? String(raw.catatan).trim()       || null : null,
             dataStatus:        'DRAFT',
             createdBy:         req.user!.userId,
