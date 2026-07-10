@@ -16,6 +16,7 @@ const IMPORT_FIELDS = [
   { key: 'nomorInduk',         label: 'No. Induk Warga',         required: false },
   { key: 'namaPanggilan',      label: 'Nama Panggilan',          required: false },
   { key: 'nik',                label: 'NIK (16 digit)',           required: false },
+  { key: 'alamatKtp',          label: 'Alamat Sesuai KTP',       required: false },
   { key: 'tempatLahir',        label: 'Tempat Lahir',            required: false },
   { key: 'tanggalLahir',       label: 'Tanggal Lahir',           required: false },
   { key: 'golonganDarah',      label: 'Golongan Darah (A/B/AB/O)',required: false },
@@ -45,6 +46,7 @@ const HEADER_HINTS: Record<string, FieldKey> = {
   'no induk': 'nomorInduk', 'no. induk': 'nomorInduk', 'nomor induk': 'nomorInduk', 'nomer induk': 'nomorInduk',
   'panggilan': 'namaPanggilan', 'nama panggilan': 'namaPanggilan',
   'nik': 'nik', 'ktp': 'nik', 'no ktp': 'nik',
+  'alamat ktp': 'alamatKtp', 'alamat sesuai ktp': 'alamatKtp', 'alamat': 'alamatKtp', 'address': 'alamatKtp',
   'tempat lahir': 'tempatLahir', 'ttl': 'tempatLahir',
   'tanggal lahir': 'tanggalLahir', 'tgl lahir': 'tanggalLahir', 'tgl. lahir': 'tanggalLahir', 'dob': 'tanggalLahir',
   'gol darah': 'golonganDarah', 'golongan darah': 'golonganDarah', 'gol. darah': 'golonganDarah',
@@ -88,6 +90,7 @@ const FORMAT_HINTS: Record<string, string> = {
   nomorInduk:          'Nomor induk dari gereja (mis. WRG001)',
   namaPanggilan:       'Nama yang biasa dipanggil',
   nik:                 '16 digit angka dari KTP',
+  alamatKtp:           'Alamat lengkap sesuai KTP (jalan, RT/RW, kelurahan, kecamatan)',
   tempatLahir:         'Kota/kabupaten tempat lahir',
   tanggalLahir:        'Format: dd/mm/yyyy  — contoh: 15/05/1980',
   golonganDarah:       'A, B, AB, atau O',
@@ -130,12 +133,14 @@ async function downloadTemplate() {
   const headers = IMPORT_FIELDS.map((f) => f.required ? `${f.label} *` : f.label)
 
   const sample1 = [
-    'Budi Santoso', 'L', 'WRG001', 'Budi', '3175011234567890', 'Jakarta', '15/05/1980',
+    'Budi Santoso', 'L', 'WRG001', 'Budi', '3175011234567890',
+    'Jl. Melati No. 10, RT 001/RW 002, Rawamangun, Jakarta Timur', 'Jakarta', '15/05/1980',
     'A', 'KEPALA', 'AKTIF', 'Y', '10/03/1985', 'GKJ Rawamangun', 'Y', 'SIDI001', '01/06/2000',
     '08123456789', '08123456789', 'budi@email.com', 'S1', 'Karyawan', 'K01', '',
   ]
   const sample2 = [
-    'Sri Wahyu', 'P', 'WRG002', 'Sri', '3175016789012345', 'Surabaya', '20/08/1983',
+    'Sri Wahyu', 'P', 'WRG002', 'Sri', '3175016789012345',
+    'Jl. Kenanga No. 5, RT 003/RW 004, Rawamangun, Jakarta Timur', 'Surabaya', '20/08/1983',
     'B', 'ISTRI', 'AKTIF', 'Y', '25/07/1987', 'GKJ Surabaya', 'N', '', '',
     '08198765432', '08198765432', 'sri@email.com', 'D3', 'Ibu Rumah Tangga', 'K01', '',
   ]
