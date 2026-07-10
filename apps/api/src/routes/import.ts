@@ -52,32 +52,36 @@ function normUsername(v: unknown): string {
     .replace(/[^a-z0-9._-]/g, '')
 }
 
+// Kolom teks di Excel (mis. Telepon, NIK, No. Sidi) sering tersimpan bertipe Number
+// kalau isinya cuma digit — terima string maupun number di sini, di-String()-kan saat dipakai.
+const textCell = z.union([z.string(), z.number()]).optional()
+
 // Row schema
 const rowSchema = z.object({
-  namaLengkap:        z.string().optional(),
-  namaPanggilan:      z.string().optional(),
-  jenisKelamin:       z.string().optional(),
-  nomorInduk:         z.string().optional(),
-  nik:                z.string().optional(),
-  alamatKtp:          z.string().optional(),
-  tempatLahir:        z.string().optional(),
+  namaLengkap:        textCell,
+  namaPanggilan:      textCell,
+  jenisKelamin:       textCell,
+  nomorInduk:         textCell,
+  nik:                textCell,
+  alamatKtp:          textCell,
+  tempatLahir:        textCell,
   tanggalLahir:       z.union([z.string(), z.number()]).optional(),
-  golonganDarah:      z.string().optional(),
-  statusKeluarga:     z.string().optional(),
-  statusKeanggotaan:  z.string().optional(),
+  golonganDarah:      textCell,
+  statusKeluarga:     textCell,
+  statusKeanggotaan:  textCell,
   sudahBaptis:        z.union([z.string(), z.boolean(), z.number()]).optional(),
   tanggalBaptis:      z.union([z.string(), z.number()]).optional(),
-  tempatBaptis:       z.string().optional(),
+  tempatBaptis:       textCell,
   sudahSidi:          z.union([z.string(), z.boolean(), z.number()]).optional(),
-  nomorSidi:          z.string().optional(),
+  nomorSidi:          textCell,
   tanggalSidi:        z.union([z.string(), z.number()]).optional(),
-  telepon:            z.string().optional(),
-  whatsapp:           z.string().optional(),
-  email:              z.string().optional(),
-  pendidikanTerakhir: z.string().optional(),
-  pekerjaan:          z.string().optional(),
-  kelompokKode:       z.string().optional(),
-  catatan:            z.string().optional(),
+  telepon:            textCell,
+  whatsapp:           textCell,
+  email:              textCell,
+  pendidikanTerakhir: textCell,
+  pekerjaan:          textCell,
+  kelompokKode:       textCell,
+  catatan:            textCell,
   _rowIndex:          z.number(),
 })
 
@@ -224,12 +228,12 @@ importRouter.post(
 
 // Row schema — pengguna
 const penggunaRowSchema = z.object({
-  namaLengkap:  z.string().optional(),
-  username:     z.string().optional(),
-  email:        z.string().optional(),
-  password:     z.string().optional(),
-  role:         z.string().optional(),
-  kelompokKode: z.string().optional(),
+  namaLengkap:  textCell,
+  username:     textCell,
+  email:        textCell,
+  password:     textCell,
+  role:         textCell,
+  kelompokKode: textCell,
   _rowIndex:    z.number(),
 })
 

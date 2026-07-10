@@ -296,18 +296,30 @@ export default function ImportPage() {
     let totalBerhasil = 0, totalGagal = 0
     setProgress({ done: 0, total: allRows.length })
 
-    for (const batch of batches) {
-      const res = await api.post('/import/warga', { rows: batch })
-      const d = res.data.data
-      fullLog.push(...d.log)
-      totalBerhasil += d.berhasil
-      totalGagal    += d.gagal
-      setProgress((p) => ({ ...p, done: p.done + batch.length }))
+    try {
+      for (const batch of batches) {
+        const res = await api.post('/import/warga', { rows: batch })
+        const d = res.data.data
+        fullLog.push(...d.log)
+        totalBerhasil += d.berhasil
+        totalGagal    += d.gagal
+        setProgress((p) => ({ ...p, done: p.done + batch.length }))
+      }
+      setResults({ total: allRows.length, berhasil: totalBerhasil, gagal: totalGagal, log: fullLog })
+      setProcessing(false)
+      setStep(4)
+    } catch (err: any) {
+      setProcessing(false)
+      setStep(2)
+      const data = err?.response?.data
+      const detailMsg = Array.isArray(data?.details)
+        ? data.details.map((d: any) => `${d.field}: ${d.message}`).join('\n')
+        : ''
+      alert(
+        `Import gagal: ${data?.error ?? 'Tidak dapat terhubung ke server, coba lagi.'}` +
+        (detailMsg ? `\n\n${detailMsg}` : ''),
+      )
     }
-
-    setResults({ total: allRows.length, berhasil: totalBerhasil, gagal: totalGagal, log: fullLog })
-    setProcessing(false)
-    setStep(4)
   }
 
   // ── Download log ──────────────────────────────────────────
