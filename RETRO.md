@@ -3,6 +3,80 @@
 
 ---
 
+## [2026-10-03] — Retrospektif Pasca Sprint 7 (Maintenance Import/Logs & Relokasi Folder)
+
+**Project**: Database Warga GKJJ
+**Scope**: 5 commit sejak 2026-07-09 (di luar alur `/sprint`) + relokasi folder `~/Documents` → `~/Projects` (2026-10-03)
+**Reviewed**: Sabtu, 3 Oktober 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 0 sprint baru (sprint terakhir: 7; `.current_sprint` = 8, belum ada `sprint_08.md`) |
+| Commit pasca Sprint 7 | 7 (4 fix/feat import & logs, 1 fix port Redis, 1 chore duplikat, 1 improve skill) |
+| Fix commits | 4 pada 2026-07-10 + 1 pada 2026-10-03 |
+| Unique blockers baru | 3 |
+| Recurring blockers (>=3x) | 1 (bug kelas data-nyata, 4x, HIGH, belum resolved) |
+| Skill gap terdeteksi | 5 |
+
+### 🔁 Pola Blocker Sistemik
+
+#### Bug data-nyata lolos dari test — muncul 4 kali dalam satu hari (2026-07-10)
+- **Severity**: HIGH (eskalasi otomatis: >=3x, belum resolved)
+- **Bukti**: kolom Excel bertipe Number ditolak Zod dan menggagalkan seluruh batch tanpa pesan (`920f44a`); NIK terimpor plaintext padahal jalur manual mengenkripsi AES-256 sesuai UU PDP (`191b61a`); VARCHAR overflow tanpa nama kolom (`191b61a`); `activity_log.id` BigInt gagal `JSON.stringify` di production (`9cb9fac`).
+- **Root cause**: Sprint 6 menaikkan coverage `import.ts` ke 91% dengan prisma di-mock dan input string sintetis. Coverage garis tidak menangkap bentuk data nyata, paritas antar jalur tulis, maupun serialisasi tipe BigInt.
+- **Catatan serius**: bug NIK plaintext adalah isu kepatuhan PDP. Perlu dicek apakah data hasil import sebelum `191b61a` sudah terenkripsi ulang.
+- **Skill yang perlu diupdate**: `qa.md` (HIGH).
+- **Tindakan wajib**: jadikan **task nyata Sprint 8**, bukan rekomendasi naratif.
+
+#### Port host bentrok — 2x (Postgres 5433 lalu Redis 6379), resolved
+- Redis Homebrew memegang 6379; `gkjj-redis` dipindah ke 6380 (`12d9c70`). API tidak memakai Redis, jadi tidak ada `REDIS_URL` yang perlu diubah.
+- **Skill**: `devops.md` perlu cek semua port di `docker-compose.yml`.
+
+#### Relokasi folder: DB lokal kosong setelah pindah — 1x, resolved
+- Volume `databasewargagkjj_postgres_data` terpasang benar, tetapi `gkjj_db` tanpa tabel; restore dari dump pra-relokasi memulihkan `warga`=76, `users`=26.
+- **Root cause kekosongan belum diketahui pasti.** Baseline `n_live_tup` untuk `users` (29) juga tidak akurat dibanding `count(*)` (26).
+
+### 🐛 Pola Git Bermasalah
+
+- **File sering diubah ulang**: `warga.service.ts` (8x), `routes/warga.ts` (8x), `schema.prisma` (8x), `WargaForm.tsx` (7x), `routes/import.ts` (6x).
+- **Commit masalah**: 3 dari 4 fix import menyentuh area yang baru saja "ditutup" Sprint 6.
+- **Root cause**: lihat pola data-nyata di atas.
+- **Artefak**: `.gitignore 2` dan `.prettierrc 2` (duplikat Finder) sempat ter-commit; sudah dihapus di `8c70e63`.
+
+### 🕳️ Gap Skill Coverage
+
+- **Maintenance di luar `/sprint`** (4 commit 2026-07-10) tidak punya entry CHANGELOG; gate commit yatim hanya menangkap feat besar.
+- **Relokasi project** hanya ada sebagai skill `relocate-project` di `.claude/skills/` yang belum di-commit; baseline rowcount-nya berbasis estimasi.
+- **Memory ter-track git** (`todo_next_session.md`) masih menunjuk path `~/Documents`.
+
+### ✅ Yang Berjalan Baik
+
+- Backup `pg_dump` sebelum relokasi menjadi penyelamat: restore berhasil dan terverifikasi dengan `count(*)`.
+- Asesmen read-only dan konfirmasi sebelum tindakan berisiko (restore, ubah port, hapus duplikat) berjalan sesuai `CLAUDE.md`.
+- Commit message fix import menjelaskan root cause dengan jelas.
+- Gate RETRO/commit-yatim dari retro sebelumnya tidak diganggu.
+
+### 🔧 Kandidat Perbaikan Skill
+
+| Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
+|-----------|-----------|---------|-----------------|--------|
+| HIGH | qa.md | Test mock + input sintetis meloloskan bug data nyata | Checklist fixture xlsx realistis, paritas antar jalur tulis, uji serialisasi BigInt | ⬜ pending |
+| MED | pm.md / sprint.md | Fix/feat di luar sprint tanpa entry CHANGELOG | Perluas deteksi commit yatim + entry "Maintenance" | ⬜ pending |
+| MED | devops.md | Cek port tidak mencakup semua service compose | Loop `lsof` untuk semua port host | ⬜ pending |
+| MED | relocate-project | Baseline `n_live_tup`, tanpa cek port & langkah restore | `count(*)` per tabel, cek port, restore standar | ⬜ pending |
+| LOW | memory/todo | Path lama di file ter-track | sed path, putuskan tracking `.claude/projects/` | ⬜ pending |
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. **Buat Sprint 8 "Hardening Import & Serialisasi"** (wajib, eskalasi >=3x): fixture Excel nyata, test paritas enkripsi NIK import vs manual, test serialisasi BigInt untuk semua route.
+2. **Audit data produksi**: periksa apakah NIK hasil import sebelum 2026-07-10 masih plaintext dan rencanakan enkripsi ulang (isu PDP; operasi data produksi, konfirmasi dulu).
+3. **Selidiki mengapa volume DB kosong** sebelum relokasi/backup berikutnya, dan commit skill `relocate-project` setelah baseline diperbaiki.
+
+---
+
 ## [2026-07-09] — Retrospektif Sprint 6–7 (Test Coverage & Perpindahan Jemaat Frontend)
 
 **Project**: Database Warga GKJJ

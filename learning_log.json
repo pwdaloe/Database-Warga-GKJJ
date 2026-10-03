@@ -1,7 +1,7 @@
 {
   "project": "Database Warga GKJJ",
-  "last_updated": "2026-07-09",
-  "note": "Sprint 6 (Test Coverage) dan Sprint 7 (Perpindahan Jemaat Frontend) selesai penuh via /sprint. Kedua gate baru dari /improve 2026-07-08 (baca-RETRO-sebelum-mulai, cek-commit-yatim) tervalidasi bekerja pada percobaan pertama: blocker test coverage 5x HIGH akhirnya resolved, dan commit yatim Sprint 4/PDP akhirnya dapat entry CHANGELOG retroaktif. sprints/.current_sprint = 8, belum ada sprint_08.md terjadwal.",
+  "last_updated": "2026-10-03",
+  "note": "Retro 2026-10-03 (pasca Sprint 7, di luar alur /sprint): 4 fix/feat import & logs (2026-07-10) ditemukan lewat uji data nyata meski coverage import.ts 91%; relokasi folder ~/Documents -> ~/Projects + bentrok port Redis 6379; DB lokal kosong setelah relokasi (pulih via restore dump). sprints/.current_sprint = 8, belum ada sprint_08.md.",
   "sprints": [
     {
       "number": 4,
@@ -159,6 +159,36 @@
       "resolved": false,
       "root_cause": "sprint.md Langkah 6 (Verifikasi Sprint) tidak punya panduan eksplisit untuk kasus sesi tanpa browser tool — penanganan yang benar (fallback ke curl + disclosure) saat ini murni dari instruksi umum skill /verify, bukan dari sprint.md sendiri.",
       "escalation_note": "Occurrence pertama. Berpotensi berulang di setiap sprint frontend selanjutnya kalau sesi tidak punya browser tool — didokumentasikan sebagai skill_improvement_candidate agar jadi standar konsisten."
+    },
+    {
+      "item": "Bug data-nyata di jalur import/serialisasi lolos dari test ber-mock prisma meski coverage tinggi (Excel Number vs string, NIK plaintext di import vs terenkripsi di jalur manual, VARCHAR overflow, BigInt tak ter-serialize di /api/logs)",
+      "occurrences": 4,
+      "severity": "HIGH",
+      "first_seen": "2026-07-10 (pasca Sprint 7)",
+      "last_seen": "2026-07-10 (pasca Sprint 7)",
+      "resolved": false,
+      "root_cause": "Test Sprint 6 memakai prisma mock dan input sintetis berbentuk string; tidak ada fixture Excel nyata, tidak ada paritas-check antar jalur tulis (import vs manual), dan tidak ada test serialisasi JSON untuk tipe BigInt/Decimal.",
+      "escalation_note": "4 bug dalam satu hari = >=3x. Wajib jadi task sprint nyata (Sprint 8), bukan rekomendasi naratif."
+    },
+    {
+      "item": "Port host docker-compose bentrok dengan service lokal lain (Redis 6379 vs Redis Homebrew); sebelumnya Postgres 5433 (HIGH)",
+      "occurrences": 2,
+      "severity": "MED",
+      "first_seen": "Sprint 1-3 (Postgres 5433)",
+      "last_seen": "2026-10-03 (Redis 6379)",
+      "resolved": true,
+      "root_cause": "devops.md mengecek port Postgres tetapi tidak semua port service di docker-compose.yml.",
+      "resolution": "Redis dipindah ke 6380 (commit 12d9c70)."
+    },
+    {
+      "item": "Pemindahan folder project: DB lokal (volume databasewargagkjj_postgres_data) kosong setelah relokasi walau backup mencatat 76 warga; baseline n_live_tup users (29) tidak akurat vs count(*) (26)",
+      "occurrences": 1,
+      "severity": "MED",
+      "first_seen": "2026-10-03",
+      "last_seen": "2026-10-03",
+      "resolved": true,
+      "root_cause": "Belum diketahui pasti mengapa volume kosong; baseline rowcount memakai statistik perkiraan, bukan count(*).",
+      "resolution": "Restore dari dump pra-relokasi; verifikasi count(*) warga=76, users=26 sama dengan isi dump."
     }
   ],
   "skill_improvement_candidates": [
@@ -269,6 +299,41 @@
       "applied": true,
       "applied_date": "2026-07-09",
       "applied_summary": "Tambah subsection di sprint.md Langkah 6: kalau sprint menyentuh apps/web dan tidak ada browser tool, fallback ke type-check+test+build, simulasi alur via curl kalau relevan, dan wajib disclose eksplisit ke user bahwa UI belum divalidasi visual."
+    },
+    {
+      "skill": "qa.md",
+      "issue": "Panduan test hanya prisma-mock + input sintetis; tidak mewajibkan fixture data nyata (Excel dengan kolom numerik), test paritas antar jalur tulis (import vs manual, mis. enkripsi NIK), atau test serialisasi JSON untuk BigInt.",
+      "suggested_fix": "Tambah checklist 'bug kelas data-nyata' di qa.md: fixture xlsx realistis, uji paritas enkripsi/normalisasi antar jalur, uji JSON.stringify respons yang memuat BigInt.",
+      "priority": "HIGH",
+      "applied": false
+    },
+    {
+      "skill": "pm.md / sprint.md",
+      "issue": "Commit fix/feat di luar /sprint (4 commit 2026-07-10) tidak punya entry CHANGELOG; gate commit-yatim hanya efektif untuk feat besar.",
+      "suggested_fix": "Perluas deteksi commit yatim ke semua feat/fix pasca sprint terakhir dan tawarkan entry ringkas 'Maintenance' di CHANGELOG.",
+      "priority": "MED",
+      "applied": false
+    },
+    {
+      "skill": "devops.md",
+      "issue": "Pre-flight port hanya mengecek sebagian port; Redis 6379 bentrok dengan Redis Homebrew tanpa terdeteksi.",
+      "suggested_fix": "Loop lsof untuk SEMUA port host di docker-compose.yml (bukan hanya Postgres) dan laporkan pemilik proses.",
+      "priority": "MED",
+      "applied": false
+    },
+    {
+      "skill": "relocate-project (.claude/skills, belum di-commit)",
+      "issue": "Baseline rowcount memakai n_live_tup (estimasi); verifikasi pasca-pindah tidak mengantisipasi volume kosong dan tidak menyebut tindakan Redis/port bentrok.",
+      "suggested_fix": "Ganti baseline dengan count(*) per tabel, tambah cek port bentrok sebelum 'compose up', dan catat langkah restore sebagai bagian standar Fase 6.",
+      "priority": "MED",
+      "applied": false
+    },
+    {
+      "skill": "CLAUDE.md / todo_next_session.md",
+      "issue": "Memory/todo di .claude/projects/ yang ter-track di git masih menunjuk path ~/Documents lama setelah relokasi.",
+      "suggested_fix": "Jalankan sed path pada file memory ter-track dan putuskan apakah folder .claude/projects/ perlu ter-track.",
+      "priority": "LOW",
+      "applied": false
     }
   ],
   "improvement_history": [
