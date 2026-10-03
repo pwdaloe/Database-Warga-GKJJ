@@ -228,6 +228,7 @@ model User {
   role          UserRole
   kelompokId    Int?      @map("kelompok_id")
   aktif         Boolean   @default(true)
+  mustChangePassword Boolean @default(false) @map("must_change_password")
   lastLogin     DateTime? @map("last_login")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")

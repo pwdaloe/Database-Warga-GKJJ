@@ -20,6 +20,8 @@ export default function MobileAppLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/m/login')
+    } else if (!loading && user?.mustChangePassword) {
+      router.replace('/ganti-password')
     }
   }, [user, loading, router])
 
@@ -31,7 +33,7 @@ export default function MobileAppLayout({ children }: { children: React.ReactNod
     )
   }
 
-  if (!user) return null
+  if (!user || user.mustChangePassword) return null
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col max-w-lg mx-auto relative">

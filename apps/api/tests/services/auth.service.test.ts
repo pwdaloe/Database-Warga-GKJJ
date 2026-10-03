@@ -109,7 +109,14 @@ describe('changePassword', () => {
 
     expect(mockedUpdate).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { passwordHash: expect.any(String) },
+      data: { passwordHash: expect.any(String), mustChangePassword: false },
     })
+  })
+
+  it('melempar 400 jika password baru sama dengan password lama', async () => {
+    mockedFindUnique.mockResolvedValue(baseUser())
+    await expect(changePassword(1, 'password123', 'password123'))
+      .rejects.toThrow('Password baru tidak boleh sama dengan password lama')
+    expect(mockedUpdate).not.toHaveBeenCalled()
   })
 })

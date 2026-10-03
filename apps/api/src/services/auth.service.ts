@@ -53,6 +53,7 @@ export async function login(username: string, password: string) {
       kelompok: user.kelompok,
       wargaId: user.wargaId,
       warga: user.warga,
+      mustChangePassword: user.mustChangePassword,
     },
   }
 }
@@ -71,6 +72,7 @@ export async function getMe(userId: number) {
       wargaId: true,
       warga: { select: { id: true, namaLengkap: true, fotoUrl: true } },
       lastLogin: true,
+      mustChangePassword: true,
     },
   })
 
@@ -93,8 +95,15 @@ export async function changePassword(
     throw new AppError(400, 'Password baru minimal 8 karakter')
   }
 
+  if (passwordBaru === passwordLama) {
+    throw new AppError(400, 'Password baru tidak boleh sama dengan password lama')
+  }
+
   const passwordHash = await bcrypt.hash(passwordBaru, 12)
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash } })
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash, mustChangePassword: false },
+  })
 }
 
 const RESET_SUCCESS_MESSAGE =
@@ -145,6 +154,6 @@ export async function resetPassword(token: string, passwordBaru: string) {
   const passwordHash = await bcrypt.hash(passwordBaru, 12)
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash, resetTokenHash: null, resetTokenExpiry: null },
+    data: { passwordHash, resetTokenHash: null, resetTokenExpiry: null, mustChangePassword: false },
   })
 }

@@ -99,6 +99,7 @@ describe('resetPassword', () => {
         passwordHash: expect.any(String),
         resetTokenHash: null,
         resetTokenExpiry: null,
+        mustChangePassword: false,
       },
     })
   })

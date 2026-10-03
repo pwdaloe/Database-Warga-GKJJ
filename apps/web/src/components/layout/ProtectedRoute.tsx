@@ -20,6 +20,10 @@ export function ProtectedRoute({ children, allowedRoles }: Props) {
       router.replace('/login')
       return
     }
+    if (user.mustChangePassword) {
+      router.replace('/ganti-password')
+      return
+    }
     if (allowedRoles && !allowedRoles.includes(user.role)) {
       router.replace('/dashboard')
     }
@@ -36,7 +40,7 @@ export function ProtectedRoute({ children, allowedRoles }: Props) {
     )
   }
 
-  if (!user) return null
+  if (!user || user.mustChangePassword) return null
   if (allowedRoles && !allowedRoles.includes(user.role)) return null
 
   return <>{children}</>

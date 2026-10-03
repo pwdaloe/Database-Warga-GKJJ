@@ -11,6 +11,7 @@ export interface AuthUser {
   wargaId: number | null
   warga: { id: number; namaLengkap: string; fotoUrl: string | null } | null
   lastLogin: string | null
+  mustChangePassword?: boolean
 }
 
 export async function loginRequest(username: string, password: string) {
@@ -42,6 +43,14 @@ export async function resetPasswordRequest(token: string, passwordBaru: string) 
   const res = await api.post<{ success: boolean; data: { message: string } }>(
     '/auth/reset-password',
     { token, passwordBaru },
+  )
+  return res.data.data
+}
+
+export async function changePasswordRequest(passwordLama: string, passwordBaru: string) {
+  const res = await api.post<{ success: boolean; data: { message: string } }>(
+    '/auth/change-password',
+    { passwordLama, passwordBaru },
   )
   return res.data.data
 }

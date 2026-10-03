@@ -3,7 +3,7 @@
 Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
 Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
 
-**Versi:** `v1.4` · **Terakhir diperbarui:** 8 Juli 2026
+**Versi:** `v1.5` · **Terakhir diperbarui:** 3 Oktober 2026
 
 ---
 
@@ -139,6 +139,12 @@ Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off
 - Token reset di-hash (SHA-256) sebelum disimpan, sekali pakai (langsung invalid setelah dipakai)
 - Mode dev: `SMTP_HOST` kosong → email di-log ke console (tidak perlu kredensial SMTP asli untuk testing)
 
+#### Wajib Ganti Password Sementara
+- Akun bisa ditandai `must_change_password` (kolom di tabel `users`). Akun penatua kelompok diberi password sementara oleh admin dan **wajib menggantinya saat login pertama**
+- Setelah login, user ber-flag otomatis diarahkan ke halaman `/ganti-password` (desktop dan `/m`) dan tidak bisa membuka halaman lain sebelum selesai
+- Password baru minimal 8 karakter, tidak boleh sama dengan password sementara; flag dikosongkan setelah berhasil (juga setelah reset password via email)
+- Catatan: pemaksaan saat ini di sisi frontend; endpoint API belum memblokir akses sebelum password diganti
+
 #### Manajemen Pengguna
 - Daftar pengguna: nama, username, email, role, kelompok, status aktif, waktu login terakhir
 - Tambah pengguna baru dengan form: nama, username, email, password (min. 8 karakter), role, kelompok
@@ -196,7 +202,7 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 9 | 63 (crypto, error handler, auth middleware/service/route, reset password, perpindahan service/route) |
+| Backend (`apps/api`) | 11 | 108 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route) |
 | Frontend (`apps/web`) | 3 | 15 (Badge, Pagination, ResetPasswordForm) |
 
 ```bash
@@ -250,6 +256,8 @@ Body snapshot pada `ActivityLog` secara otomatis:
 ### Catatan Operasional Penting
 
 > ⚠️ **JANGAN rotasi `ENCRYPTION_KEY` tanpa terlebih dahulu mendekripsi dan re-enkripsi semua NIK di database.** Rotasi kunci tanpa migrasi data akan membuat seluruh data NIK tidak terbaca.
+
+> 🔑 **Password awal akun seed** tidak ada di repository. `npm run db:seed` membaca `SEED_ADMIN_PASSWORD` dan `SEED_PENATUA_PASSWORD` dari environment (minimal 12 karakter). Ganti password superadmin segera setelah login pertama.
 
 > 🔐 **Production:** Gunakan `openssl rand -hex 32` untuk generate `ENCRYPTION_KEY` yang kuat. Simpan di secrets manager (AWS Secrets Manager, Vault, dll.) — JANGAN di file `.env` yang bisa masuk ke repository.
 
@@ -381,7 +389,7 @@ npm install
 docker-compose up -d
 ```
 
-Menjalankan **PostgreSQL** di `localhost:5435` (bukan 5432 default — lihat komentar di `docker-compose.yml`, di-remap karena port 5432 sudah dipakai instance PostgreSQL lokal lain, dan 5433/5434 dipakai project lain).
+Menjalankan **PostgreSQL** di `localhost:5435` dan **Redis** di `localhost:6380` (6379 sering bentrok dengan Redis Homebrew lokal; API saat ini belum memakai Redis) (bukan 5432 default — lihat komentar di `docker-compose.yml`, di-remap karena port 5432 sudah dipakai instance PostgreSQL lokal lain, dan 5433/5434 dipakai project lain).
 
 ### 4. Konfigurasi Environment
 
@@ -507,7 +515,7 @@ Authorization: Bearer <token>
 |---|---|---|
 | `POST` | `/auth/login` | Login, mendapatkan JWT |
 | `GET` | `/auth/me` | Data user yang sedang login |
-| `POST` | `/auth/change-password` | Ganti password |
+| `POST` | `/auth/change-password` | Ganti password (menghapus flag wajib-ganti-password) |
 | `POST` | `/auth/logout` | Logout |
 | `POST` | `/auth/forgot-password` | Minta link reset password (rate limit 5/15 menit, tanpa auth) |
 | `POST` | `/auth/reset-password` | Set password baru dari token reset (tanpa auth) |

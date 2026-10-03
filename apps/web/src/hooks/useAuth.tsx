@@ -24,6 +24,7 @@ interface AuthContextValue {
   loading: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
   isRole: (...roles: string[]) => boolean
 }
 
@@ -54,6 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/dashboard')
   }, [router])
 
+  const refreshUser = useCallback(async () => {
+    setUser(await getMeRequest())
+  }, [])
+
   const logout = useCallback(async () => {
     await logoutRequest()
     clearToken()
@@ -67,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isRole }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, isRole }}>
       {children}
     </AuthContext.Provider>
   )
