@@ -22,7 +22,7 @@ docker-compose up -d
 ```
 
 PostgreSQL akan berjalan di `localhost:5432`  
-Redis akan berjalan di `localhost:6379`
+Redis akan berjalan di `localhost:6380`
 
 ---
 
