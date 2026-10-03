@@ -400,14 +400,15 @@ Edit `apps/api/.env` — ganti nilai berikut:
 cd apps/api
 npx prisma db push
 npx tsx prisma/seed-master.ts   # Seed kelurahan Jakarta Timur + komisi config
+SEED_ADMIN_PASSWORD='...' SEED_PENATUA_PASSWORD='...' npm run db:seed   # superadmin + akun penatua (password wajib dari env)
 ```
 
-Akun default setelah seed:
+Akun setelah seed:
 
 | Field | Value |
 |---|---|
 | Username | `superadmin` |
-| Password | `Admin@GKJJ2025!` |
+| Password | nilai `SEED_ADMIN_PASSWORD` yang Anda set saat menjalankan seed |
 
 > **Ganti password segera setelah login pertama!**
 

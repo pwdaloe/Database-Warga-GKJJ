@@ -45,12 +45,11 @@ Pastikan `JWT_SECRET` diganti dengan string acak yang kuat.
 npm run db:migrate
 
 # Seed master data (wilayah, kelompok, superadmin)
-npm run db:seed
+# Password seed wajib diisi lewat environment (minimal 12 karakter), tidak ada default:
+SEED_ADMIN_PASSWORD='<password-kuat-anda>' SEED_PENATUA_PASSWORD='<password-awal-penatua>' npm run db:seed
 ```
 
-Akun superadmin default:
-- Username: `superadmin`
-- Password: `Admin@GKJJ2025!`
+Akun superadmin dibuat dengan username `superadmin` dan password dari `SEED_ADMIN_PASSWORD`.
 - **Ganti password segera setelah login pertama!**
 
 ---

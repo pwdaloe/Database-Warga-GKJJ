@@ -3,6 +3,13 @@ import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
+// Password seed tidak boleh hardcoded di repo (repo publik) — wajib dari environment.
+function requireSeedPassword(name: string): string {
+  const v = process.env[name]
+  if (!v || v.length < 12) throw new Error(`${name} wajib diisi di environment (minimal 12 karakter)`)
+  return v
+}
+
 async function main() {
   console.log('🌱 Seeding master data...')
 
@@ -66,7 +73,7 @@ async function main() {
   console.log(`  ✓ ${kelompokData.length} kelompok`)
 
   // ── Superadmin default ─────────────────────────────────────
-  const passwordHash = await bcrypt.hash('Admin@GKJJ2025!', 12)
+  const passwordHash = await bcrypt.hash(requireSeedPassword('SEED_ADMIN_PASSWORD'), 12)
   await prisma.user.upsert({
     where: { username: 'superadmin' },
     update: {},
@@ -108,7 +115,7 @@ async function main() {
     { kode: 'C5', nama: 'Kurida B. Budiantoro',            username: 'pondok.bambu.dua',            email: 'pondok.bambu.dua@gkjjakarta.org' },
   ]
 
-  const penatuaPasswordHash = await bcrypt.hash('GKJjakarta2026', 12)
+  const penatuaPasswordHash = await bcrypt.hash(requireSeedPassword('SEED_PENATUA_PASSWORD'), 12)
   for (const p of penatuaData) {
     const kelompok = await prisma.kelompok.findUniqueOrThrow({ where: { kode: p.kode } })
     await prisma.user.upsert({

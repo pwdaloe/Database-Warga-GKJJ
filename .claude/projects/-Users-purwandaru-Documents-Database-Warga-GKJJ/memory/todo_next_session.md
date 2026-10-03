@@ -56,11 +56,11 @@ Sesi terakhir: 2026-05-04. Aplikasi sudah bisa dijalankan (API port 4000, Web po
 ## Cara Menjalankan Aplikasi
 ```bash
 # Terminal 1 — API
-cd "/Users/purwandaru/Documents/Database Warga GKJJ/apps/api"
+cd "/Users/purwandaru/Projects/Database Warga GKJJ/apps/api"
 npx tsx src/index.ts
 
 # Terminal 2 — Web (jika belum jalan)
-cd "/Users/purwandaru/Documents/Database Warga GKJJ/apps/web"
+cd "/Users/purwandaru/Projects/Database Warga GKJJ/apps/web"
 npm run dev
 ```
-Login: username `superadmin`, password `Admin@GKJJ2025!`
+Login: username `superadmin` (password: lihat password manager)
