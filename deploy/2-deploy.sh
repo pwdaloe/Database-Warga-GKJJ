@@ -129,8 +129,13 @@ fi
 # ── 9. Restart / Start PM2 (selalu dari root) ────────────────
 info "Restart aplikasi via PM2..."
 cd "$APP_DIR"
-# Pastikan daemon PM2 milik gkjj tidak ikut berjalan (konflik port)
-sudo -u "$APP_USER" pm2 kill 2>/dev/null || true
+# Pastikan daemon PM2 milik gkjj tidak ikut berjalan (konflik port).
+# Hanya di-kill jika memang sedang berjalan — "pm2 kill" tanpa daemon justru
+# men-spawn daemon baru dulu baru mematikannya (output berisik & tidak perlu).
+if pgrep -u "$APP_USER" -f "PM2 .*God Daemon" >/dev/null 2>&1; then
+  warn "Daemon PM2 milik $APP_USER terdeteksi, dimatikan (PM2 harus berjalan dari root)..."
+  sudo -u "$APP_USER" pm2 kill || true
+fi
 if pm2 list | grep -q "gkjj-"; then
   pm2 reload deploy/ecosystem.config.cjs --update-env
 else
