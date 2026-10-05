@@ -10,5 +10,8 @@ docker-compose.override.yml
 .DS_Store
 coverage
 
+# State deploy di server (flag maintenance + versi) — ditulis oleh deploy/2-deploy.sh
+.deploy/
+
 # Artefak build TypeScript (berubah di setiap tsc/next build)
 *.tsbuildinfo

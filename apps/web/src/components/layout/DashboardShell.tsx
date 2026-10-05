@@ -24,7 +24,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <main className="flex-1 flex flex-col min-w-0 bg-gray-50">
         {/* Top bar — hanya tampil di mobile/tablet */}
-        <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 bg-brand-900 text-white shadow">
+        <header className="lg:hidden sticky top-[var(--banner-h,0px)] z-30 flex items-center gap-3 px-4 h-14 bg-brand-900 text-white shadow">
           <button
             onClick={() => setMenuOpen(true)}
             aria-label="Buka menu"

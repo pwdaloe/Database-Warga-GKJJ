@@ -71,6 +71,17 @@ else
     warn "CORS_ORIGIN di apps/api/.env mungkin tidak sesuai environment prod (gkjjakarta.org)"
 fi
 
+# ── 0. Tandai deploy berlangsung ──────────────────────────────
+# Aplikasi membaca flag ini (GET /api/system/status) dan menampilkan bar
+# "Pembaruan sistem sedang berlangsung" ke pengguna yang sedang membuka aplikasi.
+# trap EXIT memastikan flag SELALU dihapus, juga bila deploy gagal / dibatalkan (Ctrl+C).
+# Cadangan: API mengabaikan flag yang lebih tua dari 30 menit.
+STATE_DIR="$APP_DIR/.deploy"
+install -d -m 755 "$STATE_DIR"
+echo "Deploy dimulai $(date '+%Y-%m-%d %H:%M:%S')" > "$STATE_DIR/maintenance"
+trap 'rm -f "$STATE_DIR/maintenance"' EXIT
+trap 'exit 1' INT TERM
+
 # ── 1. Pull kode terbaru ──────────────────────────────────────
 info "Pull kode terbaru dari GitHub..."
 # Repo harus milik $APP_USER; kalau pernah di-pull sebagai root, objek git jadi
@@ -80,6 +91,8 @@ chown -R "$APP_USER:$APP_USER" "$APP_DIR/.git"
 # berikutnya menolak (local changes would be overwritten). Buang perubahan itu dulu.
 sudo -u "$APP_USER" git checkout -- package-lock.json
 sudo -u "$APP_USER" git pull origin main
+APP_VERSION="$(sudo -u "$APP_USER" git rev-parse --short HEAD)"
+info "Versi yang dideploy: $APP_VERSION"
 
 # ── 2. Install dependencies ───────────────────────────────────
 info "Install npm dependencies..."
@@ -167,7 +180,9 @@ sudo -u "$APP_USER" npm run build
 # ── 7. Build Web (Next.js) ────────────────────────────────────
 info "Build Web (Next.js)..."
 cd "$APP_DIR/apps/web"
-sudo -u "$APP_USER" env NODE_OPTIONS="--max-old-space-size=1400" npm run build
+# NEXT_PUBLIC_APP_VERSION ditanam ke bundle web; dibandingkan dengan versi di /api/system/status
+# untuk memunculkan bar "Versi baru tersedia" di tab yang masih memakai versi lama.
+sudo -u "$APP_USER" env NODE_OPTIONS="--max-old-space-size=1400" NEXT_PUBLIC_APP_VERSION="$APP_VERSION" npm run build
 
 # ── 8. Konfigurasi Nginx (jika belum ada) ────────────────────
 cd "$APP_DIR"
@@ -210,6 +225,26 @@ else
   pm2 startup systemd -u root --hp /root | tail -1 | bash || true
 fi
 pm2 save
+
+# ── 10. Umumkan versi baru & hapus flag maintenance ──────────
+# Tunggu aplikasi benar-benar siap dulu, supaya pengguna yang menekan "Muat ulang"
+# tidak mendapat 502. Versi ditulis SETELAH restart: tab lama melihat urutan
+# "pembaruan berlangsung" → "versi baru tersedia".
+tunggu_siap() {
+  local url="$1" nama="$2"
+  for _ in $(seq 1 30); do
+    curl -fs -o /dev/null "$url" && return 0
+    sleep 1
+  done
+  warn "$nama belum merespons setelah 30 detik (lanjut; cek: pm2 logs)"
+  return 0
+}
+info "Menunggu aplikasi siap..."
+tunggu_siap "http://127.0.0.1:4000/health" "API"
+tunggu_siap "http://127.0.0.1:3000/login"  "Web"
+echo "$APP_VERSION" > "$STATE_DIR/version"
+rm -f "$STATE_DIR/maintenance"
+info "Versi aktif: $APP_VERSION (pengguna akan melihat bar 'Versi baru tersedia')"
 
 echo ""
 echo "======================================================"

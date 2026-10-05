@@ -115,6 +115,7 @@ bash /var/www/gkjj/deploy/2-deploy.sh dev
 ```
 
 Script ini menjalankan:
+0. Buat flag *maintenance* (pengguna melihat bar "Pembaruan sistem sedang berlangsung")
 1. `git pull` → kode terbaru
 2. `npm install` → dependencies
 3. `prisma generate`
@@ -125,6 +126,15 @@ Script ini menjalankan:
 8. Build Next.js (`NODE_OPTIONS=--max-old-space-size=1400` untuk VPS 2GB)
 9. Copy Nginx config + aktifkan symlink
 10. Start/restart PM2
+11. Tunggu aplikasi siap → tulis versi baru → hapus flag (pengguna melihat bar "Versi baru tersedia")
+
+#### Notifikasi pembaruan ke pengguna
+
+Script deploy memberi tahu pengguna yang sedang membuka aplikasi:
+- **Awal deploy** → membuat flag `/var/www/gkjj/.deploy/maintenance` → bar kuning *"Pembaruan sistem sedang berlangsung…"*.
+- **Akhir deploy** (setelah PM2 restart dan `/health` + `/login` merespons) → menulis `/var/www/gkjj/.deploy/version` (git SHA) lalu menghapus flag → tab lama melihat bar *"Versi baru tersedia. Muat ulang"*.
+- Flag selalu dihapus (`trap`) walau deploy gagal atau dibatalkan Ctrl+C; API juga mengabaikan flag yang lebih tua dari 30 menit. Jika bar kuning menempel padahal tidak ada deploy: `rm -f /var/www/gkjj/.deploy/maintenance`.
+- Folder `.deploy/` tidak masuk git (`.gitignore`). Cek status manual: `curl -s https://api.gkjjakarta.org/api/system/status`.
 
 #### Backup otomatis sebelum `db push`
 

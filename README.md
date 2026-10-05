@@ -142,6 +142,13 @@ Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off
 - Token reset di-hash (SHA-256) sebelum disimpan, sekali pakai (langsung invalid setelah dipakai)
 - Mode dev: `SMTP_HOST` kosong → email di-log ke console (tidak perlu kredensial SMTP asli untuk testing)
 
+#### Notifikasi Pembaruan Aplikasi
+- Saat Anda menjalankan `deploy/2-deploy.sh` di server, pengguna yang sedang membuka aplikasi melihat bar di atas halaman: **"Pembaruan sistem sedang berlangsung. Simpan pekerjaan Anda; halaman mungkin terputus sebentar."**
+- Setelah deploy selesai, tab yang masih memakai versi lama melihat bar **"Versi baru tersedia. [Muat ulang]"** (versi git SHA yang tertanam di bundle web dibandingkan dengan versi di server). Bar tidak memblokir pekerjaan pengguna.
+- Mekanisme: script deploy menulis flag `.deploy/maintenance` (selalu dihapus lewat `trap`, juga bila deploy gagal; flag lebih dari 30 menit diabaikan) dan `.deploy/version`; frontend memeriksa `GET /api/system/status` setiap 60 detik dan saat tab kembali aktif. Gagal fetch (API sedang restart) tidak mengubah tampilan. Error `ChunkLoadError` (file JS lama sudah hilang) juga memunculkan bar versi baru.
+- Endpoint status publik, tidak menyentuh database, dan memiliki limiter sendiri (120/menit) yang dipasang **sebelum** limiter global agar polling tidak menghabiskan jatah login pengguna satu jaringan.
+- Mode dev (`npm run dev`): versi bernilai `dev` sehingga bar versi baru tidak pernah muncul. Tab yang sudah terbuka sebelum fitur ini pertama kali di-deploy belum memiliki komponennya, jadi manfaat penuh mulai deploy berikutnya.
+
 #### Wajib Ganti Password Sementara
 - Akun bisa ditandai `must_change_password` (kolom di tabel `users`). Akun penatua kelompok diberi password sementara oleh admin dan **wajib menggantinya saat login pertama**
 - Setelah login, user ber-flag otomatis diarahkan ke halaman `/ganti-password` (desktop dan `/m`) dan tidak bisa membuka halaman lain sebelum selesai
@@ -228,8 +235,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 15 | 178 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard) |
-| Frontend (`apps/web`) | 11 | 74 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload) |
+| Backend (`apps/api`) | 16 | 187 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem) |
+| Frontend (`apps/web`) | 13 | 101 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -623,6 +630,7 @@ Authorization: Bearer <token>
 | Method | Endpoint | Keterangan |
 |---|---|---|
 | `GET` | `/public/member/:id` | Info anggota terbatas untuk kartu digital |
+| `GET` | `/system/status` | `{ maintenance, message, version }` untuk bar pembaruan aplikasi (baca file `.deploy/*`, limiter 120/menit) |
 
 ---
 

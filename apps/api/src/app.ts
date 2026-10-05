@@ -19,6 +19,7 @@ import { usersRouter } from './routes/users.js'
 import { publicRouter } from './routes/public.js'
 import { logsRouter } from './routes/logs.js'
 import { perpindahanRouter } from './routes/perpindahan.js'
+import { systemRouter } from './routes/system.js'
 import { activityLogger } from './middleware/activityLogger.js'
 
 const app = express()
@@ -37,6 +38,9 @@ app.use(
     credentials: true,
   }),
 )
+
+// Status sistem (banner update) — SEBELUM rate limiter global; punya limiter sendiri
+app.use('/api/system', systemRouter)
 
 // Rate limiting
 app.use(
