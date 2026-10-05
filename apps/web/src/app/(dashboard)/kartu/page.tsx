@@ -169,7 +169,7 @@ function IdCardPreview({ warga }: { warga: any }) {
         <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shrink-0 overflow-hidden">
           <img src="/logo-gkj.jpg" alt="GKJ" className="w-8 h-8 object-contain" />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="text-xs font-bold tracking-wide">Jemaat GKJJ</p>
           <p className="text-[10px] opacity-70">Gereja Kristen Jawa Jakarta</p>
         </div>
@@ -190,7 +190,7 @@ function IdCardPreview({ warga }: { warga: any }) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-gray-900 text-sm leading-tight">{warga.namaLengkap}</p>
+          <p className="font-bold text-gray-900 text-sm leading-tight break-words">{warga.namaLengkap}</p>
           {warga.namaPanggilan && (
             <p className="text-xs text-gray-400 italic">"{warga.namaPanggilan}"</p>
           )}
@@ -282,10 +282,10 @@ export default function KartuPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Kartu Anggota</h1>
+      <div className="mb-5 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Kartu Anggota</h1>
         <p className="text-gray-500 text-sm mt-1">
           Cari anggota jemaat untuk cetak kartu atau kirim info via WhatsApp
         </p>
@@ -305,10 +305,10 @@ export default function KartuPage() {
             }}
             onFocus={() => setDropdownOpen(true)}
             placeholder="Ketik nama anggota jemaat..."
-            className="w-full pl-11 pr-10 py-3.5 rounded-xl border border-gray-300 text-sm shadow-sm outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-400 bg-white"
+            className="w-full pl-11 pr-12 py-3.5 rounded-xl border border-gray-300 text-base sm:text-sm shadow-sm outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-400 bg-white"
           />
           {query && (
-            <button onClick={clearSelection} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={clearSelection} aria-label="Hapus pencarian" className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600">
               <X size={16} />
             </button>
           )}
@@ -335,7 +335,7 @@ export default function KartuPage() {
                       <button
                         type="button"
                         onMouseDown={() => selectWarga(w)}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 min-h-11 hover:bg-gray-50 transition text-left"
                       >
                         <div className={cn(
                           'w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0',
@@ -344,7 +344,7 @@ export default function KartuPage() {
                           {avatarInitial(w.namaLengkap)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 flex items-center gap-1.5">
+                          <p className="text-sm font-medium text-gray-900 flex items-center gap-1.5 break-words">
                             {w.namaLengkap}
                             {w.statusKeluarga === 'KEPALA' && <Crown size={11} className="text-yellow-500" />}
                           </p>
@@ -371,7 +371,7 @@ export default function KartuPage() {
               <button
                 type="button"
                 onMouseDown={() => { router.push('/warga'); setDropdownOpen(false) }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-brand-600 hover:bg-brand-50 transition"
+                className="w-full flex items-center gap-3 px-4 py-3 min-h-11 text-sm text-brand-600 hover:bg-brand-50 transition"
               >
                 <UserPlus size={15} />
                 Tambah warga baru di Data Warga
@@ -383,13 +383,13 @@ export default function KartuPage() {
 
       {/* Hint awal */}
       {!selected && debounced.length < 2 && (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-10 sm:py-16 text-gray-400">
           <Users size={40} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium text-gray-500">Cari nama anggota</p>
           <p className="text-sm mt-1">Ketik minimal 2 huruf untuk mulai mencari</p>
           <button
             onClick={() => router.push('/warga')}
-            className="mt-5 flex items-center gap-2 mx-auto px-4 py-2 text-sm text-brand-600 border border-brand-300 rounded-lg hover:bg-brand-50 transition"
+            className="mt-5 flex items-center gap-2 mx-auto px-4 py-3 sm:py-2 text-sm text-brand-600 border border-brand-300 rounded-lg hover:bg-brand-50 transition"
           >
             <UserPlus size={15} />
             Tambah Warga Baru
@@ -399,28 +399,28 @@ export default function KartuPage() {
 
       {/* Kartu & aksi */}
       {selected && (
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           <IdCardPreview warga={selected} />
 
           {/* Aksi */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               onClick={() => { cetakIdCard(selected) }}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-xl transition shadow-sm"
+              className="flex items-center justify-center gap-2 px-4 py-3 min-h-11 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-xl transition shadow-sm"
             >
               <CreditCard size={16} />
               Cetak ID Card
             </button>
             <button
               onClick={() => kirimWhatsApp(selected)}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition shadow-sm"
+              className="flex items-center justify-center gap-2 px-4 py-3 min-h-11 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition shadow-sm"
             >
               <MessageCircle size={16} />
               Kirim via WhatsApp
             </button>
             <button
               onClick={() => router.push(`/warga/${selected.id}`)}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-xl transition shadow-sm"
+              className="flex items-center justify-center gap-2 px-4 py-3 min-h-11 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-xl transition shadow-sm"
             >
               <UserPlus size={16} />
               Buka Data Warga

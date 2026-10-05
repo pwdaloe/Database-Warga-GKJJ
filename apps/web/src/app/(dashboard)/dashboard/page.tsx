@@ -15,7 +15,7 @@ import {
 
 // Leaflet harus di-load client-side saja (no SSR)
 const WargaMap = dynamic(() => import('./WargaMap'), { ssr: false, loading: () => (
-  <div className="flex items-center justify-center h-64 bg-gray-50 rounded-xl border text-gray-400 gap-2">
+  <div className="flex items-center justify-center h-52 sm:h-64 bg-gray-50 rounded-xl border text-gray-400 gap-2">
     <Loader2 size={18} className="animate-spin" /> Memuat peta...
   </div>
 )})
@@ -78,10 +78,10 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
           Selamat datang, {user?.warga?.namaLengkap ?? user?.nama}
         </h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -90,19 +90,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         {statCards.map((card) => (
           <div
             key={card.label}
             onClick={card.onClick}
             className={cn(
-              'bg-white rounded-xl shadow-sm border p-5 transition',
+              'bg-white rounded-xl shadow-sm border p-4 sm:p-5 transition',
               card.onClick && 'cursor-pointer hover:shadow-md hover:border-gray-300',
               card.highlight && 'ring-2 ring-orange-300 border-orange-200',
             )}
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm text-gray-500">{card.label}</p>
+              <p className="text-sm text-gray-500 min-w-0">{card.label}</p>
               <div className={`${card.color} p-2 rounded-lg`}>
                 <card.icon size={18} className="text-white" />
               </div>
@@ -120,15 +120,15 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Chart distribusi komisi ──────────────────────────── */}
-      <div className="bg-white rounded-xl border shadow-sm p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div>
+      <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
+        <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
+          <div className="min-w-0">
             <h2 className="font-semibold text-gray-800">Distribusi Jemaat per Komisi</h2>
             <p className="text-xs text-gray-400 mt-0.5">Berdasarkan usia anggota aktif</p>
           </div>
           <button
             onClick={() => router.push('/pengaturan')}
-            className="text-xs text-brand-600 hover:underline"
+            className="text-xs text-brand-600 hover:underline shrink-0 py-2"
           >
             Atur rentang umur →
           </button>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
         ) : komisiStats.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-12">Belum ada data komisi</p>
         ) : (
-          <div className="w-full h-64">
+          <div className="w-full h-56 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={komisiStats} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
                 <XAxis
@@ -181,9 +181,9 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Peta warga ──────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border shadow-sm p-6">
-        <div className="flex items-start justify-between mb-4 gap-4">
-          <div>
+      <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3 sm:gap-4">
+          <div className="min-w-0">
             <h2 className="font-semibold text-gray-800">Peta Lokasi Warga</h2>
             <p className="text-xs text-gray-400 mt-0.5">
               {mapData.length > 0
@@ -191,11 +191,11 @@ export default function DashboardPage() {
                 : 'Hanya warga yang sudah memiliki koordinat rumah yang tampil'}
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 sm:shrink-0">
             <select
               value={selectedKelurahan}
               onChange={(e) => setSelectedKelurahan(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full sm:w-auto py-3 sm:py-2 px-3 rounded-lg border border-gray-300 text-base sm:text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="">Semua Kelurahan</option>
               {kecamatanList.map((kec) => (

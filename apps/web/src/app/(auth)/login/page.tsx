@@ -2,11 +2,11 @@ import { LoginForm } from './LoginForm'
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 to-brand-900 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-brand-700 to-brand-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
 
         {/* Logo / Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           {/* Logo */}
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white shadow-lg mb-4 overflow-hidden">
             <img
@@ -16,7 +16,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <h1 className="text-2xl font-bold text-white leading-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight">
             Database Warga
           </h1>
           <p className="text-brand-100 text-sm mt-1">
@@ -32,7 +32,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card login */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Masuk ke Sistem</h2>
           <p className="text-xs text-gray-400 mb-6">Silakan masukkan kredensial Anda</p>
           <LoginForm />

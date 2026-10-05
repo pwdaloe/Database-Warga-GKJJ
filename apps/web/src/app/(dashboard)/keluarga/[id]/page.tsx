@@ -63,7 +63,7 @@ export default function KeluargaDetailPage() {
   // ── Loading & not found ──────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-96">
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center min-h-96">
         <div className="text-center text-gray-400">
           <Loader2 className="animate-spin w-8 h-8 mx-auto mb-3 text-brand-600" />
           Memuat data keluarga...
@@ -74,7 +74,7 @@ export default function KeluargaDetailPage() {
 
   if (!keluarga) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-4 sm:p-6 lg:p-8 text-center text-gray-500">
         <Users size={40} className="mx-auto mb-3 opacity-30" />
         <p className="font-medium">Data keluarga tidak ditemukan</p>
         <button
@@ -92,28 +92,28 @@ export default function KeluargaDetailPage() {
   const wargas: any[] = keluarga.wargas ?? []
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
 
       {/* Back */}
       <button
         onClick={() => router.push('/keluarga')}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 transition"
+        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4 sm:mb-6 py-2 -my-2 transition"
       >
         <ArrowLeft size={16} />
         Kembali ke Daftar Keluarga
       </button>
 
       {/* ── Header card ───────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2.5">
+      <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6 mb-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="space-y-2 min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
               <span className="font-mono text-sm font-semibold bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg">
                 {keluarga.nomorKeluarga ?? '—'}
               </span>
               <Badge value={keluarga.dataStatus} type="dataStatus" />
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-gray-600">
+            <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-gray-600">
               <MapPin size={14} className="text-brand-500 shrink-0" />
               <span className="font-medium text-gray-800">{keluarga.kelompok?.nama ?? '—'}</span>
               {keluarga.kelompok?.wilayah && (
@@ -124,11 +124,12 @@ export default function KeluargaDetailPage() {
           {canEdit && (
             <button
               onClick={() => setEditOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700
-                border rounded-lg hover:bg-gray-50 transition shrink-0"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700
+                border rounded-lg hover:bg-gray-50 transition shrink-0 whitespace-nowrap"
             >
               <Pencil size={14} />
-              Edit Data KK
+              <span className="hidden sm:inline">Edit Data KK</span>
+              <span className="sm:hidden">Edit</span>
             </button>
           )}
         </div>
@@ -138,7 +139,7 @@ export default function KeluargaDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
         {/* Kepala Keluarga */}
-        <div className="bg-white rounded-xl border shadow-sm p-5">
+        <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-5">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
             <Crown size={13} className="text-yellow-500" />
             Kepala Keluarga
@@ -152,8 +153,8 @@ export default function KeluargaDetailPage() {
                 {kepala.namaLengkap.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 leading-tight">{kepala.namaLengkap}</p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <p className="font-medium text-gray-900 leading-tight break-words">{kepala.namaLengkap}</p>
+                <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
                   {kepala.nomorAnggota && (
                     <span className="text-xs font-mono text-gray-400">{kepala.nomorAnggota}</span>
                   )}
@@ -167,7 +168,7 @@ export default function KeluargaDetailPage() {
               </div>
               <button
                 onClick={() => router.push(`/warga/${kepala.id}`)}
-                className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500
+                className="text-xs px-3 py-2.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-gray-200 text-gray-500
                   hover:text-brand-600 hover:border-brand-300 hover:bg-brand-50 transition shrink-0"
               >
                 Biodata
@@ -179,13 +180,13 @@ export default function KeluargaDetailPage() {
         </div>
 
         {/* Alamat */}
-        <div className="bg-white rounded-xl border shadow-sm p-5">
+        <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-5">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
             <Home size={13} />
             Alamat
           </h2>
           {keluarga.alamat || keluarga.kelurahan ? (
-            <div className="space-y-0.5 text-sm text-gray-700">
+            <div className="space-y-0.5 text-sm text-gray-700 break-words">
               {keluarga.alamat && <p>{keluarga.alamat}</p>}
               {(keluarga.rt || keluarga.rw || keluarga.kelurahan) && (
                 <p className="text-xs text-gray-500">
@@ -216,7 +217,7 @@ export default function KeluargaDetailPage() {
 
       {/* ── Tabel Anggota ─────────────────────────────────────── */}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b flex items-center justify-between">
+        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <Users size={15} />
             Anggota Keluarga
@@ -225,11 +226,12 @@ export default function KeluargaDetailPage() {
           {canEdit && (
             <button
               onClick={() => setTambahOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-brand-600
+              className="shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-2.5 sm:py-1.5 text-sm font-medium text-brand-600
                 border border-brand-300 hover:bg-brand-50 rounded-lg transition"
             >
               <UserPlus size={14} />
-              Tambah Anggota
+              <span className="hidden sm:inline">Tambah Anggota</span>
+              <span className="sm:hidden">Tambah</span>
             </button>
           )}
         </div>
@@ -241,6 +243,60 @@ export default function KeluargaDetailPage() {
             <p className="text-xs mt-1">Gunakan tombol "Tambah Anggota" untuk menambahkan</p>
           </div>
         ) : (
+          <>
+          <ul className="md:hidden divide-y">
+            {wargas.map((w: any) => {
+              const isKepala = w.statusKeluarga === 'KEPALA'
+              const usiaAnggota = w.tanggalLahir
+                ? differenceInYears(new Date(), new Date(w.tanggalLahir))
+                : null
+              return (
+                <li key={w.id} className={cn('p-4 space-y-3', isKepala && 'bg-yellow-50/50')}>
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      'w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0',
+                      w.jenisKelamin === 'L' ? 'bg-blue-400' : 'bg-pink-400',
+                    )}>
+                      {w.namaLengkap.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 leading-tight break-words">{w.namaLengkap}</p>
+                      {w.namaPanggilan && (
+                        <p className="text-xs text-gray-400">&quot;{w.namaPanggilan}&quot;</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-gray-500">
+                        <span className={cn('inline-flex items-center gap-1 font-medium', isKepala ? 'text-yellow-700' : 'text-gray-600')}>
+                          {isKepala && <Crown size={11} />}
+                          {STATUS_KK_LABEL[w.statusKeluarga] ?? w.statusKeluarga}
+                        </span>
+                        <span>{w.jenisKelamin === 'L' ? 'L' : 'P'}</span>
+                        {usiaAnggota != null && <span>{usiaAnggota} th</span>}
+                      </div>
+                    </div>
+                    <Badge value={w.statusKeanggotaan} type="keanggotaan" />
+                  </div>
+                  <div className="flex gap-1">
+                    <span className={cn(
+                      'text-xs px-1.5 py-0.5 rounded font-medium',
+                      w.sudahBaptis ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400',
+                    )}>Baptis</span>
+                    <span className={cn(
+                      'text-xs px-1.5 py-0.5 rounded font-medium',
+                      w.sudahSidi ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400',
+                    )}>Sidi</span>
+                  </div>
+                  <button
+                    onClick={() => router.push(`/warga/${w.id}`)}
+                    className="w-full min-h-11 text-sm rounded-lg border border-gray-300 text-gray-600
+                      hover:text-brand-600 hover:bg-brand-50 transition"
+                  >
+                    Biodata
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -333,14 +389,16 @@ export default function KeluargaDetailPage() {
               })}
             </tbody>
           </table>
+          </div>
+          </>
         )}
       </div>
 
       {/* Catatan */}
       {keluarga.catatan && (
-        <div className="mt-4 bg-white rounded-xl border shadow-sm p-5">
+        <div className="mt-4 bg-white rounded-xl border shadow-sm p-4 sm:p-5">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Catatan</h2>
-          <p className="text-sm text-gray-700 whitespace-pre-line">{keluarga.catatan}</p>
+          <p className="text-sm text-gray-700 whitespace-pre-line break-words">{keluarga.catatan}</p>
         </div>
       )}
 

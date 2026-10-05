@@ -56,7 +56,7 @@ interface Point {
 
 export default function WargaMap({ points }: { points: Point[] }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-200" style={{ height: 420 }}>
+    <div className="rounded-xl overflow-hidden border border-gray-200 w-full h-[300px] sm:h-[420px]">
       <MapContainer
         center={[-6.2088, 106.8456]}
         zoom={12}

@@ -42,8 +42,8 @@ const KATEGORI = [
 
 export default function KebijakanCookiePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+    <div className="min-h-dvh bg-gray-50">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <Link
           href="/login"
           className="inline-flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 mb-6"
@@ -56,13 +56,13 @@ export default function KebijakanCookiePage() {
           <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
             <Cookie size={20} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Kebijakan Cookie</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Kebijakan Cookie</h1>
         </div>
         <p className="text-sm text-gray-500 mb-8">
           Berlaku untuk Sistem Informasi Jemaat GKJJ (Database Warga GKJJ) · Terakhir diperbarui {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 space-y-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-8 space-y-6 sm:space-y-8">
           <section>
             <h2 className="text-base font-semibold text-gray-800 mb-2">1. Ringkasan</h2>
             <p className="text-sm text-gray-600 leading-relaxed">
@@ -76,6 +76,7 @@ export default function KebijakanCookiePage() {
 
           <section>
             <h2 className="text-base font-semibold text-gray-800 mb-3">2. Kategori penyimpanan &amp; cookie</h2>
+            <p className="md:hidden text-xs text-gray-400 mb-2">Geser ke samping untuk melihat kolom lain</p>
             <div className="overflow-x-auto -mx-2">
               <table className="w-full text-sm border-collapse min-w-[640px]">
                 <thead>

@@ -26,7 +26,7 @@ const schema = z
 type FormData = z.infer<typeof schema>
 
 const inputClass = (hasError: boolean) =>
-  `w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition
+  `w-full px-4 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition
     focus:ring-2 focus:ring-brand-500 focus:border-brand-500
     ${hasError ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`
 
@@ -130,7 +130,7 @@ export function ChangePasswordForm() {
           type="submit"
           disabled={isSubmitting}
           className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300
-            text-white font-medium py-2.5 rounded-lg text-sm transition
+            text-white font-medium py-3 sm:py-2.5 rounded-lg text-sm transition
             flex items-center justify-center gap-2"
         >
           {isSubmitting && <Loader2 size={16} className="animate-spin" />}
@@ -140,7 +140,7 @@ export function ChangePasswordForm() {
         <button
           type="button"
           onClick={() => logout()}
-          className="w-full text-sm text-gray-500 hover:text-gray-700 hover:underline"
+          className="w-full min-h-11 text-sm text-gray-500 hover:text-gray-700 hover:underline"
         >
           Keluar
         </button>

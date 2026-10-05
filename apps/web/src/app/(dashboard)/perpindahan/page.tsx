@@ -120,12 +120,85 @@ export default function PerpindahanPage() {
     }
   }
 
+  function renderAksi(p: any, mobile = false) {
+    const bisaApprove = canApprove && !p.approvedBy
+    const bisaValidate = canValidate && p.approvedBy && !p.validatedBy
+    const bisaHapus = canHapus && !p.approvedBy
+    const bisaKirimEmail = !!p.validatedBy
+    const btn = mobile ? 'flex-1 min-h-11 flex items-center justify-center border ' : 'p-1.5 '
+    const sz = mobile ? 18 : 15
+    return (
+          <div className={mobile ? 'flex items-stretch gap-2' : 'flex items-center justify-end gap-1'}>
+            {bisaApprove && (
+              <button
+                onClick={() => setConfirmApprove(p)}
+                className={cn(btn, 'rounded-lg hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition')}
+                title="Approve"
+              aria-label="Approve"
+              >
+                <CheckCircle2 size={sz} />
+              </button>
+            )}
+            {bisaValidate && (
+              <button
+                onClick={() => setConfirmValidate(p)}
+                className={cn(btn, 'rounded-lg hover:bg-green-50 text-gray-500 hover:text-green-600 transition')}
+                title="Validate"
+              aria-label="Validate"
+              >
+                <ShieldCheck size={sz} />
+              </button>
+            )}
+            <button
+              onClick={() => handleCetak(p.id)}
+              className={cn(btn, 'rounded-lg hover:bg-gray-100 text-gray-500 hover:text-brand-600 transition')}
+              title="Cetak Surat"
+              aria-label="Cetak Surat"
+            >
+              <Printer size={sz} />
+            </button>
+            <button
+              onClick={() => bisaKirimEmail && handleKirimEmail(p.id)}
+              disabled={!bisaKirimEmail}
+              aria-label="Kirim Email"
+          title={bisaKirimEmail ? 'Kirim Email' : 'Validasi dulu sebelum kirim surat resmi'}
+              className={cn(
+                btn + 'rounded-lg transition',
+                bisaKirimEmail
+                  ? 'hover:bg-gray-100 text-gray-500 hover:text-brand-600'
+                  : 'text-gray-300 cursor-not-allowed',
+              )}
+            >
+              <Mail size={sz} />
+            </button>
+            <button
+              onClick={() => kirimPerpindahanWhatsApp(p)}
+              className={cn(btn, 'rounded-lg hover:bg-green-50 text-gray-500 hover:text-green-600 transition')}
+              title="Kirim WhatsApp"
+              aria-label="Kirim WhatsApp"
+            >
+              <MessageCircle size={sz} />
+            </button>
+            {bisaHapus && (
+              <button
+                onClick={() => setConfirmDelete(p)}
+                className={cn(btn, 'rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600 transition')}
+                title="Hapus"
+              aria-label="Hapus"
+              >
+                <Trash2 size={sz} />
+              </button>
+            )}
+          </div>
+    )
+  }
+
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Perpindahan Jemaat</h1>
+      <div className="flex items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Perpindahan Jemaat</h1>
           <p className="text-gray-500 text-sm mt-1">
             {meta ? `${meta.total} data perpindahan tercatat` : 'Memuat...'}
           </p>
@@ -133,36 +206,37 @@ export default function PerpindahanPage() {
         {canCatat && (
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700
+            className="shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 min-h-11 sm:min-h-0 bg-brand-600 hover:bg-brand-700
               text-white text-sm font-medium rounded-lg transition"
           >
             <Plus size={18} />
-            Catat Perpindahan Baru
+            <span className="hidden sm:inline">Catat Perpindahan Baru</span>
+            <span className="sm:hidden">Catat</span>
           </button>
         )}
       </div>
 
       {/* Filter & Search */}
-      <div className="bg-white rounded-xl border shadow-sm mb-4 p-4 flex gap-3 items-center flex-wrap">
-        <form onSubmit={handleSearch} className="flex-1 flex gap-2 min-w-[240px]">
+      <div className="bg-white rounded-xl border shadow-sm mb-4 p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:flex-wrap">
+        <form onSubmit={handleSearch} className="flex-1 flex gap-2 sm:min-w-[240px]">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Cari nama warga..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm
+              className="w-full pl-9 pr-4 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm
                 outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
-          <button type="submit" className="px-4 py-2.5 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700 transition">
+          <button type="submit" className="shrink-0 px-4 py-3 sm:py-2.5 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700 transition">
             Cari
           </button>
         </form>
         <select
           value={jenis}
           onChange={(e) => { setJenis(e.target.value); setPage(1) }}
-          className="px-3 py-2.5 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+          className="w-full sm:w-auto px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
         >
           {JENIS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -182,6 +256,38 @@ export default function PerpindahanPage() {
             <p className="text-sm mt-1">Catat perpindahan baru atau ubah filter pencarian</p>
           </div>
         ) : (
+          <>
+          <ul className="md:hidden divide-y">
+            {list.map((p: any) => (
+              <li key={p.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 break-words">{p.warga?.namaLengkap}</p>
+                    {p.warga?.nomorAnggota && (
+                      <span className="text-xs font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                        {p.warga.nomorAnggota}
+                      </span>
+                    )}
+                  </div>
+                  <span className={cn('shrink-0 text-xs font-medium px-2.5 py-1 rounded-full', JENIS_BADGE[p.jenis])}>
+                    {JENIS_LABEL[p.jenis] ?? p.jenis}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 space-y-0.5">
+                  <p>
+                    {p.tanggalPerpindahan
+                      ? format(new Date(p.tanggalPerpindahan), 'd MMM yyyy', { locale: localeId })
+                      : '—'}
+                    {p.nomorSurat && <span className="text-gray-400"> · </span>}
+                    {p.nomorSurat && <span className="break-words">{p.nomorSurat}</span>}
+                  </p>
+                </div>
+                <StatusBadge perpindahan={p} />
+                {renderAksi(p, true)}
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -195,11 +301,6 @@ export default function PerpindahanPage() {
             </thead>
             <tbody className="divide-y">
               {list.map((p: any) => {
-                const bisaApprove = canApprove && !p.approvedBy
-                const bisaValidate = canValidate && p.approvedBy && !p.validatedBy
-                const bisaHapus = canHapus && !p.approvedBy
-                const bisaKirimEmail = !!p.validatedBy
-
                 return (
                   <tr key={p.id} className="hover:bg-gray-50 transition">
                     <td className="px-4 py-3">
@@ -225,68 +326,15 @@ export default function PerpindahanPage() {
                       <StatusBadge perpindahan={p} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        {bisaApprove && (
-                          <button
-                            onClick={() => setConfirmApprove(p)}
-                            className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition"
-                            title="Approve"
-                          >
-                            <CheckCircle2 size={15} />
-                          </button>
-                        )}
-                        {bisaValidate && (
-                          <button
-                            onClick={() => setConfirmValidate(p)}
-                            className="p-1.5 rounded-lg hover:bg-green-50 text-gray-500 hover:text-green-600 transition"
-                            title="Validate"
-                          >
-                            <ShieldCheck size={15} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleCetak(p.id)}
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-brand-600 transition"
-                          title="Cetak Surat"
-                        >
-                          <Printer size={15} />
-                        </button>
-                        <button
-                          onClick={() => bisaKirimEmail && handleKirimEmail(p.id)}
-                          disabled={!bisaKirimEmail}
-                          title={bisaKirimEmail ? 'Kirim Email' : 'Validasi dulu sebelum kirim surat resmi'}
-                          className={cn(
-                            'p-1.5 rounded-lg transition',
-                            bisaKirimEmail
-                              ? 'hover:bg-gray-100 text-gray-500 hover:text-brand-600'
-                              : 'text-gray-300 cursor-not-allowed',
-                          )}
-                        >
-                          <Mail size={15} />
-                        </button>
-                        <button
-                          onClick={() => kirimPerpindahanWhatsApp(p)}
-                          className="p-1.5 rounded-lg hover:bg-green-50 text-gray-500 hover:text-green-600 transition"
-                          title="Kirim WhatsApp"
-                        >
-                          <MessageCircle size={15} />
-                        </button>
-                        {bisaHapus && (
-                          <button
-                            onClick={() => setConfirmDelete(p)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600 transition"
-                            title="Hapus"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        )}
-                      </div>
+                      {renderAksi(p)}
                     </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
+          </div>
+          </>
         )}
 
         {meta && meta.total > 0 && (
@@ -305,13 +353,13 @@ export default function PerpindahanPage() {
           <p className="text-gray-700">
             Setujui pengajuan perpindahan <span className="font-semibold">{confirmApprove?.warga?.namaLengkap}</span>?
           </p>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setConfirmApprove(null)} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <button onClick={() => setConfirmApprove(null)} className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
               Batal
             </button>
             <button
               onClick={async () => { await approve.mutateAsync(confirmApprove.id); setConfirmApprove(null) }}
-              className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+              className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"
             >
               Approve
             </button>
@@ -326,13 +374,13 @@ export default function PerpindahanPage() {
             Validasi perpindahan <span className="font-semibold">{confirmValidate?.warga?.namaLengkap}</span>?
             Tindakan ini akan mengubah status keanggotaan warga.
           </p>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setConfirmValidate(null)} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <button onClick={() => setConfirmValidate(null)} className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
               Batal
             </button>
             <button
               onClick={async () => { await validate.mutateAsync(confirmValidate.id); setConfirmValidate(null) }}
-              className="px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded-lg transition"
+              className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded-lg transition"
             >
               Validasi
             </button>
@@ -347,13 +395,13 @@ export default function PerpindahanPage() {
             Hapus data perpindahan <span className="font-semibold">{confirmDelete?.warga?.namaLengkap}</span>?
             Tindakan ini tidak dapat dibatalkan.
           </p>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <button onClick={() => setConfirmDelete(null)} className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
               Batal
             </button>
             <button
               onClick={async () => { await remove.mutateAsync(confirmDelete.id); setConfirmDelete(null) }}
-              className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
+              className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
             >
               Hapus
             </button>

@@ -28,7 +28,7 @@ function WilayahForm({
       onSubmit={(e) => { e.preventDefault(); onSubmit({ kode, nama, keterangan }) }}
       className="space-y-4"
     >
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Kode <span className="text-red-500">*</span>
@@ -39,7 +39,7 @@ function WilayahForm({
             maxLength={5}
             required
             placeholder="mis. RWA"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm font-mono outline-none focus:ring-2 focus:ring-brand-500 uppercase"
+            className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm font-mono outline-none focus:ring-2 focus:ring-brand-500 uppercase"
           />
         </div>
         <div>
@@ -52,7 +52,7 @@ function WilayahForm({
             maxLength={100}
             required
             placeholder="mis. Rawamangun A"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
       </div>
@@ -63,17 +63,17 @@ function WilayahForm({
           onChange={(e) => setKeterangan(e.target.value)}
           rows={2}
           placeholder="Deskripsi wilayah (opsional)"
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+          className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 resize-none"
         />
       </div>
-      <div className="flex justify-end gap-3 pt-1">
-        <button type="button" onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-3 pt-1">
+        <button type="button" onClick={onCancel} className="px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
           Batal
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
+          className="flex items-center justify-center gap-2 px-5 py-3 sm:py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
           Simpan
@@ -107,7 +107,7 @@ function KelompokForm({
       onSubmit={(e) => { e.preventDefault(); onSubmit({ wilayahId, kode, nama, penatua_nama_temp: penatua, keterangan }) }}
       className="space-y-4"
     >
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Kode <span className="text-red-500">*</span>
@@ -118,7 +118,7 @@ function KelompokForm({
             maxLength={5}
             required
             placeholder="mis. K01"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm font-mono outline-none focus:ring-2 focus:ring-brand-500 uppercase"
+            className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm font-mono outline-none focus:ring-2 focus:ring-brand-500 uppercase"
           />
         </div>
         <div>
@@ -131,7 +131,7 @@ function KelompokForm({
             maxLength={100}
             required
             placeholder="mis. Kelompok 1"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
       </div>
@@ -142,7 +142,7 @@ function KelompokForm({
           onChange={(e) => setPenatua(e.target.value)}
           maxLength={150}
           placeholder="Nama penatua atau penanggung jawab"
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+          className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500"
         />
       </div>
       <div>
@@ -152,17 +152,17 @@ function KelompokForm({
           onChange={(e) => setKeterangan(e.target.value)}
           rows={2}
           placeholder="Deskripsi kelompok (opsional)"
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+          className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 resize-none"
         />
       </div>
-      <div className="flex justify-end gap-3 pt-1">
-        <button type="button" onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-3 pt-1">
+        <button type="button" onClick={onCancel} className="px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
           Batal
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
+          className="flex items-center justify-center gap-2 px-5 py-3 sm:py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
           Simpan
@@ -201,11 +201,12 @@ function WilayahCard({
       !wilayah.aktif && 'opacity-60',
     )}>
       {/* Header wilayah */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b bg-gray-50">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-3 px-4 sm:px-5 py-3 sm:py-4 border-b bg-gray-50">
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="text-gray-400 hover:text-gray-600 transition"
+          aria-label={expanded ? 'Ciutkan' : 'Bentangkan'}
+          className="p-1.5 -ml-1.5 text-gray-400 hover:text-gray-600 transition"
         >
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
@@ -218,6 +219,9 @@ function WilayahCard({
           {wilayah.keterangan && (
             <p className="text-xs text-gray-400 truncate">{wilayah.keterangan}</p>
           )}
+          <p className="sm:hidden text-xs text-gray-500 mt-0.5">
+            {wilayah.kelompoks.length} kelompok · {totalKK} KK
+          </p>
         </div>
 
         {/* Stats */}
@@ -239,25 +243,26 @@ function WilayahCard({
         )}
 
         {canEdit && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 sm:gap-1 w-full sm:w-auto">
             <button
               onClick={() => onAddKelompok(wilayah.id)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-brand-600 border border-brand-300 rounded-lg hover:bg-brand-50 transition"
+              className="flex-1 sm:flex-none justify-center flex items-center gap-1 px-2.5 py-2.5 sm:py-1.5 text-xs font-medium text-brand-600 border border-brand-300 rounded-lg hover:bg-brand-50 transition"
             >
               <Plus size={12} />
               Kelompok
             </button>
             <button
               onClick={() => onEditWilayah(wilayah)}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-brand-600 transition"
+              className="p-2.5 sm:p-1.5 rounded-lg border sm:border-0 hover:bg-gray-100 text-gray-500 hover:text-brand-600 transition"
               title="Edit wilayah"
+              aria-label="Edit wilayah"
             >
               <Pencil size={14} />
             </button>
             <button
               onClick={() => onToggleWilayah(wilayah.id)}
               className={cn(
-                'p-1.5 rounded-lg transition',
+                'p-2.5 sm:p-1.5 rounded-lg border sm:border-0 transition',
                 wilayah.aktif
                   ? 'hover:bg-red-50 text-gray-400 hover:text-red-500'
                   : 'hover:bg-green-50 text-gray-400 hover:text-green-600',
@@ -268,8 +273,9 @@ function WilayahCard({
             </button>
             <button
               onClick={() => onDeleteWilayah(wilayah)}
-              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition"
+              className="p-2.5 sm:p-1.5 rounded-lg border sm:border-0 hover:bg-red-50 text-gray-400 hover:text-red-600 transition"
               title="Hapus wilayah"
+              aria-label="Hapus wilayah"
             >
               <Trash2 size={14} />
             </button>
@@ -293,6 +299,56 @@ function WilayahCard({
             )}
           </div>
         ) : (
+          <>
+          {/* Mobile: kartu kelompok */}
+          <ul className="md:hidden divide-y">
+            {wilayah.kelompoks.map((k) => (
+              <li key={k.id} className={cn('px-4 py-3', !k.aktif && 'opacity-50')}>
+                <div className="flex items-start gap-3">
+                  <span className="font-mono text-xs font-semibold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded mt-0.5">
+                    {k.kode}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm leading-snug">
+                      {k.nama}
+                      {!k.aktif && <span className="ml-2 text-xs text-red-500 font-normal">(non-aktif)</span>}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Penatua/PJ: {k.penatua_nama_temp ?? <span className="text-gray-300 italic">—</span>}
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-gray-600 text-xs shrink-0 mt-0.5">
+                    <Users size={12} />
+                    {k._count.keluargas} KK
+                  </span>
+                </div>
+                {canEdit && (
+                  <div className="flex gap-2 mt-2.5">
+                    <button
+                      onClick={() => onEditKelompok(k)}
+                      className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 active:bg-gray-100"
+                    >
+                      <Pencil size={14} /> Edit
+                    </button>
+                    <button
+                      onClick={() => onToggleKelompok(k.id)}
+                      className={cn(
+                        'flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 rounded-lg border text-sm',
+                        k.aktif
+                          ? 'border-red-200 text-red-600 active:bg-red-50'
+                          : 'border-green-200 text-green-700 active:bg-green-50',
+                      )}
+                    >
+                      {k.aktif ? <><PowerOff size={14} /> Nonaktifkan</> : <><Power size={14} /> Aktifkan</>}
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop/tablet: tabel */}
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50/80 border-b">
               <tr>
@@ -361,6 +417,8 @@ function WilayahCard({
               ))}
             </tbody>
           </table>
+          </div>
+          </>
         )
       )}
     </div>
@@ -417,11 +475,11 @@ export default function WilayahPage() {
   const totalKK = wilayahList.reduce((s, w) => s + w.kelompoks.reduce((sk, k) => sk + k._count.keluargas, 0), 0)
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Wilayah &amp; Kelompok</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Wilayah &amp; Kelompok</h1>
           {!isLoading && (
             <p className="text-gray-500 text-sm mt-1">
               {wilayahList.length} wilayah · {totalKelompok} kelompok · {totalKK} KK terdaftar
@@ -431,10 +489,10 @@ export default function WilayahPage() {
         {canEdit && (
           <button
             onClick={() => setWilayahModal({ open: true })}
-            className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 shrink-0 whitespace-nowrap bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition"
           >
             <Plus size={18} />
-            Tambah Wilayah
+            Tambah<span className="hidden sm:inline">&nbsp;Wilayah</span>
           </button>
         )}
       </div>
@@ -529,17 +587,17 @@ export default function WilayahPage() {
               {deleteError}
             </p>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-3">
             <button
               onClick={() => setConfirmDelete(null)}
-              className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50"
+              className="px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50"
             >
               Batal
             </button>
             <button
               onClick={handleDeleteWilayah}
               disabled={deleteWilayah.isPending}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-lg"
+              className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-lg"
             >
               {deleteWilayah.isPending && <Loader2 size={14} className="animate-spin" />}
               Hapus

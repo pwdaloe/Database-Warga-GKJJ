@@ -119,6 +119,55 @@ function LogRow({ entry }: { entry: ActivityLogEntry }) {
   )
 }
 
+// ── Kartu log (mobile) ─────────────────────────────────────────
+function LogCard({ entry }: { entry: ActivityLogEntry }) {
+  const [open, setOpen] = useState(false)
+  const isError = entry.statusCode >= 400
+  return (
+    <li className={cn(isError && 'bg-red-50/40')}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full text-left p-4 min-h-11 space-y-1.5"
+      >
+        <div className="flex items-center gap-2 flex-wrap">
+          <MethodBadge method={entry.method} />
+          <StatusBadge code={entry.statusCode} />
+          <span className="ml-auto text-xs text-gray-400 font-mono">
+            {format(new Date(entry.createdAt), 'd MMM HH:mm:ss', { locale: localeId })}
+          </span>
+          {open ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+        </div>
+        <p className="text-xs font-mono text-gray-700 break-all">{entry.path}</p>
+        <p className="text-xs text-gray-500">
+          {entry.userNama ?? '—'}{entry.durasiMs != null ? ` · ${entry.durasiMs}ms` : ''}
+        </p>
+        {isError && entry.errorMessage && (
+          <p className="text-xs text-red-600 font-medium break-words">{entry.errorMessage}</p>
+        )}
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-2">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+            <span><span className="font-medium text-gray-700">ID:</span> {entry.id}</span>
+            <span><span className="font-medium text-gray-700">IP:</span> {entry.ipAddress ?? '—'}</span>
+            <span><span className="font-medium text-gray-700">User ID:</span> {entry.userId ?? '—'}</span>
+          </div>
+          {entry.bodySnapshot && (
+            <div>
+              <p className="text-xs font-semibold text-gray-600 mb-1">Request Body Snapshot:</p>
+              <pre className="text-xs bg-white border border-gray-200 rounded-lg p-3 overflow-x-auto text-gray-700 max-h-48">
+                {JSON.stringify(entry.bodySnapshot, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+      )}
+    </li>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────
 export default function LogPage() {
   const [status, setStatus]   = useState<'all' | 'success' | 'error'>('all')
@@ -138,11 +187,11 @@ export default function LogPage() {
   const successCount = entries.filter((e) => e.statusCode < 400).length
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2.5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2.5">
             <Activity size={22} className="text-gray-500" />
             Log Aktivitas
           </h1>
@@ -150,17 +199,17 @@ export default function LogPage() {
             {meta ? `${meta.total.toLocaleString('id-ID')} entri` : 'Memuat...'} · auto-refresh tiap 30 detik
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition"
+            className="flex-1 sm:flex-none justify-center whitespace-nowrap min-h-11 sm:min-h-0 flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition"
           >
             <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} /> Refresh
           </button>
           <button
             onClick={() => setConfirmPurge(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition"
+            className="flex-1 sm:flex-none justify-center whitespace-nowrap min-h-11 sm:min-h-0 flex items-center gap-1.5 px-3 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition"
           >
             <Trash2 size={14} /> Bersihkan Log
           </button>
@@ -169,7 +218,7 @@ export default function LogPage() {
 
       {/* Filter + stats */}
       <div className="flex gap-3 mb-4 flex-wrap items-center">
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-full sm:w-auto">
           {([
             { v: 'all',     label: `Semua` },
             { v: 'error',   label: `Error`, count: meta?.total },
@@ -179,7 +228,7 @@ export default function LogPage() {
               key={v}
               onClick={() => { setStatus(v); setPage(1) }}
               className={cn(
-                'px-3 py-1.5 rounded-md text-xs font-medium transition',
+                'flex-1 sm:flex-none px-3 py-2.5 sm:py-1.5 rounded-md text-xs font-medium transition',
                 status === v ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700',
               )}
             >
@@ -188,18 +237,18 @@ export default function LogPage() {
           ))}
         </div>
 
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative w-full sm:flex-1 sm:max-w-xs">
           <Filter size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={pathFilter}
             onChange={(e) => { setPath(e.target.value); setPage(1) }}
             placeholder="Filter path (mis. /warga)"
-            className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-300 text-xs outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-8 pr-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-xs outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
 
         {entries.length > 0 && (
-          <div className="flex gap-3 text-xs text-gray-500 ml-auto">
+          <div className="flex gap-3 text-xs text-gray-500 sm:ml-auto">
             <span className="flex items-center gap-1 text-green-600">
               <CheckCircle2 size={12} /> {successCount} sukses
             </span>
@@ -223,7 +272,13 @@ export default function LogPage() {
             <p className="text-xs mt-1">Log akan muncul setelah ada operasi tulis (POST/PUT/PATCH/DELETE)</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <ul className="md:hidden divide-y">
+            {entries.map((entry) => (
+              <LogCard key={entry.id} entry={entry} />
+            ))}
+          </ul>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b sticky top-0">
                 <tr>
@@ -244,6 +299,7 @@ export default function LogPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {meta && meta.total > 0 && (
@@ -265,9 +321,9 @@ export default function LogPage() {
             <p className="text-sm text-gray-600">
               Hapus semua log yang lebih lama dari 90 hari? Tindakan ini tidak dapat dibatalkan.
             </p>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
               <button onClick={() => setConfirmPurge(false)}
-                className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
+                className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
                 Batal
               </button>
               <button
@@ -276,7 +332,7 @@ export default function LogPage() {
                   setConfirmPurge(false)
                 }}
                 disabled={purge.isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-lg"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-3 sm:py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-lg"
               >
                 {purge.isPending && <Loader2 size={14} className="animate-spin" />}
                 Hapus Log &gt; 90 Hari

@@ -150,14 +150,14 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
     <Modal open={open} onClose={handleClose} title="Import Pengguna dari Excel" size="xl">
       <div className="space-y-5">
         {!results && (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p className="text-sm text-gray-500">
               Upload file Excel hasil isian template untuk membuat banyak akun pengguna sekaligus.
             </p>
             <button
               onClick={async () => { setIsGenerating(true); try { await downloadTemplate() } finally { setIsGenerating(false) } }}
               disabled={isGenerating}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-700 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg shrink-0"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto px-3 py-3 sm:py-2 text-sm font-medium text-brand-700 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg shrink-0"
             >
               {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
               Download Template
@@ -172,7 +172,7 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              'flex flex-col items-center justify-center gap-2 py-14 border-2 border-dashed rounded-xl cursor-pointer transition',
+              'flex flex-col items-center justify-center gap-2 py-10 sm:py-14 px-4 text-center border-2 border-dashed rounded-xl cursor-pointer transition',
               dragOver ? 'border-brand-500 bg-brand-50' : 'border-gray-300 hover:border-brand-300',
             )}
           >
@@ -188,21 +188,21 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
 
         {!results && rows.length > 0 && (
           <>
-            <div className="flex items-center justify-between text-sm">
-              <p className="text-gray-600">
+            <div className="flex items-start justify-between gap-3 text-sm">
+              <p className="text-gray-600 min-w-0 break-words">
                 <span className="font-medium">{fileName}</span> · {rows.length} baris terbaca ·{' '}
                 <span className={validCount === rows.length ? 'text-green-600' : 'text-orange-600'}>
                   {validCount} valid
                 </span>
               </p>
-              <button onClick={reset} className="text-xs text-gray-400 hover:text-gray-600 underline">
+              <button onClick={reset} className="shrink-0 min-h-10 sm:min-h-0 px-1 text-xs text-gray-400 hover:text-gray-600 underline">
                 Ganti file
               </button>
             </div>
 
             <div className="border rounded-xl overflow-hidden">
-              <div className="max-h-80 overflow-y-auto">
-                <table className="w-full text-xs">
+              <div className="max-h-80 overflow-auto">
+                <table className="w-full min-w-[640px] text-xs">
                   <thead className="bg-gray-50 border-b sticky top-0">
                     <tr>
                       <th className="text-left px-3 py-2 font-medium text-gray-600">Baris</th>
@@ -242,14 +242,14 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
-              <button onClick={handleClose} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+              <button onClick={handleClose} className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
                 Batal
               </button>
               <button
                 onClick={runImport}
                 disabled={processing || rows.length === 0}
-                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 sm:py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
               >
                 {processing ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                 Import {rows.length} Pengguna
@@ -260,24 +260,24 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
 
         {results && (
           <>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border bg-gray-50 p-4 text-center">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="rounded-xl border bg-gray-50 p-3 sm:p-4 text-center">
                 <p className="text-2xl font-bold text-gray-900">{results.total}</p>
                 <p className="text-xs text-gray-500">Total baris</p>
               </div>
-              <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
+              <div className="rounded-xl border border-green-200 bg-green-50 p-3 sm:p-4 text-center">
                 <p className="text-2xl font-bold text-green-700">{results.berhasil}</p>
                 <p className="text-xs text-green-600">Berhasil</p>
               </div>
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 sm:p-4 text-center">
                 <p className="text-2xl font-bold text-red-600">{results.gagal}</p>
                 <p className="text-xs text-red-500">Gagal</p>
               </div>
             </div>
 
             <div className="border rounded-xl overflow-hidden">
-              <div className="max-h-72 overflow-y-auto">
-                <table className="w-full text-xs">
+              <div className="max-h-72 overflow-auto">
+                <table className="w-full min-w-[640px] text-xs">
                   <thead className="bg-gray-50 border-b sticky top-0">
                     <tr>
                       <th className="text-left px-3 py-2 font-medium text-gray-600">Baris</th>
@@ -308,11 +308,11 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
-              <button onClick={reset} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+              <button onClick={reset} className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
                 Import File Lain
               </button>
-              <button onClick={handleClose} className="px-5 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg">
+              <button onClick={handleClose} className="w-full sm:w-auto px-5 py-3 sm:py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg">
                 Selesai
               </button>
             </div>

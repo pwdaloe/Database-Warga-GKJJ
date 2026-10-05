@@ -56,7 +56,7 @@ export function LoginForm() {
           autoComplete="username"
           autoFocus
           placeholder="Masukkan username"
-          className={`w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition
+          className={`w-full px-4 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition
             focus:ring-2 focus:ring-brand-500 focus:border-brand-500
             ${errors.username ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`}
         />
@@ -74,14 +74,15 @@ export function LoginForm() {
             type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
             placeholder="Masukkan password"
-            className={`w-full px-4 py-2.5 pr-11 rounded-lg border text-sm outline-none transition
+            className={`w-full px-4 py-3 sm:py-2.5 pr-12 rounded-lg border text-base sm:text-sm outline-none transition
               focus:ring-2 focus:ring-brand-500 focus:border-brand-500
               ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`}
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600"
             tabIndex={-1}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -97,7 +98,7 @@ export function LoginForm() {
         type="submit"
         disabled={isSubmitting}
         className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300
-          text-white font-medium py-2.5 rounded-lg text-sm transition
+          text-white font-medium py-3 sm:py-2.5 rounded-lg text-sm transition
           flex items-center justify-center gap-2"
       >
         {isSubmitting && <Loader2 size={16} className="animate-spin" />}
@@ -107,7 +108,7 @@ export function LoginForm() {
       <p className="text-center">
         <a
           href="/forgot-password"
-          className="text-sm text-brand-600 hover:text-brand-700 hover:underline"
+          className="inline-block py-2 text-sm text-brand-600 hover:text-brand-700 hover:underline"
         >
           Lupa password?
         </a>

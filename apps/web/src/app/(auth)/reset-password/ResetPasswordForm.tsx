@@ -72,7 +72,7 @@ export function ResetPasswordForm() {
         <button
           type="button"
           onClick={() => router.push('/login')}
-          className="mt-6 w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 rounded-lg text-sm transition"
+          className="mt-6 w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 sm:py-2.5 rounded-lg text-sm transition"
         >
           Ke halaman login
         </button>
@@ -99,7 +99,7 @@ export function ResetPasswordForm() {
             autoComplete="new-password"
             autoFocus
             placeholder="Minimal 8 karakter"
-            className={`w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition
+            className={`w-full px-4 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition
               focus:ring-2 focus:ring-brand-500 focus:border-brand-500
               ${errors.passwordBaru ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`}
           />
@@ -117,7 +117,7 @@ export function ResetPasswordForm() {
             type="password"
             autoComplete="new-password"
             placeholder="Ulangi password baru"
-            className={`w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition
+            className={`w-full px-4 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition
               focus:ring-2 focus:ring-brand-500 focus:border-brand-500
               ${errors.konfirmasiPassword ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`}
           />
@@ -130,7 +130,7 @@ export function ResetPasswordForm() {
           type="submit"
           disabled={isSubmitting}
           className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300
-            text-white font-medium py-2.5 rounded-lg text-sm transition
+            text-white font-medium py-3 sm:py-2.5 rounded-lg text-sm transition
             flex items-center justify-center gap-2"
         >
           {isSubmitting && <Loader2 size={16} className="animate-spin" />}

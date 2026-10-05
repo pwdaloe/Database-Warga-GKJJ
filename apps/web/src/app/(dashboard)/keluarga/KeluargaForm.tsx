@@ -80,16 +80,16 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
       {/* Status Dokumen */}
-      <div className="flex items-center justify-between pb-4 border-b">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Status Dokumen</p>
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {STATUS_DOKUMEN.map((s) => (
             <button
               key={s.value}
               type="button"
               onClick={() => setValue('dataStatus', s.value as any)}
               className={cn(
-                'px-3 py-1 rounded-full text-xs font-medium transition ring-1',
+                'px-3 py-2 sm:py-1 rounded-full text-xs font-medium transition ring-1',
                 dataStatus === s.value
                   ? s.color + ' ring-2'
                   : 'bg-white text-gray-400 ring-gray-200 hover:ring-gray-300',
@@ -109,7 +109,7 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
         <select
           value={selectedKelompokId ?? ''}
           onChange={(e) => setValue('kelompokId', e.target.value ? Number(e.target.value) : null)}
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none transition bg-white focus:ring-2 focus:ring-brand-500"
+          className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none transition bg-white focus:ring-2 focus:ring-brand-500"
         >
           <option value="">— Pilih Kelompok —</option>
           {wilayahList.map((w) => (
@@ -140,7 +140,7 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
               <select
                 value={selectedKepalaId ?? ''}
                 onChange={(e) => setValue('kepalakeluargaId', e.target.value ? Number(e.target.value) : null)}
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none transition bg-white focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none transition bg-white focus:ring-2 focus:ring-brand-500"
               >
                 <option value="">— Belum ditentukan —</option>
                 {candidates.map((w) => (
@@ -191,7 +191,7 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
             <InputField label="RW" {...register('rw')} error={errors.rw} placeholder="005" />
           </div>
           {/* Kelurahan — autocomplete dari master data */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Kelurahan</label>
               <input
@@ -204,7 +204,7 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
                 onFocus={() => setKelurahanDropdown(true)}
                 onBlur={() => setTimeout(() => setKelurahanDropdown(false), 150)}
                 placeholder="Ketik nama kelurahan..."
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500"
               />
               {kelurahanDropdown && kelurahanResults.length > 0 && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto">
@@ -220,7 +220,7 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
                           setKelurahanQuery('')
                           setKelurahanDropdown(false)
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-brand-50 transition"
+                        className="w-full text-left px-3 py-3 sm:py-2 text-sm hover:bg-brand-50 transition"
                       >
                         <span className="font-medium text-gray-800">{k.nama}</span>
                         <span className="text-gray-400 text-xs ml-1.5">· {k.kecamatan} · {k.kodePos}</span>
@@ -232,7 +232,7 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
             </div>
             <InputField label="Kecamatan" {...register('kecamatan')} error={errors.kecamatan} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField label="Kota" {...register('kota')} error={errors.kota} placeholder="Jakarta" />
             <InputField label="Kode Pos" {...register('kodePos')} error={errors.kodePos} placeholder="13210" />
           </div>
@@ -252,11 +252,11 @@ export function KeluargaForm({ defaultValues, wargas = [], onSubmit, submitLabel
       <TextareaField label="Catatan" {...register('catatan')} error={errors.catatan} />
 
       {/* Submit */}
-      <div className="flex justify-end pt-2">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700
+          className="w-full sm:w-auto justify-center flex items-center gap-2 px-6 py-3 sm:py-2.5 bg-brand-600 hover:bg-brand-700
             disabled:bg-brand-300 text-white text-sm font-medium rounded-lg transition"
         >
           {isSubmitting && <Loader2 size={16} className="animate-spin" />}

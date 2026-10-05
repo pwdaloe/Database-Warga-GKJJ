@@ -36,17 +36,17 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-700 to-brand-900 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-brand-700 to-brand-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white shadow-lg mb-4 overflow-hidden">
             <img src="/logo-gkj.jpg" alt="Logo GKJ" className="w-20 h-20 object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-white leading-tight">Lupa Password</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight">Lupa Password</h1>
           <p className="text-brand-100 text-sm mt-1">Gereja Kristen Jawa Jakarta</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-8">
           {successMessage ? (
             <>
               <h2 className="text-xl font-semibold text-gray-800 mb-1">Permintaan Terkirim</h2>
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
                     autoComplete="username"
                     autoFocus
                     placeholder="Masukkan username atau email"
-                    className={`w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition
+                    className={`w-full px-4 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition
                       focus:ring-2 focus:ring-brand-500 focus:border-brand-500
                       ${errors.usernameOrEmail ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`}
                   />
@@ -94,7 +94,7 @@ export default function ForgotPasswordPage() {
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300
-                    text-white font-medium py-2.5 rounded-lg text-sm transition
+                    text-white font-medium py-3 sm:py-2.5 rounded-lg text-sm transition
                     flex items-center justify-center gap-2"
                 >
                   {isSubmitting && <Loader2 size={16} className="animate-spin" />}

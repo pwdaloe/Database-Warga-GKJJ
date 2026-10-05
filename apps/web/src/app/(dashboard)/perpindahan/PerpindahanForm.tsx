@@ -115,7 +115,7 @@ export function PerpindahanForm({ onSuccess }: Props) {
             onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
             placeholder="Cari nama warga..."
             className={cn(
-              'w-full pl-9 pr-8 py-2.5 rounded-lg border text-sm outline-none transition',
+              'w-full pl-9 pr-10 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition',
               'focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
               errors.wargaId ? 'border-red-400 bg-red-50' : 'border-gray-300',
             )}
@@ -124,9 +124,10 @@ export function PerpindahanForm({ onSuccess }: Props) {
             <button
               type="button"
               onClick={clearWarga}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="Hapus pilihan warga"
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           )}
         </div>
@@ -137,10 +138,10 @@ export function PerpindahanForm({ onSuccess }: Props) {
                 type="button"
                 key={w.id}
                 onClick={() => selectWarga(w)}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                className="w-full text-left px-3 py-3 sm:py-2 min-h-11 sm:min-h-0 text-sm hover:bg-gray-50 flex items-center gap-2"
               >
                 <User size={13} className="text-gray-400" />
-                <span>{w.namaLengkap}</span>
+                <span className="min-w-0 break-words">{w.namaLengkap}</span>
                 {w.nomorAnggota && <span className="text-xs text-gray-400">({w.nomorAnggota})</span>}
               </button>
             ))}
@@ -185,11 +186,11 @@ export function PerpindahanForm({ onSuccess }: Props) {
         error={errors.keterangan as any}
       />
 
-      <div className="flex justify-end pt-2 border-t">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2 border-t">
         <button
           type="submit"
           disabled={isSubmitting || create.isPending}
-          className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700
+          className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-brand-600 hover:bg-brand-700
             disabled:bg-brand-300 text-white text-sm font-medium rounded-lg transition"
         >
           {(isSubmitting || create.isPending) && <Loader2 size={14} className="animate-spin" />}

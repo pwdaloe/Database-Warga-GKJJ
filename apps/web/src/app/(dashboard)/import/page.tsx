@@ -189,9 +189,9 @@ const STEPS = ['Upload', 'Mapping', 'Preview', 'Proses', 'Hasil']
 
 function Stepper({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-0 mb-8">
+    <div className="flex items-center justify-between sm:justify-start gap-0 mb-6 sm:mb-8">
       {STEPS.map((label, i) => (
-        <div key={i} className="flex items-center">
+        <div key={i} className={cn('flex items-center', i < STEPS.length - 1 && 'sm:flex-none')}>
           <div className={cn(
             'flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition',
             i < current  ? 'bg-brand-600 text-white'
@@ -202,10 +202,11 @@ function Stepper({ current }: { current: number }) {
           </div>
           <span className={cn(
             'mx-2 text-xs font-medium',
+            i !== current && 'hidden sm:inline',
             i === current ? 'text-brand-700' : i < current ? 'text-gray-500' : 'text-gray-400',
           )}>{label}</span>
           {i < STEPS.length - 1 && (
-            <div className={cn('w-8 h-0.5 mx-1', i < current ? 'bg-brand-400' : 'bg-gray-200')} />
+            <div className={cn('w-4 sm:w-8 h-0.5 mx-1', i < current ? 'bg-brand-400' : 'bg-gray-200')} />
           )}
         </div>
       ))}
@@ -350,9 +351,9 @@ export default function ImportPage() {
 
   // ── RENDER ────────────────────────────────────────────────
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Import Data Warga</h1>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Import Data Warga</h1>
         <p className="text-gray-500 text-sm mt-1">Upload file Excel untuk mengimpor data warga secara massal</p>
       </div>
 
@@ -368,13 +369,18 @@ export default function ImportPage() {
             onDrop={handleFileDrop}
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              'border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition',
+              'border-2 border-dashed rounded-xl p-8 sm:p-12 min-h-44 flex flex-col items-center justify-center text-center cursor-pointer transition',
               dragOver ? 'border-brand-400 bg-brand-50' : 'border-gray-300 hover:border-brand-400 hover:bg-gray-50',
             )}
           >
             <FileSpreadsheet size={40} className="mx-auto mb-3 text-gray-400" />
-            <p className="font-medium text-gray-700">Drag & drop file Excel di sini</p>
-            <p className="text-sm text-gray-400 mt-1">atau klik untuk memilih file (.xlsx, .xls)</p>
+            <p className="font-medium text-gray-700">
+              <span className="sm:hidden">Ketuk untuk pilih file Excel</span>
+              <span className="hidden sm:inline">Drag & drop file Excel di sini</span>
+            </p>
+            <p className="text-sm text-gray-400 mt-1">
+              <span className="hidden sm:inline">atau klik untuk memilih file </span>(.xlsx, .xls)
+            </p>
             <input
               ref={fileInputRef}
               type="file"
@@ -385,8 +391,8 @@ export default function ImportPage() {
           </div>
 
           {/* Download template */}
-          <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <Info size={16} className="text-blue-500 shrink-0" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <Info size={16} className="text-blue-500 shrink-0 hidden sm:block" />
             <div className="flex-1 text-sm text-blue-700">
               Belum punya file Excel? Gunakan template resmi agar header langsung terpetakan otomatis.
             </div>
@@ -396,7 +402,7 @@ export default function ImportPage() {
                 try { await downloadTemplate() } finally { setIsGenerating(false) }
               }}
               disabled={isGenerating}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 disabled:opacity-60 transition shrink-0"
+              className="flex items-center justify-center gap-2 px-3 min-h-11 sm:min-h-0 py-1.5 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 disabled:opacity-60 transition shrink-0"
             >
               {isGenerating
                 ? <><Loader2 size={14} className="animate-spin" /> Menyiapkan...</>
@@ -411,7 +417,7 @@ export default function ImportPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-gray-700">File: <span className="text-brand-600">{file?.name}</span></p>
+              <p className="font-medium text-gray-700 break-all">File: <span className="text-brand-600">{file?.name}</span></p>
               <p className="text-sm text-gray-400 mt-0.5">{rawRows.length} baris data · {headers.length} kolom</p>
             </div>
           </div>
@@ -420,7 +426,33 @@ export default function ImportPage() {
             <div className="px-4 py-3 bg-gray-50 border-b text-xs font-medium text-gray-500">
               Petakan kolom Excel ke field sistem · Field wajib ditandai <span className="text-red-500">*</span>
             </div>
-            <div className="overflow-y-auto max-h-96">
+            <ul className="md:hidden divide-y max-h-[70vh] overflow-y-auto">
+              {headers.map((h) => {
+                const sampleVal = rawRows[0]?.[headers.indexOf(h)]
+                return (
+                  <li key={h} className="px-4 py-3 space-y-2">
+                    <div>
+                      <p className="font-medium text-gray-800 text-sm break-words">{h}</p>
+                      <p className="text-xs text-gray-500 font-mono truncate">Contoh: {String(sampleVal ?? '—')}</p>
+                    </div>
+                    <select
+                      aria-label={`Petakan kolom ${h}`}
+                      value={mapping[h] ?? ''}
+                      onChange={(e) => setMapping({ ...mapping, [h]: e.target.value as FieldKey | '' })}
+                      className="w-full px-3 py-3 rounded-lg border border-gray-300 text-base bg-white outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                      <option value="">— Abaikan kolom ini —</option>
+                      {IMPORT_FIELDS.map((f) => (
+                        <option key={f.key} value={f.key}>
+                          {f.required ? '* ' : ''}{f.label}
+                        </option>
+                      ))}
+                    </select>
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="hidden md:block overflow-y-auto max-h-96">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-white border-b">
                   <tr>
@@ -467,14 +499,14 @@ export default function ImportPage() {
             </div>
           )}
 
-          <div className="flex justify-between">
-            <button onClick={reset} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2.5">
+            <button onClick={reset} className="w-full sm:w-auto min-h-11 sm:min-h-0 px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
               ← Ganti File
             </button>
             <button
               onClick={() => setStep(2)}
               disabled={!mandatoryMapped}
-              className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
+              className="w-full sm:w-auto min-h-11 sm:min-h-0 justify-center flex items-center gap-2 px-5 py-3 sm:py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
             >
               Preview Data <ChevronRight size={15} />
             </button>
@@ -486,16 +518,16 @@ export default function ImportPage() {
       {step === 2 && (
         <div className="space-y-4">
           {/* Summary */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border p-4 text-center">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="bg-white rounded-xl border p-3 sm:p-4 text-center">
               <p className="text-2xl font-bold text-gray-800">{rawRows.length}</p>
               <p className="text-xs text-gray-500 mt-1">Total baris</p>
             </div>
-            <div className="bg-white rounded-xl border p-4 text-center">
+            <div className="bg-white rounded-xl border p-3 sm:p-4 text-center">
               <p className="text-2xl font-bold text-green-600">{rawRows.length - totalErrors}</p>
               <p className="text-xs text-gray-500 mt-1">Siap diimpor</p>
             </div>
-            <div className={cn('rounded-xl border p-4 text-center', totalErrors > 0 ? 'bg-red-50 border-red-200' : 'bg-white')}>
+            <div className={cn('rounded-xl border p-3 sm:p-4 text-center', totalErrors > 0 ? 'bg-red-50 border-red-200' : 'bg-white')}>
               <p className={cn('text-2xl font-bold', totalErrors > 0 ? 'text-red-600' : 'text-gray-300')}>{totalErrors}</p>
               <p className="text-xs text-gray-500 mt-1">Baris bermasalah</p>
             </div>
@@ -505,9 +537,10 @@ export default function ImportPage() {
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
             <div className="px-4 py-3 bg-gray-50 border-b text-xs font-medium text-gray-500">
               Preview 10 baris pertama
+              <span className="md:hidden block font-normal text-gray-400 mt-0.5">Geser ke samping untuk melihat kolom lain</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full min-w-[640px] text-xs">
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     <th className="px-3 py-2.5 text-left font-medium text-gray-500">Baris</th>
@@ -561,14 +594,14 @@ export default function ImportPage() {
             </div>
           )}
 
-          <div className="flex justify-between">
-            <button onClick={() => setStep(1)} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2.5">
+            <button onClick={() => setStep(1)} className="w-full sm:w-auto min-h-11 sm:min-h-0 px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
               ← Kembali ke Mapping
             </button>
             <button
               onClick={runImport}
               disabled={rawRows.length - totalErrors === 0}
-              className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
+              className="w-full sm:w-auto min-h-11 sm:min-h-0 justify-center flex items-center gap-2 px-5 py-3 sm:py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg"
             >
               Mulai Import {rawRows.length - totalErrors} Data <ChevronRight size={15} />
             </button>
@@ -578,7 +611,7 @@ export default function ImportPage() {
 
       {/* ── Step 3: Processing ──────────────────────────────── */}
       {step === 3 && (
-        <div className="bg-white rounded-xl border shadow-sm p-10 text-center space-y-5">
+        <div className="bg-white rounded-xl border shadow-sm p-6 sm:p-10 text-center space-y-5">
           <div className="flex items-center justify-center">
             <div className="relative w-20 h-20">
               <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
@@ -616,18 +649,18 @@ export default function ImportPage() {
       {step === 4 && results && (
         <div className="space-y-5">
           {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border p-5 text-center">
-              <p className="text-3xl font-bold text-gray-800">{results.total}</p>
-              <p className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Total Diproses</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="bg-white rounded-xl border p-3 sm:p-5 text-center">
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800">{results.total}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1 uppercase tracking-wide">Total Diproses</p>
             </div>
-            <div className="bg-green-50 rounded-xl border border-green-200 p-5 text-center">
-              <p className="text-3xl font-bold text-green-600">{results.berhasil}</p>
-              <p className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Berhasil</p>
+            <div className="bg-green-50 rounded-xl border border-green-200 p-3 sm:p-5 text-center">
+              <p className="text-2xl sm:text-3xl font-bold text-green-600">{results.berhasil}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1 uppercase tracking-wide">Berhasil</p>
             </div>
-            <div className={cn('rounded-xl border p-5 text-center', results.gagal > 0 ? 'bg-red-50 border-red-200' : 'bg-white')}>
-              <p className={cn('text-3xl font-bold', results.gagal > 0 ? 'text-red-600' : 'text-gray-300')}>{results.gagal}</p>
-              <p className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Gagal</p>
+            <div className={cn('rounded-xl border p-3 sm:p-5 text-center', results.gagal > 0 ? 'bg-red-50 border-red-200' : 'bg-white')}>
+              <p className={cn('text-2xl sm:text-3xl font-bold', results.gagal > 0 ? 'text-red-600' : 'text-gray-300')}>{results.gagal}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1 uppercase tracking-wide">Gagal</p>
             </div>
           </div>
 
@@ -636,12 +669,13 @@ export default function ImportPage() {
             <div className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
               <p className="text-sm font-medium text-gray-700">Log Import</p>
               <button onClick={downloadLog}
-                className="flex items-center gap-1.5 text-xs text-brand-600 hover:underline">
+                className="flex items-center gap-1.5 min-h-10 sm:min-h-0 text-xs text-brand-600 hover:underline">
                 <Download size={13} /> Download Log
               </button>
             </div>
-            <div className="overflow-y-auto max-h-96">
-              <table className="w-full text-sm">
+            <p className="md:hidden px-4 py-1.5 text-xs text-gray-400 border-b">Geser ke samping untuk melihat kolom lain</p>
+            <div className="overflow-auto max-h-96">
+              <table className="w-full min-w-[600px] text-sm">
                 <thead className="sticky top-0 bg-white border-b">
                   <tr>
                     <th className="text-left px-4 py-2.5 font-medium text-gray-500 w-16">Baris</th>
@@ -682,7 +716,7 @@ export default function ImportPage() {
           <div className="flex gap-3">
             <button
               onClick={reset}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50"
+              className="w-full sm:w-auto min-h-11 sm:min-h-0 justify-center flex items-center gap-2 px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50"
             >
               <RotateCcw size={14} /> Import File Lain
             </button>

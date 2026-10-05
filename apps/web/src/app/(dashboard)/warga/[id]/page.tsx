@@ -53,7 +53,7 @@ export default function WargaDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-96">
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center min-h-96">
         <div className="text-center text-gray-400">
           <div className="animate-spin w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full mx-auto mb-3" />
           Memuat data warga...
@@ -64,7 +64,7 @@ export default function WargaDetailPage() {
 
   if (!warga) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-4 sm:p-6 lg:p-8 text-center text-gray-500">
         <User size={40} className="mx-auto mb-3 opacity-30" />
         <p className="font-medium">Data warga tidak ditemukan</p>
         <button onClick={() => router.back()} className="mt-4 text-sm text-brand-600 hover:underline">
@@ -82,36 +82,36 @@ export default function WargaDetailPage() {
   const anggotaLain = anggotaKeluarga.filter((a: any) => a.id !== warga.id)
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Back */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 transition"
+        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4 sm:mb-6 py-2 -my-2 transition"
       >
         <ArrowLeft size={16} />
         Kembali ke Daftar Warga
       </button>
 
       {/* Header card */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
+      <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6 mb-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {warga.fotoUrl ? (
               <img
                 src={warga.fotoUrl}
                 alt={warga.namaLengkap}
-                className="w-16 h-16 rounded-full object-cover shrink-0 border-2 border-gray-100 shadow-sm"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover shrink-0 border-2 border-gray-100 shadow-sm"
               />
             ) : (
               <div className={cn(
-                'w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shrink-0',
+                'w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold shrink-0',
                 warga.jenisKelamin === 'L' ? 'bg-blue-500' : 'bg-pink-500',
               )}>
                 {warga.namaLengkap.charAt(0).toUpperCase()}
               </div>
             )}
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{warga.namaLengkap}</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{warga.namaLengkap}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
                 {warga.nomorAnggota && (
                   <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
@@ -126,7 +126,7 @@ export default function WargaDetailPage() {
                 <Badge value={warga.dataStatus} type="dataStatus" />
               </div>
               {warga.keluarga && (
-                <p className="text-sm text-gray-500 mt-1.5 flex items-center gap-1.5">
+                <p className="text-sm text-gray-500 mt-1.5 flex flex-wrap items-center gap-x-1.5">
                   <MapPin size={13} />
                   {warga.keluarga.kelompok?.nama}
                   {warga.keluarga.kelompok?.wilayah && (
@@ -139,7 +139,7 @@ export default function WargaDetailPage() {
           {canEdit && (
             <button
               onClick={() => setEditOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 transition shrink-0"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 transition shrink-0 whitespace-nowrap"
             >
               <Pencil size={14} />
               Edit
@@ -149,16 +149,16 @@ export default function WargaDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl w-full sm:w-fit">
         {([
           { key: 'biodata', label: 'Biodata', icon: User },
-          { key: 'keluarga', label: `Anggota Keluarga (${anggotaKeluarga.length})`, icon: Users },
+          { key: 'keluarga', label: `Keluarga (${anggotaKeluarga.length})`, icon: Users },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition',
+              'flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition',
               activeTab === key
                 ? 'bg-white text-brand-700 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700',
@@ -174,7 +174,7 @@ export default function WargaDetailPage() {
       {activeTab === 'biodata' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Identitas */}
-          <div className="bg-white rounded-xl border shadow-sm p-6">
+          <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
               <User size={14} /> Identitas Pribadi
             </h2>
@@ -197,7 +197,7 @@ export default function WargaDetailPage() {
           </div>
 
           {/* Sakramen */}
-          <div className="bg-white rounded-xl border shadow-sm p-6">
+          <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
               <BookOpen size={14} /> Sakramen & Keanggotaan
             </h2>
@@ -262,7 +262,7 @@ export default function WargaDetailPage() {
           </div>
 
           {/* Kontak */}
-          <div className="bg-white rounded-xl border shadow-sm p-6">
+          <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
               <Phone size={14} /> Kontak
             </h2>
@@ -275,7 +275,7 @@ export default function WargaDetailPage() {
 
           {/* Keluarga ringkas */}
           {warga.keluarga && (
-            <div className="bg-white rounded-xl border shadow-sm p-6">
+            <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <MapPin size={14} /> Keluarga & Wilayah
               </h2>
@@ -303,9 +303,9 @@ export default function WargaDetailPage() {
 
           {/* Catatan */}
           {warga.catatan && (
-            <div className="bg-white rounded-xl border shadow-sm p-6 md:col-span-2">
+            <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6 md:col-span-2">
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Catatan</h2>
-              <p className="text-sm text-gray-700 whitespace-pre-line">{warga.catatan}</p>
+              <p className="text-sm text-gray-700 whitespace-pre-line break-words">{warga.catatan}</p>
             </div>
           )}
         </div>
@@ -316,7 +316,7 @@ export default function WargaDetailPage() {
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           {/* Info KK */}
           {warga.keluarga && (
-            <div className="px-6 py-4 bg-gray-50 border-b flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b flex flex-wrap gap-x-6 gap-y-1 text-sm">
               <span className="text-gray-500">
                 No. KK: <span className="font-mono font-medium text-gray-800">{warga.keluarga.nomorKeluarga ?? '—'}</span>
               </span>
@@ -339,6 +339,56 @@ export default function WargaDetailPage() {
               <p className="text-sm mt-1">Tambahkan warga dan hubungkan ke nomor KK yang sama</p>
             </div>
           ) : (
+            <>
+            <ul className="md:hidden divide-y">
+              {anggotaKeluarga.map((a: any) => {
+                const isCurrentWarga = a.id === warga.id
+                const usiaAnggota = a.tanggalLahir
+                  ? differenceInYears(new Date(), new Date(a.tanggalLahir))
+                  : null
+                return (
+                  <li key={a.id} className={cn('p-4 space-y-3', isCurrentWarga && 'bg-brand-50')}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg">{STATUS_KELUARGA_ICON[a.statusKeluarga] ?? '👤'}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className={cn('font-medium break-words', isCurrentWarga ? 'text-brand-700' : 'text-gray-900')}>
+                          {a.namaLengkap}
+                          {isCurrentWarga && <span className="ml-2 text-xs text-brand-500 font-normal">(ini)</span>}
+                        </p>
+                        {a.namaPanggilan && (
+                          <p className="text-xs text-gray-400">&quot;{a.namaPanggilan}&quot;</p>
+                        )}
+                        {a.tanggalLahir && (
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {format(new Date(a.tanggalLahir), 'd MMM yyyy', { locale: localeId })} · {usiaAnggota} tahun
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge value={a.statusKeluarga} type="statusKeluarga" />
+                      <Badge value={a.statusKeanggotaan} type="keanggotaan" />
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
+                        a.sudahBaptis ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'
+                      )}>Baptis</span>
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
+                        a.sudahSidi ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400'
+                      )}>Sidi</span>
+                    </div>
+                    {!isCurrentWarga && (
+                      <button
+                        onClick={() => router.push(`/warga/${a.id}`)}
+                        className="w-full min-h-11 text-sm rounded-lg border border-gray-300 text-gray-600
+                          hover:bg-gray-50 hover:text-brand-600 transition"
+                      >
+                        Lihat
+                      </button>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
@@ -419,6 +469,8 @@ export default function WargaDetailPage() {
                 })}
               </tbody>
             </table>
+            </div>
+            </>
           )}
         </div>
       )}
@@ -481,7 +533,7 @@ function InfoRow({
   return (
     <div>
       <dt className="text-xs text-gray-400 mb-0.5">{label}</dt>
-      <dd className={cn('text-sm text-gray-800', mono && 'font-mono')}>
+      <dd className={cn('text-sm text-gray-800 break-words', mono && 'font-mono')}>
         {children ?? (value || <span className="text-gray-300">—</span>)}
       </dd>
     </div>

@@ -91,12 +91,12 @@ export default function ValidasiDataPage() {
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-5">
 
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
             <ShieldCheck size={22} className="text-brand-600" />
             Validasi Data
           </h1>
@@ -107,7 +107,7 @@ export default function ValidasiDataPage() {
       </div>
 
       {/* ── Tabs ───────────────────────────────────────────────── */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
         {([
           { key: 'draft', label: 'Perlu Validasi' },
           { key: 'aktif', label: 'Sudah Divalidasi' },
@@ -116,7 +116,7 @@ export default function ValidasiDataPage() {
             key={t.key}
             onClick={() => { setTab(t.key); setPage(1); setSelected(new Set()) }}
             className={cn(
-              'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+              'px-4 py-3 sm:py-2.5 min-h-11 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
               tab === t.key
                 ? 'border-brand-600 text-brand-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700',
@@ -133,21 +133,21 @@ export default function ValidasiDataPage() {
       </div>
 
       {/* ── Search & Filter ─────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="relative flex-1 min-w-0 sm:max-w-sm">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             placeholder="Cari nama, nomor anggota..."
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
         {user?.role !== 'PENATUA_KELOMPOK' && (
           <button
             onClick={() => setShowFilter((v) => !v)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors',
+              'shrink-0 flex items-center gap-1.5 px-3 py-3 sm:py-2 text-sm border rounded-lg transition-colors',
               showFilter ? 'bg-brand-50 border-brand-300 text-brand-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50',
             )}
           >
@@ -159,11 +159,11 @@ export default function ValidasiDataPage() {
       </div>
 
       {showFilter && user?.role !== 'PENATUA_KELOMPOK' && (
-        <div className="flex flex-wrap gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <select
             value={wilayahId}
             onChange={(e) => { setWilayahId(e.target.value ? Number(e.target.value) : ''); setKelompokId(''); setPage(1) }}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+            className="w-full lg:w-auto px-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
           >
             <option value="">Semua Wilayah</option>
             {wilayahData?.map((w) => (
@@ -174,14 +174,14 @@ export default function ValidasiDataPage() {
             value={kelompokId}
             onChange={(e) => { setKelompokId(e.target.value ? Number(e.target.value) : ''); setPage(1) }}
             disabled={!wilayahId}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white disabled:opacity-50"
+            className="w-full lg:w-auto px-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white disabled:opacity-50"
           >
             <option value="">Semua Kelompok</option>
             {kelompokList.map((k) => (
               <option key={k.id} value={k.id}>{k.kode} — {k.nama}</option>
             ))}
           </select>
-          <button onClick={resetFilter} className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 underline">
+          <button onClick={resetFilter} className="px-3 py-3 sm:py-2 text-sm text-gray-500 hover:text-gray-700 underline">
             Reset
           </button>
         </div>
@@ -189,16 +189,16 @@ export default function ValidasiDataPage() {
 
       {/* ── Bulk action bar ─────────────────────────────────────── */}
       {canValidate && selected.size > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-brand-50 border border-brand-200 rounded-xl">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-4 py-3 bg-brand-50 border border-brand-200 rounded-xl">
           <span className="text-sm font-medium text-brand-800">
             {selected.size} data dipilih
           </span>
-          <div className="flex-1" />
+          <div className="hidden sm:block flex-1" />
           {tab === 'draft' && (
             <button
               onClick={() => setConfirmAction({ action: 'validate', ids: [...selected] })}
               disabled={bulkStatus.isPending}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              className="flex-1 sm:flex-none justify-center whitespace-nowrap min-h-11 sm:min-h-0 flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               <CheckCircle2 size={14} />
               Validasi Terpilih ({selected.size})
@@ -208,7 +208,7 @@ export default function ValidasiDataPage() {
             <button
               onClick={() => setConfirmAction({ action: 'revert', ids: [...selected] })}
               disabled={bulkStatus.isPending}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+              className="flex-1 sm:flex-none justify-center whitespace-nowrap min-h-11 sm:min-h-0 flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
             >
               <RotateCcw size={14} />
               Batalkan Validasi ({selected.size})
@@ -216,7 +216,7 @@ export default function ValidasiDataPage() {
           )}
           <button
             onClick={() => setSelected(new Set())}
-            className="px-3 py-1.5 text-sm text-brand-600 hover:text-brand-800"
+            className="px-3 py-1.5 min-h-11 sm:min-h-0 text-sm text-brand-600 hover:text-brand-800"
           >
             Batal
           </button>
@@ -238,6 +238,80 @@ export default function ValidasiDataPage() {
             </p>
           </div>
         ) : (
+          <>
+          <div className="md:hidden flex items-center gap-3 px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+            {canValidate && (
+              <label className="flex items-center gap-3 text-sm text-gray-600 min-h-11 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  className="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                />
+                Pilih semua
+              </label>
+            )}
+          </div>
+          <ul className="md:hidden divide-y divide-gray-100">
+            {wargas.map((w: any) => {
+              const kelompok = w.keluarga?.kelompok
+              return (
+                <li key={w.id} className={cn('p-4', selected.has(w.id) && 'bg-brand-50')}>
+                  <div className="flex items-start gap-3">
+                    {canValidate && (
+                      <input
+                        type="checkbox"
+                        aria-label={`Pilih ${w.namaLengkap}`}
+                        checked={selected.has(w.id)}
+                        onChange={() => toggleOne(w.id)}
+                        className="mt-0.5 w-5 h-5 shrink-0 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 leading-tight break-words">{w.namaLengkap}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{w.nomorAnggota ?? w.nomorInduk ?? '—'}</div>
+                      <div className="text-sm text-gray-700 mt-1.5 break-words">
+                        {kelompok ? `${kelompok.kode} — ${kelompok.nama}` : '—'}
+                        {kelompok?.wilayah?.nama && <span className="text-xs text-gray-400"> · {kelompok.wilayah.nama}</span>}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Diinput {format(new Date(w.createdAt), 'd MMM yyyy', { locale: localeId })}
+                      </div>
+                      {tab === 'aktif' && w.validatedAt && (
+                        <div className="text-xs text-green-700 mt-0.5">
+                          Divalidasi {w.validatedByUser?.nama ?? '—'} · {format(new Date(w.validatedAt), 'd MMM yyyy, HH:mm', { locale: localeId })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {canValidate && (
+                    <div className="flex gap-2 mt-3">
+                      {tab === 'draft' ? (
+                        <button
+                          onClick={() => setConfirmAction({ action: 'validate', ids: [w.id] })}
+                          disabled={bulkStatus.isPending}
+                          className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 px-3 text-sm font-medium bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 disabled:opacity-50"
+                        >
+                          <CheckCircle2 size={14} />
+                          Validasi
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmAction({ action: 'revert', ids: [w.id] })}
+                          disabled={bulkStatus.isPending}
+                          className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 px-3 text-sm font-medium bg-orange-50 text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-100 disabled:opacity-50"
+                        >
+                          <RotateCcw size={14} />
+                          Batalkan
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
@@ -340,6 +414,8 @@ export default function ValidasiDataPage() {
               })}
             </tbody>
           </table>
+          </div>
+          </>
         )}
       </div>
 
@@ -357,7 +433,7 @@ export default function ValidasiDataPage() {
       {/* ── Dialog konfirmasi ───────────────────────────────────── */}
       {confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 sm:p-6 space-y-4">
             <div className="flex items-start gap-3">
               <div className={cn(
                 'mt-0.5 w-9 h-9 rounded-full flex items-center justify-center shrink-0',
@@ -380,11 +456,11 @@ export default function ValidasiDataPage() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
               <button
                 onClick={() => setConfirmAction(null)}
                 disabled={bulkStatus.isPending}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg"
+                className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg"
               >
                 Batal
               </button>
@@ -392,7 +468,7 @@ export default function ValidasiDataPage() {
                 onClick={() => execBulk(confirmAction.action, confirmAction.ids)}
                 disabled={bulkStatus.isPending}
                 className={cn(
-                  'px-4 py-2 text-sm font-medium text-white rounded-lg flex items-center gap-1.5 disabled:opacity-50',
+                  'w-full sm:w-auto justify-center px-4 py-3 sm:py-2 text-sm font-medium text-white rounded-lg flex items-center gap-1.5 disabled:opacity-50',
                   confirmAction.action === 'validate' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600',
                 )}
               >
