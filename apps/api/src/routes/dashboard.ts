@@ -2,22 +2,32 @@ import { Router } from 'express'
 import { authenticate } from '../middleware/auth.js'
 import { prisma } from '../utils/prisma.js'
 import { ok } from '../utils/response.js'
+import { isKelompokScoped, wargaScope, keluargaScope } from '../services/dashboardScope.js'
 
 export const dashboardRouter = Router()
 dashboardRouter.use(authenticate)
 
 // GET /api/dashboard/stats — total warga, keluarga, draft
-dashboardRouter.get('/stats', async (_req, res) => {
-  const [totalWarga, totalKeluarga, wargaDraft] = await Promise.all([
-    prisma.warga.count(),
-    prisma.keluarga.count(),
-    prisma.warga.count({ where: { dataStatus: 'DRAFT' } }),
+dashboardRouter.get('/stats', async (req, res) => {
+  const user = req.user!
+  const [totalWarga, totalKeluarga, wargaDraft, kelompok] = await Promise.all([
+    prisma.warga.count({ where: wargaScope(user) }),
+    prisma.keluarga.count({ where: keluargaScope(user) }),
+    prisma.warga.count({ where: { ...wargaScope(user), dataStatus: 'DRAFT' } }),
+    isKelompokScoped(user) && user.kelompokId
+      ? prisma.kelompok.findUnique({
+          where: { id: user.kelompokId },
+          select: { id: true, kode: true, nama: true },
+        })
+      : null,
   ])
-  ok(res, { totalWarga, totalKeluarga, wargaDraft })
+  // `kelompok` terisi hanya untuk pengguna yang dibatasi ke satu kelompok
+  ok(res, { totalWarga, totalKeluarga, wargaDraft, kelompok })
 })
 
 // GET /api/dashboard/komisi-stats — distribusi umur per komisi
-dashboardRouter.get('/komisi-stats', async (_req, res) => {
+dashboardRouter.get('/komisi-stats', async (req, res) => {
+  const user = req.user!
   const komisiList = await prisma.komisiConfig.findMany({ orderBy: { urutan: 'asc' } })
   const today = new Date()
 
@@ -31,6 +41,7 @@ dashboardRouter.get('/komisi-stats', async (_req, res) => {
 
       const jumlah = await prisma.warga.count({
         where: {
+          ...wargaScope(user),
           tanggalLahir: {
             ...(minDate ? { gt: minDate } : {}),
             lte: maxDate,
@@ -51,6 +62,7 @@ dashboardRouter.get('/map', async (req, res) => {
 
   const wargaList = await prisma.warga.findMany({
     where: {
+      ...wargaScope(req.user!),
       latitude: { not: null },
       longitude: { not: null },
       ...(kelurahan

@@ -46,7 +46,15 @@ export default function DashboardPage() {
   // Daftar kelurahan unik dari master
   const kecamatanList = [...new Set(kelurahanList.map((k) => k.kecamatan))].sort()
 
-  const statCards = [
+  const statCards: Array<{
+    label: string
+    value: number | undefined
+    icon: React.ElementType
+    color: string
+    onClick?: () => void
+    highlight?: boolean
+    hidden?: boolean
+  }> = [
     {
       label: 'Total Warga',
       value: stats?.totalWarga,
@@ -66,6 +74,8 @@ export default function DashboardPage() {
       value: 22,
       icon: MapPin,
       color: 'bg-purple-500',
+      // Jumlah kelompok hanya relevan untuk yang melihat seluruh jemaat
+      hidden: !!stats?.kelompok,
     },
     {
       label: 'Perlu Divalidasi',
@@ -75,7 +85,7 @@ export default function DashboardPage() {
       onClick: () => router.push('/warga?dataStatus=DRAFT'),
       highlight: !!(stats?.wargaDraft && stats.wargaDraft > 0),
     },
-  ]
+  ].filter((c) => !c.hidden)
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-8">
@@ -87,10 +97,19 @@ export default function DashboardPage() {
         <p className="text-gray-500 text-sm mt-1">
           {ROLE_LABELS[user?.role ?? '']} · Database Warga Jemaat GKJJ
         </p>
+        {stats?.kelompok && (
+          <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-medium">
+            <MapPin size={11} />
+            Data kelompok Anda: {stats.kelompok.kode} · {stats.kelompok.nama}
+          </span>
+        )}
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div className={cn(
+        'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5',
+        statCards.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4',
+      )}>
         {statCards.map((card) => (
           <div
             key={card.label}
