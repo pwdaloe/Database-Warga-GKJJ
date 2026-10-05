@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import QRCode from 'qrcode'
 import { useWargaList } from '@/hooks/useWarga'
-import { cn } from '@/lib/utils'
+import { cn, nomorWarga } from '@/lib/utils'
 import { STATUS_KEANGGOTAAN_LABEL, kirimWhatsApp } from '@/lib/kartuWhatsapp'
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -349,7 +349,7 @@ export default function KartuPage() {
                             {w.statusKeluarga === 'KEPALA' && <Crown size={11} className="text-yellow-500" />}
                           </p>
                           <p className="text-xs text-gray-400 truncate">
-                            {w.nomorAnggota ?? '—'}
+                            {nomorWarga(w) ?? '—'}
                             {kelompok ? ` · ${kelompok.nama}` : ''}
                           </p>
                         </div>

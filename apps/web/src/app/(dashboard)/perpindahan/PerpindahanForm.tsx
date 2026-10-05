@@ -8,7 +8,7 @@ import { Loader2, Search, User, X, AlertCircle } from 'lucide-react'
 import { InputField, SelectField, TextareaField } from '@/components/ui/FormField'
 import { useWargaList } from '@/hooks/useWarga'
 import { usePerpindahanMutations } from '@/hooks/usePerpindahan'
-import { cn } from '@/lib/utils'
+import { cn, nomorWarga } from '@/lib/utils'
 
 const schema = z.object({
   wargaId: z.number({ required_error: 'Pilih warga terlebih dahulu' }).int().positive(),
@@ -142,7 +142,7 @@ export function PerpindahanForm({ onSuccess }: Props) {
               >
                 <User size={13} className="text-gray-400" />
                 <span className="min-w-0 break-words">{w.namaLengkap}</span>
-                {w.nomorAnggota && <span className="text-xs text-gray-400">({w.nomorAnggota})</span>}
+                {nomorWarga(w) && <span className="text-xs text-gray-400">({nomorWarga(w)})</span>}
               </button>
             ))}
           </div>

@@ -14,7 +14,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { PerpindahanForm } from './PerpindahanForm'
 import { useAuth } from '@/hooks/useAuth'
 import { api } from '@/lib/api'
-import { cn } from '@/lib/utils'
+import { cn, nomorWarga } from '@/lib/utils'
 
 const JENIS_OPTIONS = [
   { value: '', label: 'Semua Jenis' },
@@ -263,9 +263,9 @@ export default function PerpindahanPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium text-gray-900 break-words">{p.warga?.namaLengkap}</p>
-                    {p.warga?.nomorAnggota && (
+                    {nomorWarga(p.warga) && (
                       <span className="text-xs font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                        {p.warga.nomorAnggota}
+                        {nomorWarga(p.warga)}
                       </span>
                     )}
                   </div>
@@ -305,9 +305,9 @@ export default function PerpindahanPage() {
                   <tr key={p.id} className="hover:bg-gray-50 transition">
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900">{p.warga?.namaLengkap}</p>
-                      {p.warga?.nomorAnggota && (
+                      {nomorWarga(p.warga) && (
                         <span className="text-xs font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                          {p.warga.nomorAnggota}
+                          {nomorWarga(p.warga)}
                         </span>
                       )}
                     </td>

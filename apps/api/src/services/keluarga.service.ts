@@ -16,7 +16,7 @@ export interface KeluargaFilter {
 const keluargaInclude = {
   kelompok: { include: { wilayah: true } },
   kepalaKeluarga: {
-    select: { id: true, namaLengkap: true, nomorAnggota: true },
+    select: { id: true, namaLengkap: true, nomorAnggota: true, nomorInduk: true },
   },
   wargas: {
     orderBy: [

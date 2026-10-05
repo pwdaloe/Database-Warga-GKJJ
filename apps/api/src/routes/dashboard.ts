@@ -61,6 +61,7 @@ dashboardRouter.get('/map', async (req, res) => {
       id: true,
       namaLengkap: true,
       nomorAnggota: true,
+      nomorInduk: true,
       latitude: true,
       longitude: true,
       statusKeanggotaan: true,

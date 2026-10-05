@@ -21,7 +21,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { WargaForm } from '../WargaForm'
-import { cn } from '@/lib/utils'
+import { cn, nomorWarga } from '@/lib/utils'
 
 type Tab = 'biodata' | 'keluarga'
 
@@ -113,9 +113,9 @@ export default function WargaDetailPage() {
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{warga.namaLengkap}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                {warga.nomorAnggota && (
+                {nomorWarga(warga) && (
                   <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                    {warga.nomorAnggota}
+                    {nomorWarga(warga)}
                   </span>
                 )}
                 {warga.namaPanggilan && (

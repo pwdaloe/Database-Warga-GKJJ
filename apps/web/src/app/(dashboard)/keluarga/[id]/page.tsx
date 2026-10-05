@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { KeluargaForm } from '../KeluargaForm'
 import { WargaForm, type WargaFormData } from '../../warga/WargaForm'
-import { cn } from '@/lib/utils'
+import { cn, nomorWarga } from '@/lib/utils'
 
 const STATUS_KK_LABEL: Record<string, string> = {
   KEPALA: 'Kepala KK', ISTRI: 'Istri', ANAK: 'Anak',
@@ -155,8 +155,8 @@ export default function KeluargaDetailPage() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 leading-tight break-words">{kepala.namaLengkap}</p>
                 <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
-                  {kepala.nomorAnggota && (
-                    <span className="text-xs font-mono text-gray-400">{kepala.nomorAnggota}</span>
+                  {nomorWarga(kepala) && (
+                    <span className="text-xs font-mono text-gray-400">{nomorWarga(kepala)}</span>
                   )}
                   {(kepala.whatsapp || kepala.telepon) && (
                     <span className="text-xs text-gray-400 flex items-center gap-0.5">

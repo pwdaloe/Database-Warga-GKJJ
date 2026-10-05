@@ -50,7 +50,7 @@ const wargaInclude = {
     include: {
       kelompok: { include: { wilayah: true } },
       kepalaKeluarga: {
-        select: { id: true, namaLengkap: true, nomorAnggota: true },
+        select: { id: true, namaLengkap: true, nomorAnggota: true, nomorInduk: true },
       },
     },
   },
@@ -62,7 +62,7 @@ const wargaDetailInclude = {
     include: {
       kelompok: { include: { wilayah: true } },
       kepalaKeluarga: {
-        select: { id: true, namaLengkap: true, nomorAnggota: true },
+        select: { id: true, namaLengkap: true, nomorAnggota: true, nomorInduk: true },
       },
       wargas: {
         orderBy: [
@@ -83,6 +83,7 @@ const wargaDetailInclude = {
           whatsapp: true,
           fotoUrl: true,
           nomorAnggota: true,
+          nomorInduk: true,
         },
       },
     },

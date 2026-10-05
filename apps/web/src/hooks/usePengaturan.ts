@@ -104,6 +104,7 @@ export function useDashboardMap(kelurahan?: string) {
         id: number
         namaLengkap: string
         nomorAnggota: string | null
+        nomorInduk: string | null
         latitude: number
         longitude: number
         statusKeanggotaan: string

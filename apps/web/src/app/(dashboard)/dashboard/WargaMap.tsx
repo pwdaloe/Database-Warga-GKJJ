@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import { nomorWarga } from '@/lib/utils'
 import 'leaflet/dist/leaflet.css'
 
 // Fix Leaflet default marker icons (Next.js webpack issue)
@@ -48,6 +49,7 @@ interface Point {
   id: number
   namaLengkap: string
   nomorAnggota: string | null
+  nomorInduk?: string | null
   latitude: number
   longitude: number
   statusKeanggotaan: string
@@ -73,7 +75,10 @@ export default function WargaMap({ points }: { points: Point[] }) {
             <Popup>
               <div className="text-sm min-w-[140px]">
                 <p className="font-semibold text-gray-800">{p.namaLengkap}</p>
-                {p.nomorAnggota && <p className="text-xs text-gray-400 font-mono">{p.nomorAnggota}</p>}
+                {/* Utamakan No. Induk Warga; No. Anggota (WRG…) hanya sebagai cadangan sementara */}
+                {nomorWarga(p) && (
+                  <p className="text-xs text-gray-400 font-mono">{nomorWarga(p)}</p>
+                )}
                 {p.keluarga?.kelompok && (
                   <p className="text-xs text-gray-600 mt-1">{p.keluarga.kelompok.nama}</p>
                 )}

@@ -12,7 +12,7 @@ import { useValidasiMutations } from '@/hooks/useValidasiWarga'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuth } from '@/hooks/useAuth'
-import { cn } from '@/lib/utils'
+import { cn, nomorWarga } from '@/lib/utils'
 
 type Tab = 'draft' | 'aktif'
 
@@ -269,7 +269,7 @@ export default function ValidasiDataPage() {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-gray-900 leading-tight break-words">{w.namaLengkap}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">{w.nomorAnggota ?? w.nomorInduk ?? '—'}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{nomorWarga(w) ?? '—'}</div>
                       <div className="text-sm text-gray-700 mt-1.5 break-words">
                         {kelompok ? `${kelompok.kode} — ${kelompok.nama}` : '—'}
                         {kelompok?.wilayah?.nama && <span className="text-xs text-gray-400"> · {kelompok.wilayah.nama}</span>}
@@ -353,7 +353,7 @@ export default function ValidasiDataPage() {
                     )}
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900 leading-tight">{w.namaLengkap}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">{w.nomorAnggota ?? w.nomorInduk ?? '—'}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{nomorWarga(w) ?? '—'}</div>
                     </td>
                     <td className="px-4 py-3">
                       {kelompok ? (
