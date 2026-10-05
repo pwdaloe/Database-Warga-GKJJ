@@ -3,13 +3,14 @@
 Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
 Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
 
-**Versi:** `v1.5` · **Terakhir diperbarui:** 3 Oktober 2026
+**Versi:** `v1.5` · **Terakhir diperbarui:** 5 Oktober 2026
 
 ---
 
 ## Daftar Isi
 
 - [Fitur](#fitur)
+- [Tampilan Responsif (Mobile Browser)](#tampilan-responsif-mobile-browser)
 - [Aplikasi Mobile (PWA) untuk Penatua Kelompok](#aplikasi-mobile-pwa-untuk-penatua-kelompok)
 - [Pengujian (Testing)](#pengujian-testing)
 - [Keamanan & Kepatuhan PDP](#keamanan--kepatuhan-pdp)
@@ -174,6 +175,28 @@ Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off
 - Tabel searchable + filter per kecamatan
 - CRUD: tambah, edit, hapus
 - Data dipakai untuk **autocomplete** field kelurahan di form Keluarga
+
+---
+
+## Tampilan Responsif (Mobile Browser)
+
+Seluruh halaman utama (`/dashboard`, `/warga`, `/keluarga`, `/validasi-data`, `/kartu`, `/wilayah`, `/perpindahan`, `/import`, `/pengguna`, `/log`, `/pengaturan`) dan halaman autentikasi (`/login`, lupa/reset/ganti password) kini nyaman dipakai dari browser smartphone, tanpa perlu membuka `/m/...`. Perubahan ini hanya menyentuh layout/tampilan — tidak ada perubahan API, skema database, maupun hak akses.
+
+| Area | Perilaku di layar kecil (< 768px / < 1024px) |
+|---|---|
+| **Navigasi** | Sidebar menjadi *drawer* geser dari kiri (di bawah 1024px), dibuka lewat tombol ☰ di bar atas; menutup otomatis saat pindah halaman |
+| **Daftar data** | Tabel lebar diganti **daftar kartu** (warga, keluarga, wilayah/kelompok, validasi, perpindahan, pengguna, log, kelurahan); tabel tetap dipakai di tablet/desktop |
+| **Tombol aksi** | Area ketuk minimal 44px (Detail, Edit, Telepon, Hapus, dll.); tombol ikon diberi `aria-label` |
+| **Form & modal** | Modal tampil sebagai *bottom-sheet* dari bawah layar; isian satu kolom; tombol Simpan selebar layar; bar navigasi form Tambah Warga menempel di dasar layar |
+| **Input** | Font 16px di HP sehingga iOS Safari tidak memperbesar layar saat mengetik; keypad angka untuk koordinat |
+| **Form Tambah Warga** | Lima tab (Identitas, Keanggotaan, Kontak, Keluarga, Alamat) berbagi lebar layar; foto bisa diambil langsung dari kamera atau galeri |
+| **Pencarian & filter** | Filter tersusun satu kolom; tombol Filter menjadi ikon |
+| **Import Excel** | Dropzone "Ketuk untuk pilih file"; stepper muat di layar; tabel pratinjau digeser ke samping |
+| **Dashboard** | Chart dan peta lebih pendek, kartu statistik menyesuaikan lebar |
+
+Implementasi bersama: `components/layout/DashboardShell.tsx` (bar atas + drawer), `Sidebar.tsx`, serta komponen `Modal`, `Pagination`, dan `FormField` yang sudah responsif. Breakpoint memakai Tailwind standar (`sm` 640px, `md` 768px, `lg` 1024px).
+
+> Versi ringkas `/m/...` untuk Penatua Kelompok tetap tersedia (lihat bagian berikut). Halaman `/m/[id]` dipakai oleh tautan QR dan WhatsApp kartu anggota.
 
 ---
 
@@ -346,7 +369,8 @@ Database-Warga-GKJJ/
 │           │       └── [id]/       # Kartu digital publik (tanpa auth)
 │           ├── components/
 │           │   ├── layout/
-│           │   │   ├── Sidebar.tsx # Navigasi bergroup + v1.0 badge
+│           │   │   ├── DashboardShell.tsx # Bar atas mobile + drawer sidebar
+│           │   │   ├── Sidebar.tsx # Navigasi bergroup + v1.0 badge (drawer di mobile)
 │           │   │   ├── ProtectedRoute.tsx
 │           │   │   └── CookieConsentBanner.tsx # Banner consent site-wide (localStorage)
 │           │   └── ui/             # Modal, Badge, Pagination, FormField
