@@ -287,7 +287,7 @@ Body snapshot pada `ActivityLog` secara otomatis:
 
 > 🔐 **Production:** Gunakan `openssl rand -hex 32` untuk generate `ENCRYPTION_KEY` yang kuat. Simpan di secrets manager (AWS Secrets Manager, Vault, dll.) — JANGAN di file `.env` yang bisa masuk ke repository.
 
-> 🚀 **Deploy ke VPS:** jalankan `bash deploy/2-deploy.sh prod` **dari root repo di server**, jangan `git pull`/`npm install`/`npm audit fix` manual sebagai root — itu membuat file di `.git`, `.next`, dan `package-lock.json` jadi milik root dan membuat deploy berikutnya gagal. Script sudah memperbaiki kepemilikan `.git`/`.next`/`dist` dan mengembalikan `package-lock.json` secara otomatis. Selalu backup database (`pg_dump`) sebelum deploy yang mengubah skema.
+> 🚀 **Deploy ke VPS:** jalankan `bash deploy/2-deploy.sh prod` **dari root repo di server**, jangan `git pull`/`npm install`/`npm audit fix` manual sebagai root — itu membuat file di `.git`, `.next`, dan `package-lock.json` jadi milik root dan membuat deploy berikutnya gagal. Script sudah memperbaiki kepemilikan `.git`/`.next`/`dist` dan mengembalikan `package-lock.json` secara otomatis. Script juga membuat backup database (`pg_dump`) otomatis ke `/var/backups/gkjj` sebelum `prisma db push` dan membatalkan deploy jika backup gagal (lihat [`DEPLOY.md`](DEPLOY.md)); salin backup berkala ke luar VPS.
 
 > 🛡️ **Keamanan dependensi:** `npm audit --omit=dev` menyisakan temuan yang menunggu upgrade besar (Next 16 untuk `postcss`, Prisma 8 untuk `deepmerge-ts`) serta `uuid` moderate bawaan `exceljs` (fungsi yang rentan tidak dipakai). Hindari `npm audit fix --force` — itu menurunkan `eslint-config-next` dan memaksa Tailwind 4. Format Excel yang didukung hanya `.xlsx` (SheetJS `xlsx` sudah diganti `exceljs`).
 

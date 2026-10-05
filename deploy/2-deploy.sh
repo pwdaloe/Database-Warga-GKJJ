@@ -92,6 +92,59 @@ info "Generate Prisma client..."
 cd "$APP_DIR/apps/api"
 sudo -u "$APP_USER" npx prisma generate
 
+# ── 3b. Backup database sebelum push schema ──────────────────
+# Backup selalu dibuat sebelum 'prisma db push' (bisa mengubah/menghapus kolom).
+# Deploy DIBATALKAN jika backup gagal. Lewati dengan: SKIP_BACKUP=1 bash 2-deploy.sh prod
+# Hasil: $BACKUP_DIR/gkjj_<env>_<waktu>.dump (format custom, pulihkan dengan pg_restore).
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/gkjj}"
+BACKUP_KEEP="${BACKUP_KEEP:-14}"
+
+backup_database() {
+  command -v pg_dump >/dev/null    || error "pg_dump tidak ditemukan. Install: apt install postgresql-client (atau SKIP_BACKUP=1 untuk melewati)"
+  command -v pg_restore >/dev/null || error "pg_restore tidak ditemukan (paket postgresql-client)"
+
+  # Baca DATABASE_URL dari apps/api/.env → variabel PG* (password tidak muncul di daftar proses).
+  # Parameter query Prisma seperti ?schema=public dibuang karena tidak dikenal libpq.
+  local pg_env
+  pg_env="$(ENV_FILE="$APP_DIR/apps/api/.env" node -e '
+    const fs = require("fs");
+    const line = fs.readFileSync(process.env.ENV_FILE, "utf8").split("\n").find((l) => /^\s*DATABASE_URL\s*=/.test(l));
+    if (!line) { console.error("DATABASE_URL tidak ditemukan"); process.exit(1); }
+    const raw = line.replace(/^\s*DATABASE_URL\s*=\s*/, "").trim().replace(/^["\x27]|["\x27]$/g, "");
+    const u = new URL(raw);
+    const q = (v) => "\x27" + String(v).replace(/\x27/g, "\x27\\\x27\x27") + "\x27";
+    console.log("export PGHOST=" + q(u.hostname || "localhost"));
+    console.log("export PGPORT=" + q(u.port || "5432"));
+    console.log("export PGUSER=" + q(decodeURIComponent(u.username)));
+    console.log("export PGPASSWORD=" + q(decodeURIComponent(u.password)));
+    console.log("export PGDATABASE=" + q(decodeURIComponent(u.pathname.replace(/^\//, ""))));
+  ')" || error "Gagal membaca DATABASE_URL dari apps/api/.env"
+
+  install -d -m 700 "$BACKUP_DIR"
+  local file="$BACKUP_DIR/gkjj_${ENV}_$(date +%Y%m%d_%H%M%S).dump"
+
+  info "Backup database ke $file ..."
+  # subshell: variabel PG* tidak bocor ke langkah lain
+  ( eval "$pg_env"; pg_dump --format=custom --no-owner --file="$file" ) \
+    || { rm -f "$file"; error "pg_dump gagal — deploy dibatalkan (database tidak diubah)."; }
+
+  # Verifikasi: file tidak kosong dan terbaca oleh pg_restore
+  [ -s "$file" ] && pg_restore --list "$file" >/dev/null 2>&1 \
+    || { rm -f "$file"; error "Backup tidak valid — deploy dibatalkan (database tidak diubah)."; }
+
+  chmod 600 "$file"
+  info "Backup OK ($(du -h "$file" | cut -f1)). Pulihkan dengan: pg_restore --clean --if-exists --no-owner -d <nama_db> $file"
+
+  # Simpan $BACKUP_KEEP backup terbaru per environment
+  ls -1t "$BACKUP_DIR"/gkjj_"${ENV}"_*.dump 2>/dev/null | tail -n +"$((BACKUP_KEEP + 1))" | xargs -r rm -f
+}
+
+if [[ "${SKIP_BACKUP:-0}" == "1" ]]; then
+  warn "SKIP_BACKUP=1 — backup database DILEWATI."
+else
+  backup_database
+fi
+
 # ── 4. Push schema ke database ───────────────────────────────
 info "Sync schema database..."
 sudo -u "$APP_USER" npx prisma db push

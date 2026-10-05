@@ -117,12 +117,26 @@ bash /var/www/gkjj/deploy/2-deploy.sh dev
 Script ini menjalankan:
 1. `git pull` → kode terbaru
 2. `npm install` → dependencies
-3. `prisma generate` + `prisma db push` → sync schema
-4. Seed master data (kelurahan Jakarta Timur + komisi)
-5. Build API (TypeScript → JavaScript)
-6. Build Next.js (`NODE_OPTIONS=--max-old-space-size=1400` untuk VPS 2GB)
-7. Copy Nginx config + aktifkan symlink
-8. Start/restart PM2
+3. `prisma generate`
+4. **Backup database (`pg_dump`)** → `/var/backups/gkjj/gkjj_<env>_<waktu>.dump`
+5. `prisma db push` → sync schema
+6. Seed master data (kelurahan Jakarta Timur + komisi)
+7. Build API (TypeScript → JavaScript)
+8. Build Next.js (`NODE_OPTIONS=--max-old-space-size=1400` untuk VPS 2GB)
+9. Copy Nginx config + aktifkan symlink
+10. Start/restart PM2
+
+#### Backup otomatis sebelum `db push`
+
+- Dibuat dari `DATABASE_URL` di `apps/api/.env`, format custom (`pg_dump -Fc`), izin `600` di folder `700`.
+- **Jika backup gagal, deploy dibatalkan** sebelum database diubah. Kegagalan umum: `pg_dump` belum terpasang (`apt install postgresql-client`) atau versi `pg_dump` lebih lama dari server PostgreSQL.
+- 14 backup terbaru per environment disimpan, sisanya dihapus otomatis (`BACKUP_KEEP=30 bash ... prod` untuk mengubah). Folder dapat diganti lewat `BACKUP_DIR`.
+- Lewati hanya jika benar-benar perlu: `SKIP_BACKUP=1 bash /var/www/gkjj/deploy/2-deploy.sh prod`.
+- Cara memulihkan (ke database kosong/yang sama):
+  ```bash
+  pg_restore --clean --if-exists --no-owner -d gkjj_prod /var/backups/gkjj/gkjj_prod_YYYYMMDD_HHMMSS.dump
+  ```
+- Backup berada di server yang sama dengan database, jadi **salin berkala ke luar VPS** (mis. `scp` ke Mac) untuk perlindungan dari kegagalan disk/VPS.
 
 > ⏳ Build pertama kali bisa 5–10 menit.
 
