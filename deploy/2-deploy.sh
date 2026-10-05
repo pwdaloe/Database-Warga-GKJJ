@@ -73,11 +73,19 @@ fi
 
 # ── 1. Pull kode terbaru ──────────────────────────────────────
 info "Pull kode terbaru dari GitHub..."
+# Repo harus milik $APP_USER; kalau pernah di-pull sebagai root, objek git jadi
+# milik root dan pull berikutnya gagal ("insufficient permission ... .git/objects").
+chown -R "$APP_USER:$APP_USER" "$APP_DIR/.git"
+# 'npm install' menulis ulang package-lock.json di server, yang membuat 'git pull'
+# berikutnya menolak (local changes would be overwritten). Buang perubahan itu dulu.
+sudo -u "$APP_USER" git checkout -- package-lock.json
 sudo -u "$APP_USER" git pull origin main
 
 # ── 2. Install dependencies ───────────────────────────────────
 info "Install npm dependencies..."
 sudo -u "$APP_USER" npm install --legacy-peer-deps
+# Kembalikan lockfile agar working tree tetap bersih untuk deploy berikutnya
+sudo -u "$APP_USER" git checkout -- package-lock.json
 
 # ── 3. Generate Prisma Client ─────────────────────────────────
 info "Generate Prisma client..."
@@ -91,6 +99,12 @@ sudo -u "$APP_USER" npx prisma db push
 # ── 5. Seed master data (skip jika sudah ada) ─────────────────
 info "Seed master data (kelurahan & komisi)..."
 sudo -u "$APP_USER" npx tsx prisma/seed-master.ts || warn "Seed dilewati (data sudah ada)"
+
+# PM2 berjalan sebagai root, sehingga Next.js (runtime) menulis cache ke .next sebagai root.
+# Build dijalankan sebagai $APP_USER dan gagal (EACCES unlink) jika masih ada file milik root.
+for d in "$APP_DIR/apps/web/.next" "$APP_DIR/apps/api/dist"; do
+  [ -e "$d" ] && chown -R "$APP_USER:$APP_USER" "$d"
+done
 
 # ── 6. Build API ──────────────────────────────────────────────
 info "Build API (TypeScript → JavaScript)..."
