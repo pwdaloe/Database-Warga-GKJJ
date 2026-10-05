@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import {
   UserCog, Plus, Pencil, Power, PowerOff, KeyRound,
-  Loader2, Shield, CheckCircle2, XCircle, Upload,
+  Loader2, Shield, CheckCircle2, XCircle, Upload, Search, Filter, X,
 } from 'lucide-react'
 import { useUserList, useUserMutations, type AppUser } from '@/hooks/useUsers'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
@@ -175,6 +175,45 @@ export default function PenggunaPage() {
   const [serverError, setServerError]       = useState('')
   const [importOpen, setImportOpen]         = useState(false)
 
+  // Search & filter (client-side — daftar pengguna kecil dan sudah dimuat penuh)
+  const [search, setSearch]           = useState('')
+  const [roleFilter, setRoleFilter]   = useState('')
+  const [kelompokFilter, setKelompokFilter] = useState('')   // '' = semua, 'NONE' = tanpa kelompok, atau id kelompok
+  const [statusFilter, setStatusFilter] = useState('')       // '' | 'aktif' | 'nonaktif'
+  const [showFilter, setShowFilter]   = useState(false)
+
+  const kelompokOptions = useMemo(() => {
+    const map = new Map<number, { id: number; kode: string; nama: string }>()
+    users.forEach((u) => { if (u.kelompok) map.set(u.kelompok.id, u.kelompok) })
+    return Array.from(map.values()).sort((a, b) => a.kode.localeCompare(b.kode))
+  }, [users])
+
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return users.filter((u) => {
+      if (q) {
+        const haystack = [
+          u.nama, u.username, u.email,
+          u.kelompok ? `${u.kelompok.kode} ${u.kelompok.nama}` : '',
+        ].join(' ').toLowerCase()
+        if (!haystack.includes(q)) return false
+      }
+      if (roleFilter && u.role !== roleFilter) return false
+      if (kelompokFilter === 'NONE' && u.kelompok) return false
+      if (kelompokFilter && kelompokFilter !== 'NONE' && u.kelompok?.id !== Number(kelompokFilter)) return false
+      if (statusFilter === 'aktif' && !u.aktif) return false
+      if (statusFilter === 'nonaktif' && u.aktif) return false
+      return true
+    })
+  }, [users, search, roleFilter, kelompokFilter, statusFilter])
+
+  const activeFilterCount = [roleFilter, kelompokFilter, statusFilter].filter(Boolean).length
+  const isFiltering = !!search.trim() || activeFilterCount > 0
+
+  function resetFilters() {
+    setSearch(''); setRoleFilter(''); setKelompokFilter(''); setStatusFilter('')
+  }
+
   async function handleSave(formData: any) {
     setServerError('')
     try {
@@ -257,7 +296,8 @@ export default function PenggunaPage() {
             Manajemen Pengguna
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            {users.length} akun terdaftar · {aktifCount} aktif · {nonAktifCount} nonaktif
+            {isFiltering ? `${filteredUsers.length} dari ${users.length} akun · ` : `${users.length} akun terdaftar · `}
+            {aktifCount} aktif · {nonAktifCount} nonaktif
           </p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -276,6 +316,93 @@ export default function PenggunaPage() {
         </div>
       </div>
 
+      {/* Search & Filter */}
+      <div className="bg-white rounded-xl border shadow-sm mb-4">
+        <div className="p-3 sm:p-4 flex gap-2 sm:gap-3 items-center">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama, username, email, kelompok..."
+              aria-label="Cari pengguna"
+              className="w-full pl-9 pr-9 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm
+                outline-none focus:ring-2 focus:ring-brand-500"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                aria-label="Hapus pencarian"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setShowFilter(!showFilter)}
+            aria-label="Filter"
+            className={cn(
+              'flex items-center gap-2 px-3 py-3 sm:py-2.5 rounded-lg border text-sm transition',
+              showFilter || activeFilterCount > 0
+                ? 'bg-brand-50 border-brand-300 text-brand-700'
+                : 'border-gray-300 text-gray-600 hover:bg-gray-50',
+            )}
+          >
+            <Filter size={15} />
+            <span className="hidden sm:inline">Filter</span>
+            {activeFilterCount > 0 && (
+              <span className="text-[11px] font-semibold bg-brand-600 text-white rounded-full min-w-5 h-5 px-1.5 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {showFilter && (
+          <div className="px-3 sm:px-4 pb-4 border-t pt-3 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              aria-label="Filter role"
+              className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+            >
+              <option value="">Semua Role</option>
+              {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r] ?? r}</option>)}
+            </select>
+            <select
+              value={kelompokFilter}
+              onChange={(e) => setKelompokFilter(e.target.value)}
+              aria-label="Filter kelompok"
+              className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+            >
+              <option value="">Semua Kelompok</option>
+              <option value="NONE">Tanpa kelompok (akses semua)</option>
+              {kelompokOptions.map((k) => (
+                <option key={k.id} value={k.id}>[{k.kode}] {k.nama}</option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter status"
+              className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+            >
+              <option value="">Semua Status</option>
+              <option value="aktif">Aktif</option>
+              <option value="nonaktif">Nonaktif</option>
+            </select>
+            <button
+              onClick={resetFilters}
+              disabled={!isFiltering}
+              className="px-3 py-2.5 sm:py-2 text-sm text-gray-500 hover:text-gray-700 underline text-left sm:text-center disabled:opacity-40 disabled:no-underline"
+            >
+              Reset
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Tabel */}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         {isLoading ? (
@@ -287,10 +414,18 @@ export default function PenggunaPage() {
             <UserCog size={36} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">Belum ada pengguna</p>
           </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="py-16 text-center text-gray-400">
+            <Search size={36} className="mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Tidak ada pengguna yang cocok</p>
+            <button onClick={resetFilters} className="mt-3 text-sm text-brand-600 hover:underline">
+              Reset pencarian &amp; filter
+            </button>
+          </div>
         ) : (
           <>
           <ul className="md:hidden divide-y">
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <li key={u.id} className={cn('p-4 space-y-3', !u.aktif && 'opacity-60')}>
                 <div className="flex items-start gap-3">
                   <div className={cn(
@@ -350,7 +485,7 @@ export default function PenggunaPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {users.map((u) => (
+              {filteredUsers.map((u) => (
                 <tr key={u.id} className={cn('transition hover:bg-gray-50', !u.aktif && 'opacity-60')}>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
