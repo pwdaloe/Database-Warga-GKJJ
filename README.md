@@ -35,7 +35,8 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 - Statistik ringkasan: **Total Warga**, **Total Keluarga**, **Kelompok Aktif**, **Perlu Divalidasi** (status Draft)
 - Setiap kartu statistik bisa diklik untuk navigasi langsung ke halaman terkait
 - **Chart distribusi komisi** — bar chart warna-warni menampilkan jumlah anggota per komisi berdasarkan rentang usia (Recharts), rentang usia dapat dikonfigurasi di Pengaturan
-- **Peta lokasi warga** — pin interaktif berbasis OpenStreetMap (Leaflet) untuk warga yang memiliki koordinat rumah, dengan filter per kelurahan
+- **Peta lokasi warga** — pin interaktif berbasis OpenStreetMap (Leaflet) untuk warga yang memiliki koordinat rumah, dengan filter per kelurahan; popup pin menampilkan **No. Induk Warga** (cadangan: No. Anggota otomatis `WRG…` jika No. Induk belum diisi)
+- **Dibatasi per kelompok untuk Penatua Kelompok** — Total Warga, Total Keluarga, Perlu Divalidasi, chart komisi, dan peta hanya menghitung/menampilkan kelompok milik pengguna (di-enforce di backend). Penatua melihat label "Data kelompok Anda: [kode] · nama" dan kartu "Kelompok Aktif" disembunyikan. Penatua yang belum punya kelompok melihat angka 0 (fail-closed). Role lain melihat seluruh jemaat
 
 ---
 
@@ -52,6 +53,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 - **Filter & pencarian** — cari nama, filter per wilayah, kelompok, status keanggotaan, jenis kelamin, status dokumen
 - **Status dokumen** — alur Draft → Validasi → Aktif → Tidak Aktif
 - **Detail warga** — halaman biodata lengkap, tampilkan foto asli jika ada
+- **Nomor warga yang ditampilkan** — di Dashboard (peta), Kartu Anggota, Perpindahan, Detail Warga/Keluarga, dan Validasi Data, sistem menampilkan **No. Induk Warga** bila sudah diisi; jika belum, memakai No. Anggota otomatis `WRG` + ID sebagai nomor sementara
 - **Wizard tambah warga** — setelah input Kepala KK, lanjut ke step 2 untuk tambah anggota keluarga
 
 #### Validasi Data
@@ -152,6 +154,7 @@ Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off
 - **Edit** — ubah semua field kecuali password
 - **Reset Password** — modal khusus, password baru minimal 8 karakter
 - **Toggle Aktif/Nonaktif** — akun nonaktif tidak bisa login
+- **Pencarian & filter** — cari nama, username, email, atau kelompok; filter **Role**, **Kelompok** (termasuk "Tanpa kelompok"), dan **Status** (Aktif/Nonaktif); ringkasan "N dari M akun" saat memfilter, tombol Reset, dan pesan jika tidak ada yang cocok
 - Akses hanya untuk **Superadmin** dan **Kepala Kantor**
 
 #### Log Aktivitas
@@ -225,8 +228,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 11 | 108 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route) |
-| Frontend (`apps/web`) | 3 | 15 (Badge, Pagination, ResetPasswordForm) |
+| Backend (`apps/api`) | 12 | 115 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok) |
+| Frontend (`apps/web`) | 6 | 29 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -283,6 +286,10 @@ Body snapshot pada `ActivityLog` secara otomatis:
 > 🔑 **Password awal akun seed** tidak ada di repository. `npm run db:seed` membaca `SEED_ADMIN_PASSWORD` dan `SEED_PENATUA_PASSWORD` dari environment (minimal 12 karakter). Ganti password superadmin segera setelah login pertama.
 
 > 🔐 **Production:** Gunakan `openssl rand -hex 32` untuk generate `ENCRYPTION_KEY` yang kuat. Simpan di secrets manager (AWS Secrets Manager, Vault, dll.) — JANGAN di file `.env` yang bisa masuk ke repository.
+
+> 🚀 **Deploy ke VPS:** jalankan `bash deploy/2-deploy.sh prod` **dari root repo di server**, jangan `git pull`/`npm install`/`npm audit fix` manual sebagai root — itu membuat file di `.git`, `.next`, dan `package-lock.json` jadi milik root dan membuat deploy berikutnya gagal. Script sudah memperbaiki kepemilikan `.git`/`.next`/`dist` dan mengembalikan `package-lock.json` secara otomatis. Selalu backup database (`pg_dump`) sebelum deploy yang mengubah skema.
+
+> 🛡️ **Keamanan dependensi:** `npm audit --omit=dev` menyisakan temuan yang menunggu upgrade besar (Next 16 untuk `postcss`, Prisma 8 untuk `deepmerge-ts`) serta `uuid` moderate bawaan `exceljs` (fungsi yang rentan tidak dipakai). Hindari `npm audit fix --force` — itu menurunkan `eslint-config-next` dan memaksa Tailwind 4. Format Excel yang didukung hanya `.xlsx` (SheetJS `xlsx` sudah diganti `exceljs`).
 
 ---
 
@@ -589,9 +596,9 @@ Authorization: Bearer <token>
 ### Dashboard
 | Method | Endpoint | Keterangan |
 |---|---|---|
-| `GET` | `/dashboard/stats` | Total warga, keluarga, draft |
+| `GET` | `/dashboard/stats` | Total warga, keluarga, draft + `kelompok` (terisi untuk Penatua Kelompok). Semua endpoint `/dashboard/*` dibatasi ke kelompok penatua |
 | `GET` | `/dashboard/komisi-stats` | Distribusi anggota per komisi |
-| `GET` | `/dashboard/map` | Koordinat warga (filter: `?kelurahan=`) |
+| `GET` | `/dashboard/map` | Koordinat warga + No. Induk/No. Anggota (filter: `?kelurahan=`) |
 
 ### Pengaturan
 | Method | Endpoint | Keterangan |
