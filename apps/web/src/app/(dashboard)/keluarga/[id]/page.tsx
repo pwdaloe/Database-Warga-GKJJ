@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { KeluargaForm } from '../KeluargaForm'
+import { keluargaToFormDefaults, buildKeluargaPayload } from '@/lib/keluargaPayload'
 import { WargaForm, type WargaFormData } from '../../warga/WargaForm'
 import { cn, nomorWarga } from '@/lib/utils'
 
@@ -39,7 +40,7 @@ export default function KeluargaDetailPage() {
   const canEdit = isRole('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK')
 
   async function handleEditKK(formData: any) {
-    await update.mutateAsync({ id: Number(id), data: formData })
+    await update.mutateAsync({ id: Number(id), data: buildKeluargaPayload(formData) })
     setEditOpen(false)
   }
 
@@ -410,20 +411,7 @@ export default function KeluargaDetailPage() {
         size="lg"
       >
         <KeluargaForm
-          defaultValues={{
-            dataStatus: keluarga.dataStatus,
-            kelompokId: keluarga.kelompokId,
-            kepalakeluargaId: keluarga.kepalakeluargaId,
-            alamat: keluarga.alamat,
-            rt: keluarga.rt,
-            rw: keluarga.rw,
-            kelurahan: keluarga.kelurahan,
-            kecamatan: keluarga.kecamatan,
-            kota: keluarga.kota,
-            kodePos: keluarga.kodePos,
-            teleponRumah: keluarga.teleponRumah,
-            catatan: keluarga.catatan,
-          }}
+          defaultValues={keluargaToFormDefaults(keluarga)}
           wargas={keluarga.wargas ?? []}
           onSubmit={handleEditKK}
           submitLabel="Update Keluarga"

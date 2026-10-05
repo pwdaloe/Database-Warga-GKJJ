@@ -3,6 +3,33 @@
 
 ---
 
+## [2026-10-05 23:45 WIB] — Sprint 9/9 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Senin, 5 Oktober 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 9 Selesai: Penomoran KK Aman, Form Keluarga Satu Jalur, Tes Stabil
+- `createKeluarga`: nomor KK = `KLG` + ID baris dalam transaksi (sebelumnya `KLG` + `count()+1` → duplikat/500 setelah ada KK terhapus
+  atau dua permintaan bersamaan; kolom `nomor_keluarga` `@unique`). Konsisten dengan `warga.service` dan `import.ts`; nomor lama tidak bentrok
+  (nomor lama ≤ ID barisnya < ID baru). 5 tes baru; **mutation check** (kembali ke `count()`) membuat 5 tes gagal
+- Form Keluarga satu jalur: `keluargaToFormDefaults`/`buildKeluargaPayload` (`apps/web/src/lib/keluargaPayload.ts`) dipakai `keluarga/page.tsx`
+  dan `keluarga/[id]/page.tsx`; string kosong sekarang tersimpan `NULL` (sebelumnya `''`); tes round-trip + paritas skema ↔ nilai awal
+  (mutation check: hapus satu field → 3 tes gagal)
+- Tes API stabil: `retry: 2` di `apps/api/vitest.config.ts`. **Akar flake**: supertest membuka server sementara per permintaan →
+  `socket hang up` saat mesin sibuk (direproduksi 1 dari 4 run paralel; setelah retry 10 dari 10 run paralel lulus). Bukan bug aplikasi.
+  Kegagalan deterministik tetap gagal 3x
+- `.gitignore`: `docs/final-import-*.xlsx` (file lokal berisi data pengguna); file asli tidak diubah
+- Total tes: API 187 → 192, web 101 → 106; `type-check` dan `build` bersih di kedua workspace
+- Commit: lihat riwayat git (sprint 9)
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+- Tidak ada blocker baru. Catatan: KK yang sudah ada dengan `kelompokId` kosong lolos validasi API (`kelompokId` opsional) walau form mewajibkan pilih kelompok —
+  tidak diubah di sprint ini (LOW)
+- Tampilan di perangkat nyata (bar pembaruan, form Keluarga) masih hanya terverifikasi lewat tes & build
+
+---
+
 ## [2026-10-05 22:30 WIB] — Sprint 8/8 | ✅ DONE
 
 **Project**: Database Warga GKJJ

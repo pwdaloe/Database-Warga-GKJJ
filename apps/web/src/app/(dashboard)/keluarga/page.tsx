@@ -10,6 +10,7 @@ import { KeluargaForm } from './KeluargaForm'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { keluargaToFormDefaults, buildKeluargaPayload } from '@/lib/keluargaPayload'
 
 export default function KeluargaPage() {
   const { isRole } = useAuth()
@@ -43,11 +44,11 @@ export default function KeluargaPage() {
 
   async function handleSubmit(formData: any) {
     if (editData) {
-      await update.mutateAsync({ id: editData.id, data: formData })
+      await update.mutateAsync({ id: editData.id, data: buildKeluargaPayload(formData) })
       setModalOpen(false)
       setEditData(null)
     } else {
-      const keluargaBaru = await create.mutateAsync(formData)
+      const keluargaBaru = await create.mutateAsync(buildKeluargaPayload(formData))
       setModalOpen(false)
       router.push(`/keluarga/${keluargaBaru.id}`)
     }
@@ -325,20 +326,7 @@ export default function KeluargaPage() {
         size="lg"
       >
         <KeluargaForm
-          defaultValues={editData ? {
-            dataStatus: editData.dataStatus,
-            kelompokId: editData.kelompokId,
-            kepalakeluargaId: editData.kepalakeluargaId,
-            alamat: editData.alamat,
-            rt: editData.rt,
-            rw: editData.rw,
-            kelurahan: editData.kelurahan,
-            kecamatan: editData.kecamatan,
-            kota: editData.kota,
-            kodePos: editData.kodePos,
-            teleponRumah: editData.teleponRumah,
-            catatan: editData.catatan,
-          } : undefined}
+          defaultValues={editData ? keluargaToFormDefaults(editData) : undefined}
           wargas={editData?.wargas ?? []}
           onSubmit={handleSubmit}
           submitLabel={editData ? 'Update Keluarga' : 'Simpan Keluarga'}

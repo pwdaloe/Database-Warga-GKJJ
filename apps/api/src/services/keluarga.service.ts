@@ -110,17 +110,19 @@ export async function createKeluarga(body: KeluargaBody, userId: number, user?: 
   // Penatua hanya boleh membuat KK di kelompoknya sendiri
   if (user) assertKelompokPenatua(user, body.kelompokId, 'Hanya dapat membuat keluarga di kelompok Anda sendiri')
 
-  const count = await prisma.keluarga.count()
-  const nomorKeluarga = `KLG${String(count + 1).padStart(5, '0')}`
-
-  return prisma.keluarga.create({
-    data: {
-      ...body,
-      nomorKeluarga,
-      createdBy: userId,
-      updatedBy: userId,
-    } as Prisma.KeluargaUncheckedCreateInput,
-    include: keluargaInclude,
+  // Nomor berbasis ID baris (sama dengan warga.service & import): unik dan bebas race.
+  // Sebelumnya KLG+count()+1 bentrok bila ada KK terhapus / dua permintaan bersamaan (kolom @unique → 500).
+  return prisma.$transaction(async (tx) => {
+    const keluarga = await tx.keluarga.create({
+      data: {
+        ...body,
+        createdBy: userId,
+        updatedBy: userId,
+      } as Prisma.KeluargaUncheckedCreateInput,
+    })
+    const nomorKeluarga = `KLG${String(keluarga.id).padStart(5, '0')}`
+    await tx.keluarga.update({ where: { id: keluarga.id }, data: { nomorKeluarga } })
+    return tx.keluarga.findUniqueOrThrow({ where: { id: keluarga.id }, include: keluargaInclude })
   })
 }
 

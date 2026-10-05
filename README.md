@@ -235,8 +235,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 16 | 187 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem) |
-| Frontend (`apps/web`) | 13 | 101 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner) |
+| Backend (`apps/api`) | 16 | 192 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem, penomoran KK) |
+| Frontend (`apps/web`) | 14 | 106 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner, round-trip form Keluarga) |
 
 ```bash
 npm run test --workspace=apps/api

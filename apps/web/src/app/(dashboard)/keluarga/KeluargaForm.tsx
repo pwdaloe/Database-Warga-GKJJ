@@ -35,6 +35,9 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
+/** Diekspor untuk tes paritas field (lihat keluargaPayload.roundtrip.test.tsx) */
+export const keluargaFormSchema = schema
+
 interface WargaOption {
   id: number
   namaLengkap: string

@@ -15,3 +15,6 @@ coverage
 
 # Artefak build TypeScript (berubah di setiap tsc/next build)
 *.tsbuildinfo
+
+# File impor pengguna lokal (berisi data & kredensial awal) — jangan ter-commit tidak sengaja
+docs/final-import-*.xlsx

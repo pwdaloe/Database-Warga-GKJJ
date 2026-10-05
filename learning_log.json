@@ -101,6 +101,18 @@
       "tasks_total": 6,
       "tasks_done": 6,
       "completion_pct": 100
+    },
+    {
+      "number": 9,
+      "name": "Penomoran KK Aman, Form Keluarga Satu Jalur, Tes Stabil",
+      "commit": "(lihat git)",
+      "status": "done",
+      "blockers_count": 0,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 5,
+      "tasks_done": 5,
+      "completion_pct": 100
     }
   ],
   "recurring_blockers": [
@@ -245,7 +257,17 @@
       "severity": "MED",
       "first_seen": "Sprint 8",
       "last_seen": "Sprint 8",
-      "resolved": false
+      "resolved": true,
+      "note": "Sprint 9: createKeluarga berbasis ID baris dalam transaksi + 5 tes (mutation check terbukti)."
+    },
+    {
+      "item": "Flake tes API: supertest `socket hang up` saat mesin sibuk (import.route.test)",
+      "occurrences": 2,
+      "severity": "LOW",
+      "first_seen": "Maintenance 2026-10-05",
+      "last_seen": "Sprint 9",
+      "resolved": true,
+      "note": "Direproduksi 1/4 run paralel; retry:2 di vitest.config.ts -> 10/10 run paralel lulus. Bukan bug aplikasi."
     }
   ],
   "skill_improvement_candidates": [
