@@ -73,7 +73,7 @@ Baca semua port yang dipakai project dari `docker-compose.yml`, lalu cek apakah 
 
 ```bash
 # Port dari docker-compose
-grep -E "^\s+- \"[0-9]+:" docker-compose.yml 2>/dev/null | grep -o '[0-9]*:[0-9]*' | while read mapping; do
+grep -E "^\s+- \"?[0-9]+:" docker-compose.yml 2>/dev/null | grep -o '[0-9]*:[0-9]*' | while read mapping; do
   host_port=$(echo $mapping | cut -d: -f1)
   container_port=$(echo $mapping | cut -d: -f2)
   
@@ -220,6 +220,30 @@ BEHIND=$(git rev-list HEAD..@{u} 2>/dev/null | wc -l | tr -d ' ')
 [ "$BEHIND" -gt 0 ] && echo "⚠️  $BEHIND commit baru di remote, perlu pull"
 [ "$AHEAD" -eq 0 ] && [ "$BEHIND" -eq 0 ] && echo "Remote sync OK ✅"
 ```
+
+## Langkah 8b — Pre-Flight Deploy VPS (jika tugasnya menyiapkan/memeriksa deploy ke VPS)
+
+Alur deploy produksi (`deploy/2-deploy.sh`) berjalan **dari root repo di server**, dengan **PM2 sebagai root**
+sedangkan git/npm/build sebagai user aplikasi (`gkjj`). Campuran ini menimbulkan 4 kegagalan berulang
+(daemon PM2 hantu, `.git` milik root, `package-lock.json` ditimpa `npm install`, `.next` milik root → `EACCES`).
+Pastikan hal berikut **sebelum** menyarankan perintah deploy ke pengguna (perintah dijalankan pengguna di VPS):
+
+```bash
+cd /var/www/gkjj
+git status --short                                   # harus kosong; jika hanya package-lock.json → sudo -u gkjj git checkout -- package-lock.json
+find . -user root -not -path './node_modules/*' -not -path './.git/*' | head   # file milik root = calon EACCES / permission error
+ls -ld .git apps/web/.next apps/api/dist             # pemilik harus gkjj
+command -v pg_dump pg_restore && pg_dump --version   # versi klien >= versi server PostgreSQL
+```
+
+Aturan yang harus disampaikan ke pengguna:
+- Deploy hanya lewat `bash deploy/2-deploy.sh prod`; **jangan** `git pull` / `npm install` / `npm audit fix` manual sebagai root.
+- Script harus membuat backup (`[INFO] Backup OK`) sebelum `prisma db push`; jika backup gagal, deploy berhenti —
+  jangan langsung pakai `SKIP_BACKUP=1`, selidiki dulu. Salin file `.dump` ke luar VPS secara berkala.
+- Setelah deploy: `pm2 list` (gkjj-api & gkjj-web online), cek satu halaman produksi, dan jangan tutup blocker
+  deploy sebelum satu deploy nyata lolos tanpa error izin.
+
+<!-- improved: pre-flight deploy VPS (kepemilikan file, git status, backup) — retro 2026-10-05, blocker deploy 4x HIGH (2026-10-05) -->
 
 ## Langkah 9 — Tulis DEVOPS_STATUS.md
 

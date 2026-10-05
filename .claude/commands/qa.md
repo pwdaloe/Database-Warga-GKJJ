@@ -195,6 +195,36 @@ Untuk `apps/api/src/services/*.service.ts` yang berisi logic murni (mis. `import
 
 Project ini **tidak** pakai database test beneran atau `conftest` — semua Prisma call di-mock dengan `vi.mock('../../src/utils/prisma.js', ...)` per file test (lihat `apps/api/tests/services/auth.service.test.ts` sebagai referensi paling lengkap). Untuk test yang butuh token JWT valid, set `process.env.JWT_SECRET` di `beforeAll` (lihat `auth.route.test.ts` baris 26-28) lalu generate token dengan helper yang sama seperti dipakai `auth.service.ts`.
 
+### 4.3b — Tes Round-Trip (WAJIB untuk form, redaksi per peran, dan import)
+
+Pola mock di 4.3 menguji **satu lapisan**. Bug paling mahal di project ini (kini 8x, HIGH) lolos justru
+karena tiap lapisan lulus sendiri-sendiri tetapi alurnya salah: data tersimpan terhapus saat role terbatas
+mengedit, field tampil di form tetapi dibuang saat simpan, form detail tidak memuat field yang ada di server.
+Untuk setiap fitur yang **menyimpan data dari form** atau **menyaring field per peran**, tulis tes alur utuh:
+
+**Backend — store in-memory, kode service asli** (contoh: `apps/api/tests/services/warga.roundtrip.test.ts`):
+1. Mock `prisma.<model>` dengan store stateful (`findUnique` mengembalikan baris, `update` melakukan `Object.assign`).
+2. Untuk **setiap peran** (`describe.each` atas semua role yang boleh mengedit): baca via service → bentuk payload
+   *seperti form mengirimnya* (field yang tidak terlihat peran itu = `null`) → panggil service update → assert
+   store: field yang diedit **berubah**, field lain (terutama yang tersembunyi) **tidak berubah**.
+3. Assert matriks redaksi (terlihat/tersembunyi per peran) dan hak **hapus vs ubah** (admin boleh mengosongkan,
+   role terbatas hanya boleh mengisi).
+4. **Mutation check wajib**: matikan sementara proteksi di service, tes HARUS gagal; lalu kembalikan.
+   Tes yang tetap lulus tanpa proteksi berarti tidak menguji apa-apa.
+
+**Frontend — paritas defaults ↔ payload** (contoh: `apps/web/src/lib/wargaPayload.roundtrip.test.tsx`):
+1. Pakai objek bentuk respons API dengan **semua** field terisi (foto, alamat, koordinat, tanggal ISO, dst.).
+2. Render form dengan nilai awal dari helper bersama, submit tanpa mengubah apa pun, lalu bandingkan payload
+   dengan data asal untuk setiap field.
+3. Ekspor skema form dan assert bahwa **setiap field skema dipetakan** oleh helper nilai awal — tes gagal bila
+   ada field baru ditambah ke form tetapi lupa dipetakan.
+4. Pemetaan nilai awal dan penyusunan payload harus berada di **satu helper bersama**, bukan diduplikasi per halaman.
+
+**Import/serialisasi**: gunakan fixture file realistis (kolom bertipe Number, tanggal, sel kosong, teks panjang),
+bukan string sintetis; uji juga serialisasi tipe `BigInt`/`Date` ke JSON.
+
+<!-- improved: tambah pola tes round-trip + mutation check — retro 2026-10-05, blocker "bug data-nyata lolos dari test" 8x HIGH, kandidat qa.md pending sejak retro 2026-10-03 (2026-10-05) -->
+
 ### 4.4 — Tulis Test Frontend (Vitest + React Testing Library)
 
 Untuk setiap komponen penting di `apps/web` yang belum tercover (pola sudah ada di `apps/web/src/components/ui/Badge.test.tsx` dan `Pagination.test.tsx`):

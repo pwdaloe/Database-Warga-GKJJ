@@ -10,6 +10,7 @@ Kamu adalah seorang Senior UX Engineer yang memperbaiki kualitas pengalaman peng
 /ux loading    → Tambah skeleton screens / loading states
 /ux error      → Error boundaries + pesan error yang ramah user
 /ux bilingual  → Audit teks UI, tambah/perbaiki bilingual (ID/EN)
+/ux responsive → Jadikan halaman nyaman di smartphone (tabel→kartu, target sentuh 44px, input 16px, modal bottom-sheet)
 /ux audit      → Jalankan semua pengecekan UX, buat laporan tanpa mengubah kode
 ```
 
@@ -29,9 +30,16 @@ Lalu scan struktur frontend:
 
 ```bash
 # Temukan semua pages/routes
+# Monorepo Next.js App Router (project ini): apps/web/src/app/**/page.tsx
+find apps/web/src/app -name "page.tsx" 2>/dev/null | sort
 find frontend/src/pages -name "*.tsx" 2>/dev/null | sort
 find src/pages -name "*.tsx" 2>/dev/null | sort
 find src/views -name "*.tsx" 2>/dev/null | sort
+
+# Simpan direktori frontend yang ditemukan sebagai PAGES_DIR untuk semua grep di bawah
+# (jangan hardcode frontend/src/pages — di monorepo ini hasilnya selalu 0 dan audit jadi kosong)
+for d in apps/web/src/app frontend/src/pages src/pages src/views; do [ -d "$d" ] && PAGES_DIR="$d" && break; done
+echo "PAGES_DIR=$PAGES_DIR"
 
 # Temukan AppShell / layout utama
 find . -name "AppShell*" -o -name "Layout*" -o -name "Shell*" 2>/dev/null | grep -v node_modules | grep src
@@ -52,17 +60,17 @@ Tentukan **subcommand** yang diminta dari argumen pemanggilan. Simpan sebagai `S
 Sebelum mengerjakan subcommand apapun, lakukan audit cepat:
 
 ```bash
-# Cek empty states yang sudah ada
-grep -r "empty\|kosong\|belum ada\|no data\|No data" frontend/src/pages/ 2>/dev/null | wc -l
+# Cek empty states yang sudah ada  (gunakan $PAGES_DIR dari Langkah 1)
+grep -r "empty\|kosong\|belum ada\|no data\|No data" ${PAGES_DIR:-frontend/src/pages}/ 2>/dev/null | wc -l
 
 # Cek loading states
-grep -r "isLoading\|loading\|skeleton\|Skeleton" frontend/src/pages/ 2>/dev/null | wc -l
+grep -r "isLoading\|loading\|skeleton\|Skeleton" ${PAGES_DIR:-frontend/src/pages}/ 2>/dev/null | wc -l
 
 # Cek error handling di pages
-grep -r "catch\|error\|Error\|onError" frontend/src/pages/ 2>/dev/null | wc -l
+grep -r "catch\|error\|Error\|onError" ${PAGES_DIR:-frontend/src/pages}/ 2>/dev/null | wc -l
 
 # Cek teks bilingual (ID/EN marker)
-grep -rn "/ " frontend/src/pages/ 2>/dev/null | grep -E "(Bahasa|English|EN|ID)" | wc -l
+grep -rn "/ " ${PAGES_DIR:-frontend/src/pages}/ 2>/dev/null | grep -E "(Bahasa|English|EN|ID)" | wc -l
 ```
 
 Catat hasilnya. Gunakan ini untuk menentukan area yang paling perlu perhatian.
@@ -427,6 +435,39 @@ Jalankan semua scan dari langkah 3B.1, 3C.1, 3D.1, 3E.1 secara berurutan.
 ```
 
 ---
+
+## Langkah 3G — Subcommand: `responsive`
+
+**Tujuan**: halaman nyaman dipakai dari browser smartphone (360–430px) tanpa perlu versi `/m` terpisah.
+
+### 3G.1 — Audit cepat (hitung sebelum mengubah)
+
+```bash
+D=${PAGES_DIR:-apps/web/src/app}
+echo "Tabel tanpa versi kartu mobile:"; grep -rln "<table" $D | xargs grep -L "md:hidden" 2>/dev/null
+echo "Input tanpa font 16px (iOS zoom):"; grep -rn "text-sm" $D --include=*.tsx | grep -E "<input|<select|<textarea" | grep -v "text-base" | wc -l
+echo "Grid form 2 kolom tanpa breakpoint:"; grep -rn "grid-cols-2" $D --include=*.tsx | grep -v "sm:grid-cols-2\|md:grid-cols-2" | wc -l
+echo "min-h-screen (gunakan min-h-dvh):"; grep -rn "min-h-screen" $D --include=*.tsx | wc -l
+```
+
+### 3G.2 — Konvensi (ikuti halaman yang sudah dikerjakan sebagai referensi)
+
+- Layout: sidebar jadi **drawer** di bawah `lg` dengan bar atas + tombol menu; padding `p-4 sm:p-6 lg:p-8`; judul `text-xl sm:text-2xl`.
+- Tabel lebar: di bawah `md` tampilkan **daftar kartu** (`md:hidden`), tabel dibungkus `hidden md:block overflow-x-auto`.
+  Tabel pratinjau kolom banyak boleh tetap tabel dengan `overflow-x-auto` + petunjuk geser.
+- Target sentuh **≥ 44px** (`min-h-11`) untuk tombol aksi; tombol ikon diberi `aria-label`.
+- Input/select/textarea `text-base sm:text-sm` (16px mencegah zoom iOS); **jangan** `type="number"` + `inputMode="decimal"` untuk
+  nilai bertanda minus (keypad desimal iOS tanpa tanda minus) — pakai `type="text"` dan parse manual.
+- Grid form `grid-cols-1 sm:grid-cols-2`; `col-span-2` di dalamnya → `sm:col-span-2` (tanpa prefix membuat kolom implisit).
+- Modal sebagai **bottom-sheet** di HP; footer form `flex-col-reverse sm:flex-row`, tombol `w-full sm:w-auto`; footer submit form panjang `sticky bottom-0`.
+- `min-h-dvh` (bukan `min-h-screen`) untuk halaman auth.
+
+### 3G.3 — Verifikasi
+
+`tsc`, tes, dan `build` harus bersih. Verifikasi tampilan **dengan tangkapan layar/perangkat nyata** (sebut keterbatasannya
+jika tidak ada browser tool) — jangan klaim "sudah nyaman" hanya dari lolosnya tes.
+
+<!-- improved: path monorepo apps/web/src/app + subcommand responsive — retro 2026-10-05: ux.md memakai frontend/src/pages sehingga audit kosong & tidak ada panduan mobile (2026-10-05) -->
 
 ## Langkah 4 — Type Check & Lint
 

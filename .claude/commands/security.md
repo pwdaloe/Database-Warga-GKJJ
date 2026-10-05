@@ -92,6 +92,21 @@ Flagging endpoint yang tidak punya auth dependency tapi nama/path-nya sensitif (
 
 ---
 
+### 3x. Konsistensi Scoping & Redaksi (cek lintas endpoint)
+
+Untuk setiap role yang dibatasi per kelompok/milik sendiri (mis. `PENATUA_KELOMPOK`), periksa **semua jalur**, bukan
+satu endpoint:
+- **Fail-closed**: role terbatas tanpa atribut pembatas (mis. tanpa `kelompokId`) harus melihat **kosong / 403**,
+  bukan semua data. Cari pola `if (role === X && user.kelompokId) { batasi } else { semua }` — itu fail-open.
+- **Baca DAN tulis**: filter di list/detail tidak cukup; periksa create/update/pindah (mis. `keluargaId`/`kelompokId`
+  dari body) agar role terbatas tidak bisa menulis ke data di luar cakupannya. UI yang mengunci pilihan bukan kontrol keamanan.
+- **Matriks redaksi vs endpoint turunan**: bandingkan fungsi penyaring field (mis. `sanitizeForRole`) dengan endpoint
+  lain yang mengirim field sama (peta/dashboard, ekspor, kartu publik) — field yang disembunyikan di satu tempat tidak
+  boleh bocor di tempat lain.
+- **Tulis-balik nilai tersaring**: pastikan nilai `null` hasil redaksi yang dikirim balik oleh form tidak menimpa data tersimpan.
+
+<!-- improved: cek konsistensi fail-closed/tulis/redaksi lintas endpoint — retro 2026-10-05: penatua bisa menulis ke kelompok lain, koordinat bocor di peta, nilai redaksi menimpa data (2026-10-05) -->
+
 ## Langkah 4 — Audit Input Validation & Injection
 
 ### 4a. SQL Injection
@@ -181,6 +196,26 @@ for k,v in sorted(deps.items()):
 Flag dependency yang:
 - Tidak punya versi lock (`*` atau `latest`)
 - Versi sangat lama untuk package yang relevan security (axios, jsonwebtoken, dll)
+
+### Node/npm (monorepo apps/api + apps/web) — kebijakan audit
+
+```bash
+npm audit --omit=dev            # fokus: apa yang benar-benar berjalan di production
+npm audit                       # ringkasan penuh; temuan dev-only (tailwind, eslint, vitest) boleh ditunda
+```
+
+Kebijakan:
+- Pisahkan temuan **production** vs **dev-only**; laporkan jumlah keduanya dan paket langsung vs transitif.
+- Jalankan perbaikan **di mesin pengembangan**, di branch terpisah, lalu `type-check` + tes + `build` sebelum push.
+  **Jangan** menyarankan `npm audit fix` di server production (bug arborist `edgesOut`, mengubah lockfile & `node_modules`).
+- **Jangan pernah `npm audit fix --force`** tanpa membaca dampaknya: di repo ini memaksa Tailwind 4 dan menurunkan
+  `eslint-config-next` ke 14. Perbaikan "MAJOR" dijadwalkan sebagai sprint tersendiri.
+- Untuk paket **tanpa perbaikan** (mis. `xlsx`/SheetJS di npm): nilai eksposur nyata (siapa yang bisa memicunya?),
+  lalu pilih: terima risiko terdokumentasi, ganti paket, atau pin versi dari sumber resmi. Catat keputusan di laporan.
+- Hindari `overrides` untuk menambal transitif tanpa memeriksa `npm ls <paket>` sesudahnya (override `qs` pernah
+  menghilangkan paket dari pohon dependensi); lebih baik naikkan induknya (mis. `express`).
+
+<!-- improved: kebijakan npm audit (prod vs dev, larang --force & audit-fix di server, paket tanpa fix) — retro 2026-10-05, 31 temuan menumpuk (2026-10-05) -->
 
 ---
 

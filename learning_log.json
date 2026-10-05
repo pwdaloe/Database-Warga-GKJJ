@@ -1,6 +1,6 @@
 {
   "project": "Database Warga GKJJ",
-  "last_updated": "2026-10-03",
+  "last_updated": "2026-10-05",
   "note": "Retro 2026-10-03 (pasca Sprint 7, di luar alur /sprint): 4 fix/feat import & logs (2026-07-10) ditemukan lewat uji data nyata meski coverage import.ts 91%; relokasi folder ~/Documents -> ~/Projects + bentrok port Redis 6379; DB lokal kosong setelah relokasi (pulih via restore dump). sprints/.current_sprint = 8, belum ada sprint_08.md.",
   "sprints": [
     {
@@ -89,6 +89,18 @@
       "tasks_done": 6,
       "completion_pct": 100,
       "note": "Verifikasi UI interaktif tidak bisa dilakukan (tidak ada browser tool di sesi ini) — fallback ke verifikasi backend end-to-end via curl (server sementara di port lain) + type-check/test/build, dengan disclosure eksplisit ke user soal keterbatasan ini."
+    },
+    {
+      "number": 8,
+      "name": "Konsistensi Data & Scoping — Tes Round-Trip, Penatua Fail-Closed, Peta per Peran",
+      "commit": "(lihat git)",
+      "status": "done",
+      "blockers_count": 2,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 6,
+      "tasks_done": 6,
+      "completion_pct": 100
     }
   ],
   "recurring_blockers": [
@@ -162,13 +174,14 @@
     },
     {
       "item": "Bug data-nyata di jalur import/serialisasi lolos dari test ber-mock prisma meski coverage tinggi (Excel Number vs string, NIK plaintext di import vs terenkripsi di jalur manual, VARCHAR overflow, BigInt tak ter-serialize di /api/logs)",
-      "occurrences": 4,
+      "occurrences": 8,
       "severity": "HIGH",
       "first_seen": "2026-07-10 (pasca Sprint 7)",
-      "last_seen": "2026-07-10 (pasca Sprint 7)",
+      "last_seen": "Maintenance 2026-10-05",
       "resolved": false,
       "root_cause": "Test Sprint 6 memakai prisma mock dan input sintetis berbentuk string; tidak ada fixture Excel nyata, tidak ada paritas-check antar jalur tulis (import vs manual), dan tidak ada test serialisasi JSON untuk tipe BigInt/Decimal.",
-      "escalation_note": "4 bug dalam satu hari = >=3x. Wajib jadi task sprint nyata (Sprint 8), bukan rekomendasi naratif."
+      "escalation_note": "4 bug dalam satu hari = >=3x. Wajib jadi task sprint nyata (Sprint 8), bukan rekomendasi naratif.",
+      "note": "Eskalasi retro 2026-10-03 (wajib jadi task Sprint 8) tidak ditindaklanjuti; 4 kejadian baru: koordinat/NIK terhapus saat edit role terbatas, alamat KK dibuang, form detail tanpa foto/alamat/koordinat, nomor WRG vs Induk tidak konsisten. Perbaikan kode sudah dibuat (helper bersama + tes), tetapi qa.md belum diubah. [Sprint 8 2026-10-05: tes round-trip API per peran + form (paritas skema) ditambahkan dan terbukti gagal saat proteksi dimatikan; qa.md masih menunggu /improve. Resolved setelah qa.md diubah.] [/improve 2026-10-05: qa.md 4.3b dan review.md diperbarui; resolved ditandai setelah satu siklus tanpa kejadian baru.]"
     },
     {
       "item": "Port host docker-compose bentrok dengan service lokal lain (Redis 6379 vs Redis Homebrew); sebelumnya Postgres 5433 (HIGH)",
@@ -189,6 +202,50 @@
       "resolved": true,
       "root_cause": "Belum diketahui pasti mengapa volume kosong; baseline rowcount memakai statistik perkiraan, bukan count(*).",
       "resolution": "Restore dari dump pra-relokasi; verifikasi count(*) warga=76, users=26 sama dengan isi dump."
+    },
+    {
+      "item": "Alur deploy VPS rapuh: campuran kepemilikan root vs gkjj (daemon PM2 hantu, .git milik root, package-lock ditimpa npm install 2x, .next milik root → EACCES saat build)",
+      "occurrences": 4,
+      "severity": "HIGH",
+      "first_seen": "Maintenance 2026-10-05",
+      "last_seen": "Maintenance 2026-10-05",
+      "resolved": false,
+      "note": "Perbaikan di deploy/2-deploy.sh (9d1db86, 0b7bd0e) sudah di-push; resolved setelah satu deploy nyata lolos tanpa error izin."
+    },
+    {
+      "item": "Pekerjaan di luar alur /sprint tanpa entry CHANGELOG (15 commit batch ini; 4 commit pada retro sebelumnya)",
+      "occurrences": 2,
+      "severity": "MED",
+      "first_seen": "Pasca Sprint 7 (2026-07-10)",
+      "last_seen": "Maintenance 2026-10-05",
+      "resolved": false,
+      "note": "Naik ke eskalasi bila terjadi lagi (>=3x)."
+    },
+    {
+      "item": "Kerentanan dependensi menumpuk tanpa audit berkala (31 temuan: 1 critical Next, nodemailer, xlsx tanpa fix)",
+      "occurrences": 1,
+      "severity": "MED",
+      "first_seen": "Maintenance 2026-10-05",
+      "last_seen": "Maintenance 2026-10-05",
+      "resolved": false,
+      "note": "Production 14 -> 6, tanpa critical. Sisa: next/postcss (Next 16), prisma/deepmerge-ts (Prisma 8), uuid via exceljs. xlsx diganti exceljs (.xls tak didukung)."
+    },
+    {
+      "item": "Scoping Penatua tanpa kelompok tidak konsisten: dashboard fail-closed, /warga & /keluarga fail-open; peta dashboard menampilkan koordinat ke semua role (kebijakan PDP menyembunyikan)",
+      "occurrences": 1,
+      "severity": "MED",
+      "first_seen": "Maintenance 2026-10-05",
+      "last_seen": "Maintenance 2026-10-05",
+      "resolved": false,
+      "note": "Kebijakan koordinat sudah diputuskan (semua role editor boleh); scoping fail-closed di /warga & /keluarga belum diseragamkan."
+    },
+    {
+      "item": "nomorKeluarga = KLG + count()+1 di createKeluarga rawan duplikat/bentrok (berbeda dari jalur warga yang memakai ID)",
+      "occurrences": 1,
+      "severity": "MED",
+      "first_seen": "Sprint 8",
+      "last_seen": "Sprint 8",
+      "resolved": false
     }
   ],
   "skill_improvement_candidates": [
@@ -302,24 +359,30 @@
     },
     {
       "skill": "qa.md",
-      "issue": "Panduan test hanya prisma-mock + input sintetis; tidak mewajibkan fixture data nyata (Excel dengan kolom numerik), test paritas antar jalur tulis (import vs manual, mis. enkripsi NIK), atau test serialisasi JSON untuk BigInt.",
-      "suggested_fix": "Tambah checklist 'bug kelas data-nyata' di qa.md: fixture xlsx realistis, uji paritas enkripsi/normalisasi antar jalur, uji JSON.stringify respons yang memuat BigInt.",
+      "issue": "Panduan test hanya prisma-mock + input sintetis; tidak mewajibkan fixture data nyata (Excel dengan kolom numerik), test paritas antar jalur tulis (import vs manual, mis. enkripsi NIK), atau test serialisasi JSON untuk BigInt. [Retro 2026-10-05: belum diterapkan setelah 2 retro; bug data-nyata kini 8x]",
+      "suggested_fix": "Tambah checklist 'bug kelas data-nyata' di qa.md: fixture xlsx realistis, uji paritas enkripsi/normalisasi antar jalur, uji JSON.stringify respons yang memuat BigInt.; wajibkan tes round-trip (simpan->muat->tampil) per peran dan uji pemetaan form<->payload",
       "priority": "HIGH",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "Tambah 4.3b: tes round-trip backend (store in-memory, per peran, mutation check) + paritas form↔payload, fixture import realistis"
     },
     {
       "skill": "pm.md / sprint.md",
-      "issue": "Commit fix/feat di luar /sprint (4 commit 2026-07-10) tidak punya entry CHANGELOG; gate commit-yatim hanya efektif untuk feat besar.",
+      "issue": "Commit fix/feat di luar /sprint (4 commit 2026-07-10) tidak punya entry CHANGELOG; gate commit-yatim hanya efektif untuk feat besar. [Retro 2026-10-05: terulang, kini 15 commit tanpa entry]",
       "suggested_fix": "Perluas deteksi commit yatim ke semua feat/fix pasca sprint terakhir dan tawarkan entry ringkas 'Maintenance' di CHANGELOG.",
       "priority": "MED",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "pm.md Langkah 5: deteksi semua commit di luar sprint → entry \"Maintenance\""
     },
     {
       "skill": "devops.md",
       "issue": "Pre-flight port hanya mengecek sebagian port; Redis 6379 bentrok dengan Redis Homebrew tanpa terdeteksi.",
       "suggested_fix": "Loop lsof untuk SEMUA port host di docker-compose.yml (bukan hanya Postgres) dan laporkan pemilik proses.",
       "priority": "MED",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "Regex port di Langkah 4 menerima port tanpa tanda kutip di docker-compose"
     },
     {
       "skill": "relocate-project (.claude/skills, belum di-commit)",
@@ -334,6 +397,51 @@
       "suggested_fix": "Jalankan sed path pada file memory ter-track dan putuskan apakah folder .claude/projects/ perlu ter-track.",
       "priority": "LOW",
       "applied": false
+    },
+    {
+      "skill": "devops.md",
+      "issue": "Tidak ada pre-flight alur VPS: kepemilikan .git/.next/dist, git status bersih sebelum pull, backup terbukti sebelum db push",
+      "suggested_fix": "Tambah cek kepemilikan file, larang git pull / npm audit fix sebagai root, verifikasi baris \"Backup OK\"",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "Tambah Langkah 8b: pre-flight deploy VPS (kepemilikan file, git status, backup, larangan git pull/npm audit fix sebagai root)"
+    },
+    {
+      "skill": "security.md",
+      "issue": "Mode deps tanpa kebijakan; tidak ada cek konsistensi fail-closed scoping dan matriks redaksi PDP vs endpoint",
+      "suggested_fix": "npm audit --omit=dev, pisahkan prod/dev, larang --force dan audit-fix di server, rencana untuk paket tanpa fix; bandingkan sanitizeForRole dengan endpoint peta/dashboard",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "Tambah kebijakan npm audit (prod vs dev, larang --force & audit-fix di server, paket tanpa fix) + bagian 3x konsistensi fail-closed/tulis/redaksi"
+    },
+    {
+      "skill": "ux.md",
+      "issue": "Path frontend/src/pages tidak cocok monorepo (apps/web/src/app); tidak ada cek responsif/mobile",
+      "suggested_fix": "Deteksi apps/web/src/app; subcommand responsive (tabel->kartu, target 44px, input 16px, modal bottom-sheet, min-h-dvh)",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "Deteksi apps/web/src/app + PAGES_DIR; subcommand baru responsive (3G)"
+    },
+    {
+      "skill": "review.md",
+      "issue": "Duplikasi pemetaan form/payload dan field yang tampil di UI tetapi dibuang saat simpan lolos review",
+      "suggested_fix": "Checklist: tiap field di form harus terkirim dan dimuat balik; pemetaan nilai awal tidak terduplikasi antar halaman",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "Tambah checklist paritas form↔payload↔muat ulang di Langkah 3"
+    },
+    {
+      "skill": "repo (.gitignore)",
+      "issue": "apps/web/tsconfig.tsbuildinfo ter-track git (noise); docs/final-import-pengguna.xlsx untracked dan kemungkinan berisi kredensial",
+      "suggested_fix": "git rm --cached tsbuildinfo + .gitignore; putuskan nasib file xlsx sebelum ter-commit",
+      "priority": "LOW",
+      "applied": true,
+      "applied_date": "2026-10-05",
+      "applied_summary": "*.tsbuildinfo masuk .gitignore dan dilepas dari git (git rm --cached); nasib docs/final-import-pengguna.xlsx menunggu keputusan pemilik"
     }
   ],
   "improvement_history": [
@@ -396,6 +504,86 @@
       "skill": "sprint.md",
       "change": "Tambah fallback verifikasi UI di Langkah 6 saat sesi tidak punya browser/screenshot tool: type-check+test+build, simulasi alur via curl, dan wajib disclosure eksplisit ke user.",
       "trigger": "RETRO finding 2026-07-09 (Sprint 6-7): Sprint 7 menangani ketiadaan browser tool dengan baik secara ad-hoc, tapi belum jadi standar baku di sprint.md"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "qa.md",
+      "change": "Tambah 4.3b: tes round-trip backend (store in-memory, per peran, mutation check) + paritas form↔payload, fixture import realistis",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "pm.md / sprint.md",
+      "change": "pm.md Langkah 5: deteksi semua commit di luar sprint → entry \"Maintenance\"",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "devops.md",
+      "change": "Regex port di Langkah 4 menerima port tanpa tanda kutip di docker-compose",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "devops.md",
+      "change": "Tambah Langkah 8b: pre-flight deploy VPS (kepemilikan file, git status, backup, larangan git pull/npm audit fix sebagai root)",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "security.md",
+      "change": "Tambah kebijakan npm audit (prod vs dev, larang --force & audit-fix di server, paket tanpa fix) + bagian 3x konsistensi fail-closed/tulis/redaksi",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "ux.md",
+      "change": "Deteksi apps/web/src/app + PAGES_DIR; subcommand baru responsive (3G)",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "review.md",
+      "change": "Tambah checklist paritas form↔payload↔muat ulang di Langkah 3",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-05",
+      "skill": "repo (.gitignore)",
+      "change": "*.tsbuildinfo masuk .gitignore dan dilepas dari git (git rm --cached); nasib docs/final-import-pengguna.xlsx menunggu keputusan pemilik",
+      "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    }
+  ],
+  "maintenance_batches": [
+    {
+      "period": "2026-10-03..2026-10-05",
+      "range": "fe362e3..adc6410 (+ perbaikan alamat KK belum di-commit)",
+      "commits": 15,
+      "fix_commits": 4,
+      "files_changed": 91,
+      "lines_added": 3710,
+      "lines_removed": 1138,
+      "tests_api": {
+        "before": 108,
+        "after": 126
+      },
+      "tests_web": {
+        "before": 22,
+        "after": 69
+      },
+      "npm_audit": {
+        "before_total": 31,
+        "after_prod": 6
+      },
+      "themes": [
+        "mobile responsive UI",
+        "dashboard scoping per kelompok",
+        "nomor induk vs WRG",
+        "search/filter pengguna",
+        "dependency security (nodemailer, express, exceljs)",
+        "deploy script hardening + pg_dump backup",
+        "koordinat & alamat KK data-loss fixes"
+      ]
     }
   ]
 }

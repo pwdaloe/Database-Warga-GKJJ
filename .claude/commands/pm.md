@@ -101,6 +101,21 @@ dari Langkah 7, supaya riwayat PM tetap lengkap.
 
 <!-- improved: deteksi commit ad-hoc yang tidak pernah dapat entry CHANGELOG — retro Sprint 4-5 (2026-07-08), Sprint 4 (PDP) dikerjakan di luar /sprint dan tidak pernah trigger laporan PM -->
 
+**Cek pekerjaan "Maintenance"** (semua jenis commit di luar `/sprint`, bukan hanya `feat`):
+
+```bash
+LAST_CHANGELOG_DATE=$(grep -m1 -oE '\[[0-9]{4}-[0-9]{2}-[0-9]{2}' CHANGELOG.md 2>/dev/null | tr -d '[')
+git log --oneline --since="${LAST_CHANGELOG_DATE:-1970-01-01}" 2>/dev/null | grep -vE "feat\(sprint-[0-9]+\)" | wc -l
+git log --oneline --since="${LAST_CHANGELOG_DATE:-1970-01-01}" 2>/dev/null | grep -vE "feat\(sprint-[0-9]+\)" | head -30
+```
+
+Jika ada ≥ 3 commit (jenis apa pun: `feat`/`fix`/`chore`/`docs`) tanpa tag `feat(sprint-N)` sejak entry CHANGELOG terakhir,
+tulis satu entry **"Maintenance"** di Langkah 7 (format sama seperti entry sprint, judul `Maintenance YYYY-MM-DD..YYYY-MM-DD`)
+yang merangkum: tema pekerjaan, jumlah commit & fix commit, perubahan jumlah tes, dan blocker baru. Retro 2026-10-05 mencatat
+pola ini terulang dua retro berturut-turut (4 commit, lalu 15 commit tanpa entry); jika terjadi lagi, naikkan ke severity HIGH.
+
+<!-- improved: jalur "Maintenance" untuk semua commit di luar sprint — retro 2026-10-05, pola terulang 2x (2026-10-05) -->
+
 ## Langkah 6 — Susun Analisis PM
 
 Berdasarkan semua data yang terkumpul, buat penilaian untuk setiap kategori:

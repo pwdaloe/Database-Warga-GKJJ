@@ -84,6 +84,21 @@ Perhatikan:
 - Missing `await` pada async database calls
 - Filter yang bisa mengembalikan data milik user lain (missing ownership check)
 
+### Paritas Form ↔ Payload ↔ Muat Ulang (untuk setiap form yang menyimpan data)
+
+Kelas bug berulang (retro 2026-10-05): field **tampil di form tetapi tidak tersimpan**, atau **tersimpan tetapi tidak
+dimuat kembali**, atau role terbatas **menimpa data dengan nilai kosong**. Untuk setiap form yang diubah/ditambah:
+- Setiap field yang ada di form: apakah ikut dikirim ke API **dan** dimuat lagi saat edit (nilai awal)? Telusuri satu field
+  dari input → payload → route (zod) → service → respons → nilai awal form.
+- Pemetaan nilai awal / penyusunan payload: apakah **terduplikasi** di beberapa halaman? Seharusnya satu helper bersama.
+- Field yang disaring per peran (mis. `sanitizeForRole`): apa yang terjadi saat form mengirim kembali `null` itu? Harus ada
+  proteksi tulis, dan tes round-trip per peran.
+- Blok UI yang hanya relevan pada kondisi tertentu (mis. "buat KK baru"): apakah juga muncul pada kondisi lain (mis. edit
+  KK yang sudah ada) sehingga pengguna mengisinya tetapi nilainya dibuang diam-diam?
+- Ada tes round-trip (lihat `/qa` bagian 4.3b)? Jika tidak, tandai sebagai temuan.
+
+<!-- improved: checklist paritas form↔payload↔muat ulang — retro 2026-10-05, 4 bug data-nyata dalam 2 hari lolos review (2026-10-05) -->
+
 ### API Contracts
 
 Untuk setiap endpoint baru/diubah:

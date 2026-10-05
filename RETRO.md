@@ -3,6 +3,99 @@
 
 ---
 
+## [2026-10-05] — Retrospektif Pasca Sprint 7 (Batch Mobile UI, Keamanan Dependensi, Deploy & Koreksi Data)
+
+**Project**: Database Warga GKJJ
+**Scope**: 15 commit `fe362e3..adc6410` + 1 perbaikan belum di-commit (alamat KK Kepala Keluarga), seluruhnya di luar alur `/sprint`
+**Reviewed**: Senin, 5 Oktober 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 0 sprint baru (`.current_sprint` = 8, `sprint_08.md` tetap belum ada) |
+| Commit sejak retro terakhir | 15 (91 file, +3710/−1138 baris) |
+| Fix commits | 4 (`4ac676b`, `d1136b9`, `9d1db86`, `adc6410`) + 1 belum di-commit |
+| Pertumbuhan tes | API 108 → 126, web 22 → 69 (+~65 tes) |
+| Unique blockers baru | 6 |
+| Recurring blockers | 3 (data-nyata 8x, deploy 4x, kerja di luar sprint 2x) |
+| Skill gap terdeteksi | 5 |
+| Temuan `npm audit` | 31 → 6 (production: 14 → 6, tanpa critical) |
+
+### 🔁 Pola Blocker Sistemik
+
+#### Bug "data-nyata lolos dari test" — kini 8x, HIGH, belum resolved, **eskalasi tidak ditindaklanjuti**
+- **Bukti sesi ini (4 kejadian baru, satu kelas masalah):**
+  1. Role terbatas (Majelis/Staf/Penatua) menerima `latitude/longitude` (dan NIK/Alamat KTP untuk Penatua) sebagai `null` dari API, form menyimpannya balik → **data tersimpan terhapus diam-diam** (`adc6410`).
+  2. Alamat Rumah Tangga (KK) untuk Kepala yang sudah punya KK tampil di form tetapi **dibuang saat simpan** dan tidak dimuat saat edit (perbaikan belum di-commit).
+  3. Form edit di Detail Warga tidak memuat foto, Alamat KTP/Domisili, dan koordinat — pemetaan nilai awal terduplikasi di dua halaman dan tidak sinkron.
+  4. Nomor warga (WRG vs No. Induk) ditampilkan tidak konsisten di 6 layar (`d1136b9`).
+- **Root cause**: tes yang ada memverifikasi lapisan terpisah (service dengan prisma di-mock, form tanpa API). Tidak ada tes alur **simpan → muat ulang → tampil** per peran, dan pemetaan field diduplikasi per layar.
+- **Eskalasi**: retro 2026-10-03 mewajibkan ini jadi **task nyata Sprint 8**; sprint itu tidak pernah dibuat, jadi bug serupa muncul lagi 4x dalam 2 hari. Rekomendasi naratif terbukti tidak cukup.
+- **Perbaikan yang sudah dikerjakan**: helper bersama `wargaToFormDefaults`/`buildWargaPayload`, redaksi + proteksi tulis di `warga.service.ts`, 40+ tes baru (termasuk tes form end-to-end).
+- **Skill yang perlu diupdate**: `qa.md` (HIGH, kandidat yang sama sudah **dua retro tidak diterapkan**), `review.md`.
+
+#### Alur deploy rapuh karena kepemilikan root vs `gkjj` — 4x, HIGH, perbaikan sudah di-push tetapi belum terbukti di deploy nyata
+- Kejadian: daemon PM2 hantu (`4ac676b`); objek `.git` milik root (`insufficient permission`); `package-lock.json` ditulis ulang `npm install` sehingga `git pull` berikutnya ditolak (2x); `.next` berisi cache milik root dari runtime PM2 sehingga build `EACCES`.
+- **Root cause**: PM2 berjalan sebagai root (disengaja), sedangkan git/npm/build berjalan sebagai `gkjj`; perintah manual sebagai root (`git pull`, `npm audit fix`) mencampur kepemilikan. Tidak ada pre-flight kepemilikan.
+- **Skill yang perlu diupdate**: `devops.md` (HIGH). Tidak ada satu pun skill yang mengenal alur VPS (`deploy/2-deploy.sh`).
+- **Status**: `9d1db86` + `0b7bd0e` menambah chown/restore lockfile/backup; **belum ada deploy sesudahnya** yang membuktikannya.
+
+#### Pekerjaan di luar `/sprint` tanpa entry CHANGELOG — 2x (retro sebelumnya 4 commit, kini 15)
+- Seluruh batch ini (fitur, keamanan, deploy) tidak punya sprint file maupun entry `/pm`. Gate commit-yatim tidak menyentuhnya.
+- **Skill**: `pm.md` / `sprint.md` (MED, belum diterapkan sejak retro lalu).
+
+#### Kerentanan dependensi menumpuk tanpa audit berkala — 1x (31 temuan), sebagian resolved
+- `npm audit fix` di server gagal (bug arborist) dan berisiko; di Mac berhasil. `xlsx` (SheetJS) tanpa perbaikan di npm → diganti `exceljs`, dengan konsekuensi `.xls` tak lagi didukung. Tersisa 6 temuan (Next/postcss, Prisma/deepmerge-ts, uuid) yang menunggu upgrade mayor.
+- **Skill**: `security.md` punya mode `deps` tetapi tidak memuat kebijakan (prod vs dev, larang `--force`, jangan di server).
+
+### 🐛 Pola Git Bermasalah
+
+- **File sering diubah ulang**: `README.md` (6x), `deploy/2-deploy.sh` (3x, tiga masalah izin berbeda), `WargaForm.tsx` (3x), `warga/[id]/page.tsx` (3x).
+- **Fix commits**: 4 dari 15 (27%). Tiga di antaranya (`d1136b9`, `adc6410`, perbaikan alamat KK) berasal dari **pemetaan data antar lapisan** yang tidak sinkron, bukan logika baru.
+- **Artefak**: `apps/web/tsconfig.tsbuildinfo` ter-track git dan selalu `M` (noise di setiap `git status`); `docs/final-import-pengguna.xlsx` dan `.claude/skills/` tetap untracked (file xlsx kemungkinan berisi kredensial awal — jangan sampai ter-commit).
+- **Flaky test**: `import.route.test.ts` (import pengguna) gagal acak sekali saat seluruh suite dijalankan; 8x ulang lulus. Dipantau, belum ada akar masalah.
+
+### 🕳️ Gap Skill Coverage
+
+- **UX/mobile**: `ux.md` memakai path `frontend/src/pages` yang tidak ada di monorepo ini (`apps/web/src/app`), sehingga auditnya kosong; tidak ada pemeriksaan responsif (tabel→kartu, target sentuh 44px, input 16px). Verifikasi tampilan hanya lewat tangkapan layar pengguna.
+- **Operasi VPS**: tidak ada skill/pre-flight untuk kepemilikan file, kebersihan `git status` sebelum pull, dan backup sebelum `db push` (kini ada di script, tetapi tidak di skill manapun).
+- **Konsistensi scoping lintas endpoint**: dashboard fail-closed untuk Penatua tanpa kelompok, sedangkan `/warga` dan `/keluarga` menampilkan semua data (fail-open). Tidak ada skill yang memeriksa konsistensi ini.
+- **Kebijakan PDP vs perilaku nyata**: peta dashboard menampilkan koordinat ke semua role padahal kebijakan menyembunyikannya; baru ketahuan dari laporan pengguna. `security.md`/`eval.md` tidak membandingkan matriks redaksi dengan endpoint.
+- **Kerja di luar sprint**: tidak ada jalur "Maintenance" resmi.
+
+### ✅ Yang Berjalan Baik
+
+- **Setiap perbaikan disertai tes** (+~65 tes); tes regresi untuk koordinat, alamat KK, dan proteksi tulis.
+- **Dua kali kegagalan hipotesis dicatat jujur**: override `qs` merusak pohon dependensi dan dibatalkan; uji "password salah" di Postgres lokal tidak valid (autentikasi `trust`) dan diulang dengan skenario lain.
+- **Backup `pg_dump` otomatis** diuji termasuk jalur gagal, retensi, dan izin sebelum di-push.
+- **Subagen paralel dengan kepemilikan file terpisah** (4 agen, 25 file) selesai tanpa konflik; hasil gabungan diverifikasi ulang (`tsc`, tes, build).
+- **Fail-closed pada scoping dashboard** dan pengujian peran (`dashboardScope.test.ts`).
+- **Konfirmasi sebelum langkah berisiko**: keputusan `/m/*`, kebijakan koordinat, dan pilihan `xlsx` diminta ke pemilik; hasil audit produksi tidak langsung dipakai `--force`.
+
+### 🔧 Kandidat Perbaikan Skill
+
+| Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
+|-----------|-----------|---------|-----------------|--------|
+| HIGH | qa.md | Hanya pola prisma-mock + input sintetis; 2 retro belum diterapkan; bug data-nyata kini 8x | Wajibkan tes **round-trip** (simpan → muat → tampil) per peran, fixture xlsx realistis, uji pemetaan form↔payload, serialisasi BigInt | ✅ applied (2026-10-05) — tsbuildinfo; 📋 xlsx menunggu keputusan pemilik |
+| HIGH | devops.md | Tidak ada pre-flight alur VPS | Cek kepemilikan `.git`/`.next`/`dist`, `git status` bersih sebelum pull, backup terbukti sebelum `db push`, larang `npm audit fix`/`git pull` sebagai root | ✅ applied (2026-10-05) |
+| MED | security.md | Mode `deps` tanpa kebijakan | `npm audit --omit=dev`, pisahkan prod/dev, larang `--force` & audit-fix di server, rencana untuk paket tanpa fix; cek konsistensi fail-closed scoping & matriks redaksi PDP vs endpoint | ✅ applied (2026-10-05) |
+| MED | ux.md | Path `frontend/src/pages` salah untuk monorepo; tidak ada cek mobile | Deteksi `apps/web/src/app`; subcommand `responsive` (tabel→kartu, target 44px, input 16px, modal bottom-sheet, `min-h-dvh`) | ✅ applied (2026-10-05) |
+| MED | pm.md / sprint.md | Kerja di luar sprint tanpa entry (kini 2 retro berturut-turut) | Jalur "Maintenance": entry CHANGELOG otomatis dari `git log` sejak retro terakhir | ✅ applied (2026-10-05) |
+| MED | review.md | Duplikasi pemetaan form/payload lolos review | Checklist: field yang tampil di UI harus ikut terkirim dan dimuat balik; pemetaan nilai awal tidak boleh terduplikasi | ✅ applied (2026-10-05) |
+| LOW | .gitignore / repo | `tsconfig.tsbuildinfo` ter-track; `docs/final-import-pengguna.xlsx` untracked | `git rm --cached` + `.gitignore`; tentukan nasib file xlsx (kemungkinan kredensial) | ✅ applied (2026-10-05) — tsbuildinfo; 📋 xlsx menunggu keputusan pemilik |
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. **Buat `sprints/sprint_08.md` sekarang dan masukkan task nyata** (bukan rekomendasi): (a) tes round-trip per peran untuk form Warga & Keluarga, (b) seragamkan scoping Penatua tanpa kelompok di `/warga` & `/keluarga`, (c) putuskan kebijakan koordinat di peta dashboard. Ini menutup eskalasi yang gagal ditindaklanjuti pada retro 2026-10-03.
+2. **Verifikasi deploy berikutnya** sebagai gate: pull tanpa error izin, build tanpa `EACCES`, baris `Backup OK` muncul, file `.dump` tersalin ke luar VPS. Ubah blocker deploy menjadi resolved hanya setelah itu.
+3. **Jalankan `/improve`** untuk menerapkan kandidat HIGH (`qa.md`, `devops.md`) — keduanya sudah menimbulkan insiden nyata.
+4. **Jadwalkan upgrade Next 16 + Prisma 8** sebagai sprint tersendiri (menutup sisa 6 temuan `npm audit`), bukan `--force`.
+5. **Rapikan artefak repo**: lepas `tsconfig.tsbuildinfo` dari git; pastikan `docs/final-import-pengguna.xlsx` tidak pernah di-commit.
+
+---
+
 ## [2026-10-03] — Retrospektif Pasca Sprint 7 (Maintenance Import/Logs & Relokasi Folder)
 
 **Project**: Database Warga GKJJ
