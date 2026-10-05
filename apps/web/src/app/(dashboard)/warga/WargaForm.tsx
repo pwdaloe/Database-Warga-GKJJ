@@ -8,6 +8,7 @@ import { Loader2, User, Award, Phone, Users, Crown, MapPin, UserPlus, Camera, X 
 import { InputField, SelectField, TextareaField } from '@/components/ui/FormField'
 import { useWilayahKelompok, useKeluargaList, useKeluargaDetail } from '@/hooks/useKeluarga'
 import { cn } from '@/lib/utils'
+import { parseCoordinateInput, parseCoordinatePair } from '@/lib/koordinat'
 
 // ── Status Dokumen ─────────────────────────────────────────────
 const STATUS_DOKUMEN = [
@@ -74,8 +75,12 @@ const schema = z.object({
   fotoUrl:            z.string().optional().nullable(),
   alamatKtp:          z.string().optional().nullable(),
   alamatDomisili:     z.string().optional().nullable(),
-  latitude:           z.number().optional().nullable(),
-  longitude:          z.number().optional().nullable(),
+  latitude:           z.number({ invalid_type_error: 'Latitude harus berupa angka, mis. -6.2088' })
+                       .min(-90, 'Latitude harus antara -90 dan 90').max(90, 'Latitude harus antara -90 dan 90')
+                       .optional().nullable(),
+  longitude:          z.number({ invalid_type_error: 'Longitude harus berupa angka, mis. 106.8456' })
+                       .min(-180, 'Longitude harus antara -180 dan 180').max(180, 'Longitude harus antara -180 dan 180')
+                       .optional().nullable(),
   catatan:            z.string().optional().nullable(),
   konsenPDP:          z.boolean().default(false),
 }).superRefine((data, ctx) => {
@@ -136,7 +141,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isSubmitted },
   } = useForm<WargaFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -174,6 +179,27 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
     () => !!(defaultValues?.alamatDomisili)
   )
 
+  // Koordinat dikelola sebagai teks agar tetap bisa diketik sebagian ("-", "-6.") dan menerima
+  // format lokal (koma desimal, tempelan "lat, lng" dari Google Maps).
+  const [latText, setLatText] = useState(() => defaultValues?.latitude != null ? String(defaultValues.latitude) : '')
+  const [lngText, setLngText] = useState(() => defaultValues?.longitude != null ? String(defaultValues.longitude) : '')
+
+  function onKoordinatChange(field: 'latitude' | 'longitude', text: string) {
+    ;(field === 'latitude' ? setLatText : setLngText)(text)
+    const p = parseCoordinateInput(text)
+    // NaN → zod menolak dengan pesan "harus berupa angka" (tidak diam-diam jadi kosong)
+    setValue(field, p.valid ? p.value : (NaN as any), { shouldValidate: isSubmitted })
+  }
+
+  function onKoordinatPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    const pair = parseCoordinatePair(e.clipboardData.getData('text'))
+    if (!pair) return
+    e.preventDefault()
+    setLatText(String(pair[0])); setLngText(String(pair[1]))
+    setValue('latitude', pair[0], { shouldValidate: isSubmitted })
+    setValue('longitude', pair[1], { shouldValidate: isSubmitted })
+  }
+
   async function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -207,6 +233,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
     if (tab === 'keanggotaan') return !!(errors.statusKeluarga || errors.statusKeanggotaan)
     if (tab === 'kontak') return !!(errors.email)
     if (tab === 'keluarga') return !!(errors.newKelompokId)
+    if (tab === 'alamat') return !!(errors.latitude || errors.longitude)
     return false
   }
 
@@ -748,30 +775,40 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               <span className="text-sm font-semibold text-gray-700">Titik Rumah</span>
               <span className="text-xs text-gray-400">Koordinat Google Maps</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Latitude</label>
                 <input
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  value={watch('latitude') ?? ''}
-                  onChange={(e) => setValue('latitude', e.target.value ? parseFloat(e.target.value) : null)}
+                  type="text"
+                  autoComplete="off"
+                  value={latText}
+                  onChange={(e) => onKoordinatChange('latitude', e.target.value)}
+                  onPaste={onKoordinatPaste}
                   placeholder="-6.2088"
-                  className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                  aria-invalid={!!errors.latitude}
+                  className={cn(
+                    'w-full px-3 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500',
+                    errors.latitude ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  )}
                 />
+                {errors.latitude && <p className="mt-1 text-xs text-red-600">{errors.latitude.message}</p>}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Longitude</label>
                 <input
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  value={watch('longitude') ?? ''}
-                  onChange={(e) => setValue('longitude', e.target.value ? parseFloat(e.target.value) : null)}
+                  type="text"
+                  autoComplete="off"
+                  value={lngText}
+                  onChange={(e) => onKoordinatChange('longitude', e.target.value)}
+                  onPaste={onKoordinatPaste}
                   placeholder="106.8456"
-                  className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                  aria-invalid={!!errors.longitude}
+                  className={cn(
+                    'w-full px-3 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500',
+                    errors.longitude ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  )}
                 />
+                {errors.longitude && <p className="mt-1 text-xs text-red-600">{errors.longitude.message}</p>}
               </div>
             </div>
             {/* Link buka maps jika sudah ada koordinat */}
@@ -791,8 +828,10 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                 <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:underline">
                   Google Maps
                 </a>
-                {' '}→ cari lokasi rumah → klik kanan → pilih{' '}
-                <strong>"What's here?"</strong> → salin angka koordinat ke field di atas.
+                {' '}→ cari lokasi rumah → klik kanan (di HP: tekan lama pada titik) → ketuk angka koordinat
+                untuk menyalinnya → tempel di kolom <strong>Latitude</strong>. Format seperti{' '}
+                <span className="font-mono">-6.2088, 106.8456</span> akan mengisi kedua kolom sekaligus.
+                Wilayah Jakarta: latitude negatif (sekitar -6), longitude sekitar 106.
               </p>
             )}
           </div>

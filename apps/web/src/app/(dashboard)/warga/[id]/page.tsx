@@ -274,12 +274,13 @@ export default function WargaDetailPage() {
           </div>
 
           {/* Keluarga ringkas */}
-          {warga.keluarga && (
+          {(warga.keluarga || (warga.latitude != null && warga.longitude != null)) && (
             <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <MapPin size={14} /> Keluarga & Wilayah
               </h2>
               <dl className="space-y-3">
+                {warga.keluarga && (<>
                 <InfoRow label="No. KK" value={warga.keluarga.nomorKeluarga} mono />
                 <InfoRow label="Kepala Keluarga" value={warga.keluarga.kepalaKeluarga?.namaLengkap} />
                 <InfoRow label="Kelompok" value={warga.keluarga.kelompok?.nama} />
@@ -297,6 +298,20 @@ export default function WargaDetailPage() {
                     .filter(Boolean)
                     .join(', ')}
                 />
+                </>)}
+                {warga.latitude != null && warga.longitude != null && (
+                  <InfoRow label="Titik Rumah">
+                    <a
+                      href={`https://www.google.com/maps?q=${warga.latitude},${warga.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-brand-600 hover:underline"
+                    >
+                      <MapPin size={13} />
+                      <span className="font-mono">{warga.latitude}, {warga.longitude}</span>
+                    </a>
+                  </InfoRow>
+                )}
               </dl>
             </div>
           )}

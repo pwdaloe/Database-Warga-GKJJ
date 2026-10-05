@@ -10,19 +10,19 @@ const FULL_ACCESS_ROLES = new Set(['SUPERADMIN', 'KEPALA_KANTOR'])
 function sanitizeForRole(warga: Record<string, any>, role: string): Record<string, any> {
   if (FULL_ACCESS_ROLES.has(role)) return warga
   const w = { ...warga }
-  // Semua role non-admin: sembunyikan koordinat rumah
-  w.latitude  = null
-  w.longitude = null
   // Role terbatas: hapus NIK + alamat KTP
   if (role === 'PENATUA_KELOMPOK' || role === 'VIEWER') {
     w.nik       = null
     w.alamatKtp = null
   }
-  // VIEWER: hapus kontak langsung
+  // VIEWER (read-only): hapus kontak langsung + koordinat rumah.
+  // Koordinat rumah boleh dilihat/diisi semua role yang dapat mengedit warga.
   if (role === 'VIEWER') {
-    w.telepon  = null
-    w.whatsapp = null
-    w.email    = null
+    w.latitude  = null
+    w.longitude = null
+    w.telepon   = null
+    w.whatsapp  = null
+    w.email     = null
   }
   return w
 }
@@ -265,6 +265,15 @@ export async function updateWarga(
     tanggalKonsenUpdate = konsenPDP
       ? (existing.konsenPDP ? undefined : new Date())
       : null
+  }
+
+  // Role yang tidak boleh MELIHAT NIK/Alamat KTP menerima nilai kosong dari form saat edit.
+  // Jangan biarkan nilai kosong itu menimpa data tersimpan (bisa mengisi/mengubah, tidak bisa menghapus).
+  if (user.role === 'PENATUA_KELOMPOK' || user.role === 'VIEWER') {
+    const d = data as Record<string, unknown>
+    for (const k of ['nik', 'alamatKtp']) {
+      if (d[k] === null || d[k] === '') delete d[k]
+    }
   }
 
   const encryptedData = {

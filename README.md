@@ -48,7 +48,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
   - **Tab Keanggotaan** — status keluarga (Kepala KK, Istri, Anak, dll.), status keanggotaan, sakramen baptis & sidi
   - **Tab Kontak** — telepon, WhatsApp, email, pendidikan, pekerjaan
   - **Tab Keluarga** — pilih/cari keluarga, atau buat keluarga baru otomatis saat warga sebagai Kepala KK (dengan validasi wajib pilih kelompok)
-  - **Tab Alamat** — Alamat KTP, Alamat Domisili (jika berbeda), koordinat GPS (latitude/longitude) dengan panduan Google Maps
+  - **Tab Alamat** — Alamat KTP, Alamat Domisili (jika berbeda), koordinat GPS (latitude/longitude). Kolom koordinat menerima desimal koma (`-6,2088`), dan menempel `-6.2088, 106.8456` dari Google Maps mengisi kedua kolom sekaligus; input tidak valid ditolak dengan pesan (rentang −90..90 / −180..180). Koordinat tampil di **Detail Warga** (tautan Google Maps) dan di peta Dashboard
 - **Foto warga** — upload foto, dikompres otomatis di browser (max 400px, JPEG 80%), disimpan sebagai base64
 - **Filter & pencarian** — cari nama, filter per wilayah, kelompok, status keanggotaan, jenis kelamin, status dokumen
 - **Status dokumen** — alur Draft → Validasi → Aktif → Tidak Aktif
@@ -228,8 +228,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 12 | 115 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok) |
-| Frontend (`apps/web`) | 6 | 29 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel) |
+| Backend (`apps/api`) | 12 | 123 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok) |
+| Frontend (`apps/web`) | 8 | 60 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -638,9 +638,9 @@ Authorization: Bearer <token>
 | `VIEWER` | ✓ | — | — | — | — | — | — | — | — | — |
 
 **Catatan field redaction (UU PDP):**
-> ¹ **MAJELIS / STAF_ADMIN** — Koordinat GPS (latitude/longitude) disembunyikan  
-> ² **PENATUA_KELOMPOK** — NIK, Alamat KTP, dan Koordinat GPS disembunyikan  
-> **VIEWER** — NIK, Alamat KTP, Koordinat GPS, Telepon, WhatsApp, dan Email disembunyikan
+> ¹ **MAJELIS / STAF_ADMIN** — melihat semua field, termasuk koordinat rumah (latitude/longitude)  
+> ² **PENATUA_KELOMPOK** — NIK dan Alamat KTP disembunyikan; koordinat rumah boleh dilihat dan diisi. Saat mengedit, nilai NIK/Alamat KTP yang kosong **tidak menimpa** data tersimpan (bisa mengisi/mengubah, tidak bisa menghapus)  
+> **VIEWER** — NIK, Alamat KTP, Koordinat GPS, Telepon, WhatsApp, dan Email disembunyikan (read-only)
 
 ---
 

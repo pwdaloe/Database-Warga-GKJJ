@@ -137,6 +137,29 @@ describe('listWarga', () => {
     expect(result.data[0].longitude).toBeNull()
   })
 
+  it.each(['MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'])(
+    'role %s (editor) boleh melihat koordinat rumah',
+    async (role) => {
+      mockedCount.mockResolvedValue(1)
+      mockedFindMany.mockResolvedValue([baseWarga()])
+
+      const result = await listWarga({}, user(role, role === 'PENATUA_KELOMPOK' ? 3 : null))
+
+      expect(result.data[0].latitude).toBe(-6.2)
+      expect(result.data[0].longitude).toBe(106.8)
+    },
+  )
+
+  it('PENATUA_KELOMPOK tetap tidak melihat NIK & alamat KTP', async () => {
+    mockedCount.mockResolvedValue(1)
+    mockedFindMany.mockResolvedValue([baseWarga()])
+
+    const result = await listWarga({}, user('PENATUA_KELOMPOK', 3))
+
+    expect(result.data[0].nik).toBeNull()
+    expect(result.data[0].alamatKtp).toBeNull()
+  })
+
   it('tidak ada redaksi untuk role SUPERADMIN/KEPALA_KANTOR', async () => {
     mockedCount.mockResolvedValue(1)
     mockedFindMany.mockResolvedValue([baseWarga()])
@@ -300,6 +323,51 @@ describe('createWarga', () => {
 })
 
 describe('updateWarga', () => {
+  it('PENATUA_KELOMPOK: nik/alamatKtp kosong dari form tidak menimpa data tersimpan', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga())
+    mockedUpdate.mockImplementation(async (args: any) => ({ id: 1, ...args.data }))
+
+    await updateWarga(1, { nik: null, alamatKtp: '', catatan: 'x' } as any, 1, user('PENATUA_KELOMPOK', 3))
+
+    const data = mockedUpdate.mock.calls[0][0].data
+    expect('nik' in data).toBe(false)
+    expect('alamatKtp' in data).toBe(false)
+    expect(data.catatan).toBe('x')
+  })
+
+  it('PENATUA_KELOMPOK: nik yang diisi tetap dienkripsi dan disimpan', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga())
+    mockedUpdate.mockImplementation(async (args: any) => ({ id: 1, ...args.data }))
+
+    await updateWarga(1, { nik: '3171234567890002' } as any, 1, user('PENATUA_KELOMPOK', 3))
+
+    expect(mockedUpdate.mock.calls[0][0].data.nik).toBe('enc:3171234567890002')
+  })
+
+  it('SUPERADMIN tetap bisa mengosongkan nik/alamatKtp dan mengubah koordinat', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga())
+    mockedUpdate.mockImplementation(async (args: any) => ({ id: 1, ...args.data }))
+
+    await updateWarga(1, { nik: null, alamatKtp: null, latitude: -6.3, longitude: 106.9 } as any, 1, user('SUPERADMIN'))
+
+    const data = mockedUpdate.mock.calls[0][0].data
+    expect(data.nik).toBeNull()
+    expect(data.alamatKtp).toBeNull()
+    expect(data.latitude).toBe(-6.3)
+    expect(data.longitude).toBe(106.9)
+  })
+
+  it('MAJELIS: koordinat yang diisi ikut disimpan', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga())
+    mockedUpdate.mockImplementation(async (args: any) => ({ id: 1, ...args.data }))
+
+    await updateWarga(1, { latitude: -6.25, longitude: 106.85 } as any, 1, user('MAJELIS'))
+
+    const data = mockedUpdate.mock.calls[0][0].data
+    expect(data.latitude).toBe(-6.25)
+    expect(data.longitude).toBe(106.85)
+  })
+
   it('transisi konsen belum-setuju → setuju mengisi tanggalKonsen baru', async () => {
     mockedFindUnique.mockResolvedValue(baseWarga({ konsenPDP: false, tanggalKonsen: null }))
     mockedUpdate.mockImplementation(async (args: any) => ({ id: 1, ...args.data }))
