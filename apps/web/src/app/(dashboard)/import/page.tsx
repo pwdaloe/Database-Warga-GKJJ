@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import * as XLSX from 'xlsx'
+import { downloadWorkbook, readSheetRows, assertXlsx, type SheetSpec } from '@/lib/excel'
 import {
   Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertCircle,
   ChevronRight, Download, RotateCcw, Loader2, Info,
@@ -145,10 +145,12 @@ async function downloadTemplate() {
     '08198765432', '08198765432', 'sri@email.com', 'D3', 'Ibu Rumah Tangga', 'K01', '',
   ]
 
-  const ws1 = XLSX.utils.aoa_to_sheet([headers, sample1, sample2])
-  ws1['!cols'] = IMPORT_FIELDS.map((f) => ({ wch: f.required ? 24 : 20 }))
-  // Freeze row 1 (header)
-  ws1['!freeze'] = { xSplit: 0, ySplit: 1 } as any
+  const ws1: SheetSpec = {
+    name: 'Data Warga',
+    rows: [headers, sample1, sample2],
+    colWidths: IMPORT_FIELDS.map((f) => (f.required ? 24 : 20)),
+    freezeHeader: true,
+  }
 
   // ── Sheet 2: Petunjuk Pengisian ─────────────────────────────
   const colLetter = (i: number) => String.fromCharCode(65 + i)
@@ -161,27 +163,22 @@ async function downloadTemplate() {
     FORMAT_HINTS[f.key] ?? '',
     i < sample1.length ? String(sample1[i] ?? '') : '',
   ])
-  const ws2 = XLSX.utils.aoa_to_sheet([petunjukHeader, ...petunjukRows])
-  ws2['!cols'] = [
-    { wch: 4 },   // No
-    { wch: 7 },   // Kolom
-    { wch: 28 },  // Nama Field
-    { wch: 12 },  // Status
-    { wch: 48 },  // Format
-    { wch: 22 },  // Contoh
-  ]
+  const ws2: SheetSpec = {
+    name: 'Petunjuk Pengisian',
+    rows: [petunjukHeader, ...petunjukRows],
+    // No, Kolom, Nama Field, Status, Format, Contoh
+    colWidths: [4, 7, 28, 12, 48, 22],
+  }
 
   // ── Sheet 3: Referensi Kelompok ─────────────────────────────
   const kelompokHeader = ['Kode Kelompok', 'Nama Kelompok', 'Wilayah', 'Penatua / Majelis']
-  const ws3 = XLSX.utils.aoa_to_sheet([kelompokHeader, ...kelompokRows])
-  ws3['!cols'] = [{ wch: 16 }, { wch: 30 }, { wch: 20 }, { wch: 30 }]
+  const ws3: SheetSpec = {
+    name: 'Referensi Kelompok',
+    rows: [kelompokHeader, ...kelompokRows],
+    colWidths: [16, 30, 20, 30],
+  }
 
-  // ── Buat workbook ───────────────────────────────────────────
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws1, 'Data Warga')
-  XLSX.utils.book_append_sheet(wb, ws2, 'Petunjuk Pengisian')
-  XLSX.utils.book_append_sheet(wb, ws3, 'Referensi Kelompok')
-  XLSX.writeFile(wb, 'template-import-warga.xlsx')
+  await downloadWorkbook('template-import-warga.xlsx', [ws1, ws2, ws3])
 }
 
 // ── Stepper ───────────────────────────────────────────────────
@@ -235,13 +232,10 @@ export default function ImportPage() {
   } | null>(null)
 
   // ── Parse Excel ────────────────────────────────────────────
-  const parseFile = useCallback((f: File) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target!.result as ArrayBuffer)
-      const wb = XLSX.read(data, { type: 'array', cellDates: false })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      const aoa: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+  const parseFile = useCallback(async (f: File) => {
+    try {
+      assertXlsx(f)
+      const aoa = await readSheetRows(await f.arrayBuffer())
       if (aoa.length < 2) { alert('File kosong atau tidak punya data'); return }
       const hdrs = aoa[0].map((h: any) => String(h ?? '').trim()).filter(Boolean)
       const rows = aoa.slice(1).filter((r) => r.some((c: any) => c !== ''))
@@ -250,8 +244,9 @@ export default function ImportPage() {
       setRawRows(rows)
       setMapping(autoMap(hdrs))
       setStep(1)
+    } catch (err: any) {
+      alert(err?.message ?? 'File tidak dapat dibaca')
     }
-    reader.readAsArrayBuffer(f)
   }, [])
 
   function handleFileDrop(e: React.DragEvent) {
@@ -324,16 +319,16 @@ export default function ImportPage() {
   }
 
   // ── Download log ──────────────────────────────────────────
-  function downloadLog() {
+  async function downloadLog() {
     if (!results) return
     const rows = [
       ['Baris', 'Status', 'Nama', 'No. Anggota', 'Alasan'],
       ...results.log.map((l) => [l.baris, l.status, l.nama, l.nomorAnggota ?? '', l.alasan ?? '']),
     ]
-    const ws = XLSX.utils.aoa_to_sheet(rows)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Log Import')
-    XLSX.writeFile(wb, `log-import-${new Date().toISOString().slice(0,10)}.xlsx`)
+    await downloadWorkbook(
+      `log-import-${new Date().toISOString().slice(0,10)}.xlsx`,
+      [{ name: 'Log Import', rows }],
+    )
   }
 
   function reset() {
@@ -379,12 +374,12 @@ export default function ImportPage() {
               <span className="hidden sm:inline">Drag & drop file Excel di sini</span>
             </p>
             <p className="text-sm text-gray-400 mt-1">
-              <span className="hidden sm:inline">atau klik untuk memilih file </span>(.xlsx, .xls)
+              <span className="hidden sm:inline">atau klik untuk memilih file </span>(.xlsx)
             </p>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".xlsx,.xls"
+              accept=".xlsx"
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) parseFile(f) }}
             />

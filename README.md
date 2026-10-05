@@ -100,7 +100,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 #### Import Data
 Wizard 5 langkah untuk import massal data warga dari file Excel:
 
-1. **Upload** — drag & drop atau klik, accept `.xlsx` / `.xls`
+1. **Upload** — drag & drop atau klik, accept `.xlsx` (format `.xls` lama tidak didukung — simpan ulang sebagai `.xlsx`)
 2. **Mapping kolom** — tabel pemetaan header Excel ke field sistem, dengan **auto-mapping otomatis** (50+ pola nama kolom)
 3. **Preview & validasi** — tampilkan 10 baris pertama, highlight baris bermasalah, summary valid/invalid
 4. **Processing** — kirim per batch 100 baris, progress bar real-time
@@ -294,7 +294,7 @@ Body snapshot pada `ActivityLog` secara otomatis:
 | **Grafik** | Recharts |
 | **Peta** | React-Leaflet + OpenStreetMap (gratis, tanpa API key) |
 | **QR Code** | qrcode |
-| **Excel** | SheetJS (xlsx) |
+| **Excel** | ExcelJS (`exceljs`) — baca/tulis `.xlsx` |
 | **Backend** | Express.js, TypeScript, Prisma ORM |
 | **Database** | PostgreSQL 16 |
 | **Build Tool** | Turborepo |

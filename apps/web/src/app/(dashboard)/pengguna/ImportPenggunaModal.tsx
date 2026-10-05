@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import * as XLSX from 'xlsx'
+import { downloadWorkbook, readSheetRows, assertXlsx } from '@/lib/excel'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   Upload, Loader2, CheckCircle2, XCircle, Download, FileSpreadsheet, AlertTriangle,
@@ -56,21 +56,22 @@ async function downloadTemplate() {
   const sample1 = ['Rama Wicaksana', 'rama.wicaksana', 'rama.wicaksana@gkjj.org', 'GantiPass123!', 'PENATUA_KELOMPOK', 'A1']
   const sample2 = ['Siti Aminah', 'siti.aminah', 'siti.aminah@gkjj.org', 'GantiPass123!', 'STAF_ADMIN', '']
 
-  const ws1 = XLSX.utils.aoa_to_sheet([headers, sample1, sample2])
-  ws1['!cols'] = [{ wch: 24 }, { wch: 20 }, { wch: 28 }, { wch: 18 }, { wch: 20 }, { wch: 14 }]
-
   const roleRows = ROLES.map((r) => [r, ROLE_LABELS[r] ?? r])
-  const ws2 = XLSX.utils.aoa_to_sheet([['Kode Role', 'Label'], ...roleRows])
-  ws2['!cols'] = [{ wch: 20 }, { wch: 22 }]
 
-  const ws3 = XLSX.utils.aoa_to_sheet([['Kode Kelompok', 'Nama Kelompok', 'Wilayah', 'Penatua / Majelis'], ...kelompokRows])
-  ws3['!cols'] = [{ wch: 16 }, { wch: 30 }, { wch: 20 }, { wch: 30 }]
-
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws1, 'Data Pengguna')
-  XLSX.utils.book_append_sheet(wb, ws2, 'Referensi Role')
-  XLSX.utils.book_append_sheet(wb, ws3, 'Referensi Kelompok')
-  XLSX.writeFile(wb, 'template-import-pengguna.xlsx')
+  await downloadWorkbook('template-import-pengguna.xlsx', [
+    {
+      name: 'Data Pengguna',
+      rows: [headers, sample1, sample2],
+      colWidths: [24, 20, 28, 18, 20, 14],
+      freezeHeader: true,
+    },
+    { name: 'Referensi Role', rows: [['Kode Role', 'Label'], ...roleRows], colWidths: [20, 22] },
+    {
+      name: 'Referensi Kelompok',
+      rows: [['Kode Kelompok', 'Nama Kelompok', 'Wilayah', 'Penatua / Majelis'], ...kelompokRows],
+      colWidths: [16, 30, 20, 30],
+    },
+  ])
 }
 
 export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -93,14 +94,13 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
     onClose()
   }
 
-  function parseFile(f: File) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target!.result as ArrayBuffer)
-      const wb = XLSX.read(data, { type: 'array' })
-      const sheetName = wb.SheetNames.find((n) => n.toLowerCase().includes('data pengguna')) ?? wb.SheetNames[0]
-      const ws = wb.Sheets[sheetName]
-      const aoa: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+  async function parseFile(f: File) {
+    try {
+      assertXlsx(f)
+      const aoa = await readSheetRows(
+        await f.arrayBuffer(),
+        (names) => names.find((n) => n.toLowerCase().includes('data pengguna')),
+      )
       const dataRows = aoa.slice(1).filter((r) => r.some((c: any) => String(c ?? '').trim() !== ''))
       const parsed: ParsedRow[] = dataRows.map((r, i) => ({
         rowIndex: i + 2,
@@ -114,8 +114,9 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
       setFileName(f.name)
       setRows(parsed)
       setResults(null)
+    } catch (err: any) {
+      alert(err?.message ?? 'File tidak dapat dibaca')
     }
-    reader.readAsArrayBuffer(f)
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -180,7 +181,7 @@ export function ImportPenggunaModal({ open, onClose }: { open: boolean; onClose:
             <p className="text-sm font-medium text-gray-600">Klik atau seret file .xlsx ke sini</p>
             <p className="text-xs text-gray-400">Sheet pertama bernama "Data Pengguna", baris 1 = header</p>
             <input
-              ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden"
+              ref={fileInputRef} type="file" accept=".xlsx" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) parseFile(f) }}
             />
           </div>

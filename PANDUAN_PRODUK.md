@@ -413,7 +413,7 @@ Tips pengisian:
 - Warga dalam satu keluarga harus punya **nomor keluarga yang sama** di kolom `nomor_keluarga`
 - Kepala KK harus ada di baris pertama sebelum anggota keluarganya
 
-**Langkah 3: Simpan sebagai .xlsx atau .xls**
+**Langkah 3: Simpan sebagai .xlsx** (format .xls lama tidak didukung — di Excel pilih *Save As* → *Excel Workbook (.xlsx)*)
 
 ---
 
@@ -421,7 +421,7 @@ Tips pengisian:
 
 **Langkah 1 — Upload File**
 1. Menu **Import Data** → klik area upload atau drag & drop file Excel
-2. File diterima: `.xlsx` atau `.xls`, maksimal 10MB
+2. File diterima: `.xlsx`, maksimal 10MB
 
 **Langkah 2 — Mapping Kolom**
 1. Sistem menampilkan tabel pemetaan kolom Excel ke field sistem
