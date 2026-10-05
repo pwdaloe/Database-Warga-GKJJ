@@ -3,6 +3,27 @@
 
 ---
 
+## [2026-10-05 22:30 WIB] — Sprint 8/8 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Senin, 5 Oktober 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 8 Selesai: Konsistensi Data & Scoping — Tes Round-Trip, Penatua Fail-Closed, Peta per Peran
+- Scoping baca Penatua **fail-closed** (`listWarga`/`listKeluarga`/`getWargaById`/`getKeluargaById`) memakai helper bersama `dashboardScope.ts`; penatua tanpa kelompok tidak lagi melihat semua data
+- **Batas tulis penatua** di backend: `createWarga`, `updateWarga` (pindah KK), `createKeluarga`, `updateKeluarga` — KK/kelompok di luar miliknya → 403 (celah ditemukan retro: sebelumnya hanya UI `/m` yang mengunci kelompok)
+- `GET /dashboard/map`: VIEWER mendapat `[]`; kartu peta disembunyikan untuk VIEWER
+- Tes round-trip API per peran (`warga.roundtrip.test.ts`, 22 tes, store in-memory) dan tes round-trip form (`wargaPayload.roundtrip.test.tsx`, 5 tes, termasuk penjaga paritas skema ↔ `wargaToFormDefaults`); **mutasi uji** (proteksi tulis / satu field dimatikan) terbukti membuat tes gagal
+- Tes baru: `keluarga.service.test.ts`, `dashboard.route.test.ts`, tambahan di `warga.service.test.ts`
+- Total tes: API 126 → 178, web 69 → 74; `type-check` dan `build` bersih di kedua workspace
+- Commit: lihat riwayat git (sprint 8)
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+- Penomoran KK `nomorKeluarga = KLG + (count()+1)` di `createKeluarga` rawan duplikat/bentrok setelah ada data terhapus atau pembuatan bersamaan (path warga memakai ID, path ini tidak). MED — belum dikerjakan
+- Uji tampilan di perangkat nyata (iPhone, peta VIEWER) belum dilakukan; hanya verifikasi kode & tes
+
+---
+
 ## [2026-07-09 08:05 WIB] — Sprint 7/7 | ✅ DONE
 
 **Project**: Database Warga GKJJ

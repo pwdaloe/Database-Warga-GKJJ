@@ -58,6 +58,9 @@ dashboardRouter.get('/komisi-stats', async (req, res) => {
 
 // GET /api/dashboard/map?kelurahan= — koordinat warga untuk peta
 dashboardRouter.get('/map', async (req, res) => {
+  // Koordinat rumah disembunyikan untuk VIEWER (read-only), sama dengan sanitizeForRole
+  if (req.user!.role === 'VIEWER') return ok(res, [])
+
   const kelurahan = req.query['kelurahan'] as string | undefined
 
   const wargaList = await prisma.warga.findMany({

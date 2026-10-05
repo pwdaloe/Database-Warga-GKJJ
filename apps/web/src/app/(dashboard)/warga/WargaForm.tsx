@@ -95,6 +95,9 @@ const schema = z.object({
 
 export type WargaFormData = z.infer<typeof schema>
 
+/** Diekspor untuk tes paritas field (lihat wargaPayload.roundtrip.test.tsx) */
+export const wargaFormSchema = schema
+
 type Tab = 'identitas' | 'keanggotaan' | 'kontak' | 'keluarga' | 'alamat'
 
 interface Props {
@@ -523,6 +526,33 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               {onTambahAnak && activeKeluarga && (
                 <TambahAnakButton onClick={onTambahAnak} />
               )}
+            </div>
+          ) : statusKeluarga === 'KEPALA' && selectedKeluargaId ? (
+            /* Kasus: Kepala Keluarga yang sudah punya KK (edit) */
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <Crown size={15} className="text-yellow-500" />
+                <span className="text-sm font-semibold text-gray-700">Keluarga</span>
+              </div>
+
+              {activeKeluarga && (
+                <div className="p-3 bg-brand-50 border border-brand-200 rounded-lg">
+                  <p className="text-sm font-medium text-brand-900">
+                    {activeKeluarga.nomorKeluarga ?? `KLG-${activeKeluarga.id}`}
+                  </p>
+                  <p className="text-xs text-brand-600 mt-0.5">
+                    {activeKeluarga.kelompok ? activeKeluarga.kelompok.nama : 'Kelompok belum ditentukan'}
+                  </p>
+                </div>
+              )}
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+                Alamat rumah tangga (KK) dapat diubah di tab <strong>Alamat</strong> — perubahan
+                ikut tersimpan ke data keluarga ini.
+              </div>
+
+              <AnggotaTable anggota={anggotaList} />
+              {onTambahAnak && activeKeluarga && <TambahAnakButton onClick={onTambahAnak} />}
             </div>
           ) : statusKeluarga === 'KEPALA' ? (
             /* Kasus: warga baru sebagai Kepala KK baru */

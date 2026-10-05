@@ -16,6 +16,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { WargaForm, type WargaFormData } from './WargaForm'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
+import { buildWargaPayload, wargaToFormDefaults } from '@/lib/wargaPayload'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -186,34 +187,7 @@ export default function WargaPage() {
   async function handleSubmit(formData: WargaFormData) {
     setSubmitError('')
 
-    const {
-      newKelompokId, newAlamat, newRt, newRw, newKelurahan,
-      newKecamatan, newKota, newKodePos, newTeleponRumah,
-      ...wargaFields
-    } = formData
-
-    const sanitized = Object.fromEntries(
-      Object.entries(wargaFields).map(([k, v]) => [k, v === '' ? null : v])
-    )
-
-    const isNewKepala = sanitized.statusKeluarga === 'KEPALA' && !sanitized.keluargaId
-
-    const payload: any = {
-      ...sanitized,
-      ...(isNewKepala && newKelompokId ? {
-        newKeluarga: {
-          kelompokId: newKelompokId,
-          alamat: newAlamat || null,
-          rt: newRt || null,
-          rw: newRw || null,
-          kelurahan: newKelurahan || null,
-          kecamatan: newKecamatan || null,
-          kota: newKota || null,
-          kodePos: newKodePos || null,
-          teleponRumah: newTeleponRumah || null,
-        },
-      } : {}),
-    }
+    const payload = buildWargaPayload(formData)
 
     try {
       if (editData) {
@@ -224,7 +198,7 @@ export default function WargaPage() {
 
       const warga = await create.mutateAsync(payload)
 
-      if (wargaFields.statusKeluarga === 'KEPALA') {
+      if (payload.statusKeluarga === 'KEPALA') {
         setWizard({
           step: 2,
           kepalaNama: warga.namaLengkap,
@@ -643,38 +617,7 @@ export default function WargaPage() {
         {wizard.step === 1 && (
           <WargaForm
             key={editData?.id ?? (addingAnakToKeluargaId ? `anak-${addingAnakToKeluargaId}` : 'new')}
-            defaultValues={editData ? {
-              dataStatus: editData.dataStatus,
-              keluargaId: editData.keluargaId,
-              nomorInduk: editData.nomorInduk,
-              namaLengkap: editData.namaLengkap,
-              namaPanggilan: editData.namaPanggilan,
-              jenisKelamin: editData.jenisKelamin,
-              tempatLahir: editData.tempatLahir,
-              tanggalLahir: editData.tanggalLahir?.split('T')[0],
-              nik: editData.nik,
-              golonganDarah: editData.golonganDarah,
-              statusKeluarga: editData.statusKeluarga,
-              statusKeanggotaan: editData.statusKeanggotaan,
-              sudahBaptis: editData.sudahBaptis,
-              tanggalBaptis: editData.tanggalBaptis?.split('T')[0],
-              tempatBaptis: editData.tempatBaptis,
-              sudahSidi: editData.sudahSidi,
-              nomorSidi: editData.nomorSidi,
-              tanggalSidi: editData.tanggalSidi?.split('T')[0],
-              telepon: editData.telepon,
-              whatsapp: editData.whatsapp,
-              email: editData.email,
-              pendidikanTerakhir: editData.pendidikanTerakhir,
-              pekerjaan: editData.pekerjaan,
-              fotoUrl: editData.fotoUrl,
-              alamatKtp: editData.alamatKtp,
-              alamatDomisili: editData.alamatDomisili,
-              latitude: editData.latitude,
-              longitude: editData.longitude,
-              catatan: editData.catatan,
-              konsenPDP: editData.konsenPDP,
-            } : addingAnakToKeluargaId ? { statusKeluarga: 'ANAK' } : undefined}
+            defaultValues={editData ? wargaToFormDefaults(editData) : addingAnakToKeluargaId ? { statusKeluarga: 'ANAK' } : undefined}
             tanggalKonsenPDP={editData?.tanggalKonsen}
             keluargaIdFixed={addingAnakToKeluargaId ?? undefined}
             onTambahAnak={editData?.keluargaId ? handleTambahAnak : undefined}

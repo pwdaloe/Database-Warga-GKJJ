@@ -54,7 +54,7 @@ keluargaRouter.post(
   authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
   async (req, res) => {
     const data = bodySchema.parse(req.body)
-    const keluarga = await svc.createKeluarga(data, req.user!.userId)
+    const keluarga = await svc.createKeluarga(data, req.user!.userId, req.user!)
     created(res, keluarga)
   },
 )
@@ -65,7 +65,7 @@ keluargaRouter.put(
   authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
   async (req, res) => {
     const data = bodySchema.parse(req.body)
-    const keluarga = await svc.updateKeluarga(Number(req.params['id']), data, req.user!.userId)
+    const keluarga = await svc.updateKeluarga(Number(req.params['id']), data, req.user!.userId, req.user!)
     ok(res, keluarga)
   },
 )

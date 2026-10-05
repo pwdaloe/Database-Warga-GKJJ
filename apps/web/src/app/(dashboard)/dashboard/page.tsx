@@ -199,7 +199,8 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Peta warga ──────────────────────────────────────── */}
+      {/* ── Peta warga (koordinat rumah disembunyikan untuk VIEWER — kebijakan PDP) ── */}
+      {user?.role !== 'VIEWER' && (
       <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3 sm:gap-4">
           <div className="min-w-0">
@@ -231,6 +232,7 @@ export default function DashboardPage() {
         </div>
         <WargaMap points={mapData} />
       </div>
+      )}
     </div>
   )
 }

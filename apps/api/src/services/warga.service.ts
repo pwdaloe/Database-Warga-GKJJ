@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '../utils/prisma.js'
 import { AppError } from '../middleware/errorHandler.js'
 import type { JwtPayload } from '../middleware/auth.js'
+import { wargaScope, assertKelompokPenatua, isKelompokScoped } from './dashboardScope.js'
 import { encryptField, decryptField } from '../utils/crypto.js'
 
 // ── Field redaction per role (UU PDP Pasal 16) ────────────────
@@ -107,9 +108,9 @@ export async function listWarga(filter: WargaFilter, user: JwtPayload) {
 
   const where: Prisma.WargaWhereInput = {}
 
-  // Scope penatua kelompok
-  if (user.role === 'PENATUA_KELOMPOK' && user.kelompokId) {
-    where.keluarga = { kelompokId: user.kelompokId }
+  // Scope penatua kelompok (fail-closed: penatua tanpa kelompok tidak melihat apa pun)
+  if (isKelompokScoped(user)) {
+    Object.assign(where, wargaScope(user))
   } else {
     if (kelompokId) where.keluarga = { kelompokId }
     else if (wilayahId) where.keluarga = { kelompok: { wilayahId } }
@@ -161,11 +162,7 @@ export async function getWargaById(id: number, user: JwtPayload) {
 
   if (!warga) throw new AppError(404, 'Data warga tidak ditemukan')
 
-  if (user.role === 'PENATUA_KELOMPOK' && user.kelompokId) {
-    if (warga.keluarga?.kelompokId !== user.kelompokId) {
-      throw new AppError(403, 'Tidak memiliki akses ke data warga ini')
-    }
-  }
+  assertKelompokPenatua(user, warga.keluarga?.kelompokId, 'Tidak memiliki akses ke data warga ini')
 
   return sanitizeForRole(decryptWarga(warga as Record<string, any>), user.role)
 }
@@ -182,11 +179,29 @@ export interface NewKeluargaInput {
   teleponRumah?: string | null
 }
 
+/** Alamat rumah tangga (KK) yang dapat diubah dari form warga oleh Kepala Keluarga */
+export type AlamatKeluargaInput = Omit<NewKeluargaInput, 'kelompokId'>
+
+/** Pastikan KK tujuan ada di kelompok penatua (no-op untuk role lain) */
+async function assertKeluargaDiKelompokPenatua(user: JwtPayload | undefined, keluargaId: number) {
+  if (!user || !isKelompokScoped(user)) return
+  const kk = await prisma.keluarga.findUnique({ where: { id: keluargaId }, select: { kelompokId: true } })
+  assertKelompokPenatua(user, kk?.kelompokId, 'Tidak memiliki akses ke keluarga tersebut')
+}
+
 export async function createWarga(
   data: Prisma.WargaUncheckedCreateInput,
   userId: number,
   newKeluarga?: NewKeluargaInput,
+  user?: JwtPayload,
 ) {
+  // Penatua hanya boleh menambah warga ke KK/kelompoknya sendiri (di-enforce di backend, bukan hanya UI)
+  if (user && isKelompokScoped(user)) {
+    if (!user.kelompokId) throw new AppError(403, 'Akun penatua belum terhubung ke kelompok')
+    if (data.keluargaId) await assertKeluargaDiKelompokPenatua(user, data.keluargaId as number)
+    if (newKeluarga) assertKelompokPenatua(user, newKeluarga.kelompokId, 'Hanya dapat membuat keluarga di kelompok Anda sendiri')
+  }
+
   // Enkripsi NIK sebelum disimpan
   // Tanggal konsen PDP ditentukan server (tidak dipercaya dari client) — UU PDP Pasal 20
   const konsenPDP = data.konsenPDP === true
@@ -253,8 +268,17 @@ export async function updateWarga(
   userId: number,
   user: JwtPayload,
   newKeluarga?: NewKeluargaInput,
+  alamatKeluarga?: AlamatKeluargaInput,
 ) {
   const existing = await getWargaById(id, user)
+
+  // Penatua tidak boleh memindahkan warga ke KK/kelompok lain
+  if (isKelompokScoped(user)) {
+    if (data.keluargaId && data.keluargaId !== existing.keluargaId) {
+      await assertKeluargaDiKelompokPenatua(user, data.keluargaId as number)
+    }
+    if (newKeluarga) assertKelompokPenatua(user, newKeluarga.kelompokId, 'Hanya dapat membuat keluarga di kelompok Anda sendiri')
+  }
 
   // Enkripsi NIK jika dikirim
   // Tanggal konsen PDP hanya diisi ulang saat transisi belum-setuju → setuju,
@@ -298,6 +322,25 @@ export async function updateWarga(
       return tx.warga.update({
         where: { id },
         data: { ...encryptedData, keluargaId: keluarga.id, updatedBy: userId },
+        include: wargaInclude,
+      })
+    })
+  }
+
+  // Kepala Keluarga yang sudah punya KK mengubah alamat rumah tangga dari form warga →
+  // perbarui alamat KK dan data warga dalam satu transaksi.
+  // (Hak akses sudah dijamin getWargaById: penatua hanya bisa warga di kelompoknya.)
+  const statusAkhir = (data.statusKeluarga as string | undefined) ?? (existing.statusKeluarga as string)
+  const keluargaAkhir = (data.keluargaId as number | null | undefined) ?? (existing.keluargaId as number | null)
+  if (alamatKeluarga && statusAkhir === 'KEPALA' && keluargaAkhir && keluargaAkhir === existing.keluargaId) {
+    return prisma.$transaction(async (tx) => {
+      await tx.keluarga.update({
+        where: { id: keluargaAkhir },
+        data: { ...alamatKeluarga, updatedBy: userId },
+      })
+      return tx.warga.update({
+        where: { id },
+        data: { ...encryptedData, updatedBy: userId },
         include: wargaInclude,
       })
     })

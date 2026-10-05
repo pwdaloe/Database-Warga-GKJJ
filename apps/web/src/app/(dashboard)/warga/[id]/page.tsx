@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { WargaForm } from '../WargaForm'
 import { cn, nomorWarga } from '@/lib/utils'
+import { buildWargaPayload, wargaToFormDefaults } from '@/lib/wargaPayload'
 
 type Tab = 'biodata' | 'keluarga'
 
@@ -47,7 +48,7 @@ export default function WargaDetailPage() {
   const canEdit = isRole('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK')
 
   async function handleEdit(formData: any) {
-    await update.mutateAsync({ id: Number(id), data: formData })
+    await update.mutateAsync({ id: Number(id), data: buildWargaPayload(formData) })
     setEditOpen(false)
   }
 
@@ -498,33 +499,7 @@ export default function WargaDetailPage() {
         size="xl"
       >
         <WargaForm
-          defaultValues={{
-            dataStatus: warga.dataStatus,
-            keluargaId: warga.keluargaId,
-            nomorInduk: warga.nomorInduk,
-            namaLengkap: warga.namaLengkap,
-            namaPanggilan: warga.namaPanggilan,
-            jenisKelamin: warga.jenisKelamin,
-            tempatLahir: warga.tempatLahir,
-            tanggalLahir: warga.tanggalLahir?.split('T')[0],
-            nik: warga.nik,
-            golonganDarah: warga.golonganDarah,
-            statusKeluarga: warga.statusKeluarga,
-            statusKeanggotaan: warga.statusKeanggotaan,
-            sudahBaptis: warga.sudahBaptis,
-            tanggalBaptis: warga.tanggalBaptis?.split('T')[0],
-            tempatBaptis: warga.tempatBaptis,
-            sudahSidi: warga.sudahSidi,
-            nomorSidi: warga.nomorSidi,
-            tanggalSidi: warga.tanggalSidi?.split('T')[0],
-            telepon: warga.telepon,
-            whatsapp: warga.whatsapp,
-            email: warga.email,
-            pendidikanTerakhir: warga.pendidikanTerakhir,
-            pekerjaan: warga.pekerjaan,
-            catatan: warga.catatan,
-            konsenPDP: warga.konsenPDP,
-          }}
+          defaultValues={wargaToFormDefaults(warga)}
           tanggalKonsenPDP={warga.tanggalKonsen}
           onSubmit={handleEdit}
           submitLabel="Update Warga"

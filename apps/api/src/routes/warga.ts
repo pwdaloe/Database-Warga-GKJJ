@@ -21,9 +21,13 @@ const newKeluargaSchema = z.object({
   teleponRumah: z.string().max(20).optional().nullable(),
 })
 
+// Perubahan alamat KK dari form warga (Kepala Keluarga yang sudah punya KK)
+const alamatKeluargaSchema = newKeluargaSchema.omit({ kelompokId: true })
+
 const bodySchema = z.object({
   keluargaId:         z.number().int().positive().optional().nullable(),
   newKeluarga:        newKeluargaSchema.optional(),
+  alamatKeluarga:     alamatKeluargaSchema.optional(),
   nomorInduk:         z.string().max(30).optional().nullable(),
   namaLengkap:        z.string().min(2, 'Nama minimal 2 karakter').max(150),
   namaPanggilan:      z.string().max(50).optional().nullable(),
@@ -122,7 +126,8 @@ wargaRouter.post(
   '/',
   authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
   async (req, res) => {
-    const { newKeluarga, ...rest } = bodySchema.parse(req.body)
+    // alamatKeluarga hanya relevan saat edit; dibuang agar tidak ikut ke create
+    const { newKeluarga, alamatKeluarga: _alamatKeluarga, ...rest } = bodySchema.parse(req.body)
     const warga = await svc.createWarga(
       {
         ...rest,
@@ -132,6 +137,7 @@ wargaRouter.post(
       } as any,
       req.user!.userId,
       newKeluarga,
+      req.user!,
     )
     created(res, warga)
   },
@@ -142,7 +148,7 @@ wargaRouter.put(
   '/:id',
   authorize('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'),
   async (req, res) => {
-    const { newKeluarga, ...rest } = bodySchema.parse(req.body)
+    const { newKeluarga, alamatKeluarga, ...rest } = bodySchema.parse(req.body)
     const warga = await svc.updateWarga(
       Number(req.params['id']),
       {
@@ -154,6 +160,7 @@ wargaRouter.put(
       req.user!.userId,
       req.user!,
       newKeluarga,
+      alamatKeluarga,
     )
     ok(res, warga)
   },

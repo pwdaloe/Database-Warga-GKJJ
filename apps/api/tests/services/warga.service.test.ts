@@ -17,6 +17,7 @@ vi.mock('../../src/utils/prisma.js', () => ({
     keluarga: {
       create: vi.fn(),
       update: vi.fn(),
+      findUnique: vi.fn(),
     },
     $transaction: vi.fn(async (fn: any) => fn({
       keluarga: { create: vi.fn(), update: vi.fn() },
@@ -52,6 +53,7 @@ const mockedDelete     = prisma.warga.delete     as ReturnType<typeof vi.fn>
 const mockedUpdateMany = prisma.warga.updateMany as ReturnType<typeof vi.fn>
 const mockedUserFindUnique = prisma.user.findUnique as ReturnType<typeof vi.fn>
 const mockedTransaction = prisma.$transaction as ReturnType<typeof vi.fn>
+const mockedKeluargaFindUnique = (prisma.keluarga as any).findUnique as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -169,6 +171,78 @@ describe('listWarga', () => {
     expect(result.data[0].nik).toBe('3171234567890001')
     expect(result.data[0].alamatKtp).toBe('Jl. Merdeka No. 1')
     expect(result.data[0].email).toBe('budi@example.com')
+  })
+})
+
+describe('scoping penatua — fail-closed & batas tulis', () => {
+  const txOk = () =>
+    mockedTransaction.mockImplementation(async (fn: any) =>
+      fn({
+        keluarga: { create: vi.fn(), update: vi.fn() },
+        warga: { create: vi.fn(async (a: any) => ({ id: 1, ...a.data })), update: vi.fn() },
+      }),
+    )
+
+  it('listWarga: penatua TANPA kelompok tidak melihat apa pun', async () => {
+    mockedCount.mockResolvedValue(0)
+    mockedFindMany.mockResolvedValue([])
+    await listWarga({}, user('PENATUA_KELOMPOK', null))
+    expect(mockedFindMany.mock.calls[0][0].where.id).toBe(-1)
+  })
+
+  it('getWargaById: penatua TANPA kelompok → 403', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga())
+    await expect(getWargaById(1, user('PENATUA_KELOMPOK', null))).rejects.toMatchObject({ statusCode: 403 })
+  })
+
+  it('createWarga: penatua boleh menambah ke KK kelompok sendiri', async () => {
+    mockedKeluargaFindUnique.mockResolvedValue({ kelompokId: 3 })
+    txOk()
+    await expect(
+      createWarga({ namaLengkap: 'A', keluargaId: 5 } as any, 1, undefined, user('PENATUA_KELOMPOK', 3)),
+    ).resolves.toBeTruthy()
+  })
+
+  it('createWarga: penatua menambah ke KK kelompok lain → 403, tidak ada insert', async () => {
+    mockedKeluargaFindUnique.mockResolvedValue({ kelompokId: 9 })
+    await expect(
+      createWarga({ namaLengkap: 'A', keluargaId: 5 } as any, 1, undefined, user('PENATUA_KELOMPOK', 3)),
+    ).rejects.toMatchObject({ statusCode: 403 })
+    expect(mockedTransaction).not.toHaveBeenCalled()
+  })
+
+  it('createWarga: penatua membuat KK baru di kelompok lain → 403', async () => {
+    await expect(
+      createWarga({ namaLengkap: 'A' } as any, 1, { kelompokId: 9 } as any, user('PENATUA_KELOMPOK', 3)),
+    ).rejects.toMatchObject({ statusCode: 403 })
+  })
+
+  it('createWarga: penatua tanpa kelompok → 403', async () => {
+    await expect(
+      createWarga({ namaLengkap: 'A' } as any, 1, undefined, user('PENATUA_KELOMPOK', null)),
+    ).rejects.toMatchObject({ statusCode: 403 })
+  })
+
+  it('createWarga: role lain & panggilan tanpa user tidak dibatasi', async () => {
+    txOk()
+    await expect(createWarga({ namaLengkap: 'A', keluargaId: 5 } as any, 1, undefined, user('STAF_ADMIN'))).resolves.toBeDefined()
+    expect(mockedKeluargaFindUnique).not.toHaveBeenCalled()
+  })
+
+  it('updateWarga: penatua memindahkan warga ke KK kelompok lain → 403', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga({ keluargaId: 5, keluarga: { id: 5, kelompokId: 3 } }))
+    mockedKeluargaFindUnique.mockResolvedValue({ kelompokId: 9 })
+    await expect(
+      updateWarga(1, { keluargaId: 77 } as any, 1, user('PENATUA_KELOMPOK', 3)),
+    ).rejects.toMatchObject({ statusCode: 403 })
+    expect(mockedUpdate).not.toHaveBeenCalled()
+  })
+
+  it('updateWarga: penatua memindahkan ke KK kelompok sendiri → lolos', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga({ keluargaId: 5, keluarga: { id: 5, kelompokId: 3 } }))
+    mockedKeluargaFindUnique.mockResolvedValue({ kelompokId: 3 })
+    mockedUpdate.mockImplementation(async (a: any) => ({ id: 1, ...a.data }))
+    await expect(updateWarga(1, { keluargaId: 6 } as any, 1, user('PENATUA_KELOMPOK', 3))).resolves.toBeTruthy()
   })
 })
 
@@ -323,6 +397,58 @@ describe('createWarga', () => {
 })
 
 describe('updateWarga', () => {
+  it('Kepala Keluarga: alamatKeluarga memperbarui alamat KK dalam transaksi yang sama', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga({ keluargaId: 5, statusKeluarga: 'KEPALA' }))
+    const txKeluargaUpdate = vi.fn()
+    const txWargaUpdate = vi.fn(async (args: any) => ({ id: 1, ...args.data }))
+    mockedTransaction.mockImplementation(async (fn: any) =>
+      fn({ keluarga: { update: txKeluargaUpdate }, warga: { update: txWargaUpdate } }),
+    )
+
+    await updateWarga(
+      1,
+      { statusKeluarga: 'KEPALA', keluargaId: 5, catatan: 'x' } as any,
+      9,
+      user('SUPERADMIN'),
+      undefined,
+      { alamat: 'Jl. Melati 3', rt: '001', rw: '005', kelurahan: 'Rawamangun', kecamatan: null, kota: 'Jakarta Timur', kodePos: '13220', teleponRumah: null },
+    )
+
+    expect(txKeluargaUpdate).toHaveBeenCalledWith({
+      where: { id: 5 },
+      data: expect.objectContaining({ alamat: 'Jl. Melati 3', rt: '001', kelurahan: 'Rawamangun', kecamatan: null, updatedBy: 9 }),
+    })
+    expect(txWargaUpdate).toHaveBeenCalled()
+    expect(mockedUpdate).not.toHaveBeenCalled()
+  })
+
+  it('bukan Kepala Keluarga: alamatKeluarga diabaikan, alamat KK tidak berubah', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga({ keluargaId: 5, statusKeluarga: 'ISTRI' }))
+    mockedUpdate.mockImplementation(async (args: any) => ({ id: 1, ...args.data }))
+    const txKeluargaUpdate = vi.fn()
+    mockedTransaction.mockImplementation(async (fn: any) =>
+      fn({ keluarga: { update: txKeluargaUpdate }, warga: { update: vi.fn() } }),
+    )
+
+    await updateWarga(1, { statusKeluarga: 'ISTRI', keluargaId: 5 } as any, 9, user('SUPERADMIN'), undefined, { alamat: 'Jl. X' })
+
+    expect(txKeluargaUpdate).not.toHaveBeenCalled()
+    expect(mockedUpdate).toHaveBeenCalled()
+  })
+
+  it('PENATUA di luar kelompok: ditolak 403 sebelum alamat KK disentuh', async () => {
+    mockedFindUnique.mockResolvedValue(baseWarga({ keluargaId: 5, keluarga: { id: 5, kelompokId: 99 }, statusKeluarga: 'KEPALA' }))
+    const txKeluargaUpdate = vi.fn()
+    mockedTransaction.mockImplementation(async (fn: any) =>
+      fn({ keluarga: { update: txKeluargaUpdate }, warga: { update: vi.fn() } }),
+    )
+
+    await expect(
+      updateWarga(1, { statusKeluarga: 'KEPALA', keluargaId: 5 } as any, 9, user('PENATUA_KELOMPOK', 3), undefined, { alamat: 'Jl. X' }),
+    ).rejects.toMatchObject({ statusCode: 403 })
+    expect(txKeluargaUpdate).not.toHaveBeenCalled()
+  })
+
   it('PENATUA_KELOMPOK: nik/alamatKtp kosong dari form tidak menimpa data tersimpan', async () => {
     mockedFindUnique.mockResolvedValue(baseWarga())
     mockedUpdate.mockImplementation(async (args: any) => ({ id: 1, ...args.data }))

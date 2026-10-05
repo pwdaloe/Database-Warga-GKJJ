@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '../utils/prisma.js'
 import { AppError } from '../middleware/errorHandler.js'
 import type { JwtPayload } from '../middleware/auth.js'
+import { keluargaScope, assertKelompokPenatua, isKelompokScoped } from './dashboardScope.js'
 
 export interface KeluargaFilter {
   search?: string
@@ -43,9 +44,9 @@ export async function listKeluarga(filter: KeluargaFilter, user: JwtPayload) {
 
   const where: Prisma.KeluargaWhereInput = {}
 
-  // Penatua kelompok hanya lihat kelompoknya
-  if (user.role === 'PENATUA_KELOMPOK' && user.kelompokId) {
-    where.kelompokId = user.kelompokId
+  // Penatua kelompok hanya lihat kelompoknya (fail-closed: tanpa kelompok → tidak melihat apa pun)
+  if (isKelompokScoped(user)) {
+    Object.assign(where, keluargaScope(user))
   } else {
     if (kelompokId) where.kelompokId = kelompokId
     if (wilayahId) where.kelompok = { wilayahId }
@@ -85,13 +86,7 @@ export async function getKeluargaById(id: number, user: JwtPayload) {
 
   if (!keluarga) throw new AppError(404, 'Data keluarga tidak ditemukan')
 
-  if (
-    user.role === 'PENATUA_KELOMPOK' &&
-    user.kelompokId &&
-    keluarga.kelompokId !== user.kelompokId
-  ) {
-    throw new AppError(403, 'Tidak memiliki akses ke data keluarga ini')
-  }
+  assertKelompokPenatua(user, keluarga.kelompokId, 'Tidak memiliki akses ke data keluarga ini')
 
   return keluarga
 }
@@ -111,7 +106,10 @@ export interface KeluargaBody {
   catatan?: string | null
 }
 
-export async function createKeluarga(body: KeluargaBody, userId: number) {
+export async function createKeluarga(body: KeluargaBody, userId: number, user?: JwtPayload) {
+  // Penatua hanya boleh membuat KK di kelompoknya sendiri
+  if (user) assertKelompokPenatua(user, body.kelompokId, 'Hanya dapat membuat keluarga di kelompok Anda sendiri')
+
   const count = await prisma.keluarga.count()
   const nomorKeluarga = `KLG${String(count + 1).padStart(5, '0')}`
 
@@ -126,10 +124,18 @@ export async function createKeluarga(body: KeluargaBody, userId: number) {
   })
 }
 
-export async function updateKeluarga(id: number, body: KeluargaBody, userId: number) {
-  await prisma.keluarga.findUniqueOrThrow({ where: { id } }).catch(() => {
+export async function updateKeluarga(id: number, body: KeluargaBody, userId: number, user?: JwtPayload) {
+  const existing = await prisma.keluarga.findUniqueOrThrow({ where: { id } }).catch(() => {
     throw new AppError(404, 'Data keluarga tidak ditemukan')
   })
+
+  // Penatua: KK harus milik kelompoknya dan tidak boleh dipindah ke kelompok lain
+  if (user && isKelompokScoped(user)) {
+    assertKelompokPenatua(user, existing.kelompokId, 'Tidak memiliki akses ke data keluarga ini')
+    if (body.kelompokId !== undefined) {
+      assertKelompokPenatua(user, body.kelompokId, 'Tidak boleh memindahkan keluarga ke kelompok lain')
+    }
+  }
 
   return prisma.keluarga.update({
     where: { id },

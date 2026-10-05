@@ -47,8 +47,8 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
   - **Tab Identitas** — nama, foto, NIK, tempat/tanggal lahir, golongan darah
   - **Tab Keanggotaan** — status keluarga (Kepala KK, Istri, Anak, dll.), status keanggotaan, sakramen baptis & sidi
   - **Tab Kontak** — telepon, WhatsApp, email, pendidikan, pekerjaan
-  - **Tab Keluarga** — pilih/cari keluarga, atau buat keluarga baru otomatis saat warga sebagai Kepala KK (dengan validasi wajib pilih kelompok)
-  - **Tab Alamat** — Alamat KTP, Alamat Domisili (jika berbeda), koordinat GPS (latitude/longitude). Kolom koordinat menerima desimal koma (`-6,2088`), dan menempel `-6.2088, 106.8456` dari Google Maps mengisi kedua kolom sekaligus; input tidak valid ditolak dengan pesan (rentang −90..90 / −180..180). Koordinat tampil di **Detail Warga** (tautan Google Maps) dan di peta Dashboard
+  - **Tab Keluarga** — pilih/cari keluarga, atau buat keluarga baru otomatis saat warga sebagai Kepala KK (dengan validasi wajib pilih kelompok). Untuk Kepala yang sudah punya KK, tab ini menampilkan ringkasan keluarga dan anggotanya
+  - **Tab Alamat** — blok **Alamat Rumah Tangga (KK)** untuk Kepala Keluarga (dimuat dari data KK; perubahan disimpan ke KK dan data warga dalam satu transaksi), Alamat KTP, Alamat Domisili (jika berbeda), koordinat GPS (latitude/longitude). Kolom koordinat menerima desimal koma (`-6,2088`), dan menempel `-6.2088, 106.8456` dari Google Maps mengisi kedua kolom sekaligus; input tidak valid ditolak dengan pesan (rentang −90..90 / −180..180). Koordinat tampil di **Detail Warga** (tautan Google Maps) dan di peta Dashboard
 - **Foto warga** — upload foto, dikompres otomatis di browser (max 400px, JPEG 80%), disimpan sebagai base64
 - **Filter & pencarian** — cari nama, filter per wilayah, kelompok, status keanggotaan, jenis kelamin, status dokumen
 - **Status dokumen** — alur Draft → Validasi → Aktif → Tidak Aktif
@@ -228,8 +228,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 12 | 123 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok) |
-| Frontend (`apps/web`) | 8 | 60 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat) |
+| Backend (`apps/api`) | 15 | 178 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard) |
+| Frontend (`apps/web`) | 11 | 74 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -640,7 +640,11 @@ Authorization: Bearer <token>
 **Catatan field redaction (UU PDP):**
 > ¹ **MAJELIS / STAF_ADMIN** — melihat semua field, termasuk koordinat rumah (latitude/longitude)  
 > ² **PENATUA_KELOMPOK** — NIK dan Alamat KTP disembunyikan; koordinat rumah boleh dilihat dan diisi. Saat mengedit, nilai NIK/Alamat KTP yang kosong **tidak menimpa** data tersimpan (bisa mengisi/mengubah, tidak bisa menghapus)  
-> **VIEWER** — NIK, Alamat KTP, Koordinat GPS, Telepon, WhatsApp, dan Email disembunyikan (read-only)
+> **VIEWER** — NIK, Alamat KTP, Koordinat GPS, Telepon, WhatsApp, dan Email disembunyikan (read-only); peta Dashboard tidak ditampilkan dan `GET /dashboard/map` mengembalikan daftar kosong
+
+**Scoping Penatua Kelompok (di-enforce di backend, fail-closed):**
+- Baca: daftar/detail Warga & Keluarga, statistik, chart, dan peta Dashboard hanya untuk kelompoknya. Penatua yang **belum punya kelompok** tidak melihat data apa pun (bukan semua data) dan mendapat `403` pada detail.
+- Tulis: penatua hanya dapat menambah warga ke KK/kelompok miliknya, membuat/mengubah KK di kelompoknya, dan tidak dapat memindahkan warga atau KK ke kelompok lain (`403`).
 
 ---
 
