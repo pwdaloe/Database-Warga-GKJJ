@@ -17,7 +17,7 @@ export function InputField({ label, error, required, className, ...props }: Inpu
       <input
         {...props}
         className={cn(
-          'w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition',
+          'w-full px-3 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition',
           'focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
           error ? 'border-red-400 bg-red-50' : 'border-gray-300',
           className,
@@ -46,7 +46,7 @@ export function SelectField({ label, error, required, options, placeholder, clas
       <select
         {...props}
         className={cn(
-          'w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition bg-white',
+          'w-full px-3 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition bg-white',
           'focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
           error ? 'border-red-400 bg-red-50' : 'border-gray-300',
           className,
@@ -81,7 +81,7 @@ export function TextareaField({ label, error, required, className, ...props }: T
         {...props}
         rows={props.rows ?? 3}
         className={cn(
-          'w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition resize-none',
+          'w-full px-3 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none transition resize-none',
           'focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
           error ? 'border-red-400 bg-red-50' : 'border-gray-300',
           className,

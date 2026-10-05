@@ -224,7 +224,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-0">
 
       {/* ── Header: Status Dokumen ─────────────────────────── */}
-      <div className="flex items-center justify-between px-1 pb-4 mb-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-3 sm:pb-4 mb-1">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Status Dokumen</p>
         <div className="flex gap-1.5">
           {STATUS_DOKUMEN.map((s) => (
@@ -233,7 +233,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               type="button"
               onClick={() => setValue('dataStatus', s.value as any)}
               className={cn(
-                'px-3 py-1 rounded-full text-xs font-medium transition ring-1',
+                'px-3 py-1.5 sm:py-1 rounded-full text-xs font-medium transition ring-1',
                 dataStatus === s.value
                   ? s.color + ' ring-2'
                   : 'bg-white text-gray-400 ring-gray-200 hover:ring-gray-300',
@@ -246,21 +246,21 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
       </div>
 
       {/* ── Tab navigation ────────────────────────────────── */}
-      <div className="flex border-b mb-5">
+      <div className="flex border-b mb-4 sm:mb-5 -mx-4 sm:mx-0 px-1 sm:px-0 overflow-x-auto">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             type="button"
             onClick={() => setActiveTab(key)}
             className={cn(
-              'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition',
+              'flex-1 sm:flex-none flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-sm font-medium border-b-2 -mb-px transition whitespace-nowrap',
               activeTab === key
                 ? 'border-brand-600 text-brand-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700',
               tabHasError(key) && activeTab !== key && 'text-red-500',
             )}
           >
-            <Icon size={14} />
+            <Icon size={16} />
             {label}
             {tabHasError(key) && <span className="w-1.5 h-1.5 rounded-full bg-red-500 ml-0.5" />}
           </button>
@@ -304,7 +304,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               className="hidden"
               onChange={handleFotoChange}
             />
-            <p className="text-xs text-gray-400">Klik foto untuk upload</p>
+            <p className="text-xs text-gray-400">Ketuk foto untuk ambil/unggah</p>
             {fotoUrl && (
               <button
                 type="button"
@@ -387,11 +387,11 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
           {/* Baptis */}
           <div className="space-y-3 p-4 bg-gray-50 rounded-xl border">
             <div className="flex items-center gap-3">
-              <input type="checkbox" id="sudahBaptis" {...register('sudahBaptis')} className="w-4 h-4 rounded text-brand-600" />
+              <input type="checkbox" id="sudahBaptis" {...register('sudahBaptis')} className="w-5 h-5 sm:w-4 sm:h-4 rounded text-brand-600" />
               <label htmlFor="sudahBaptis" className="text-sm font-medium text-gray-700">Sudah Baptis</label>
             </div>
             {sudahBaptis && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:pl-7">
                 <InputField label="Tanggal Baptis" type="date" {...register('tanggalBaptis')} error={errors.tanggalBaptis as any} />
                 <InputField label="Tempat Baptis" {...register('tempatBaptis')} error={errors.tempatBaptis} />
               </div>
@@ -401,11 +401,11 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
           {/* Sidi */}
           <div className="space-y-3 p-4 bg-gray-50 rounded-xl border">
             <div className="flex items-center gap-3">
-              <input type="checkbox" id="sudahSidi" {...register('sudahSidi')} className="w-4 h-4 rounded text-brand-600" />
+              <input type="checkbox" id="sudahSidi" {...register('sudahSidi')} className="w-5 h-5 sm:w-4 sm:h-4 rounded text-brand-600" />
               <label htmlFor="sudahSidi" className="text-sm font-medium text-gray-700">Sudah Sidi</label>
             </div>
             {sudahSidi && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:pl-7">
                 <InputField label="Nomor Sidi" {...register('nomorSidi')} error={errors.nomorSidi} />
                 <InputField label="Tanggal Sidi" type="date" {...register('tanggalSidi')} error={errors.tanggalSidi as any} />
               </div>
@@ -417,7 +417,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
             <div className="flex items-start gap-3">
               <input
                 type="checkbox" id="konsenPDP" {...register('konsenPDP')}
-                className="w-4 h-4 mt-0.5 rounded text-brand-600"
+                className="w-5 h-5 sm:w-4 sm:h-4 mt-0.5 shrink-0 rounded text-brand-600"
               />
               <label htmlFor="konsenPDP" className="text-sm text-gray-700 leading-relaxed">
                 <span className="font-medium">Persetujuan Pemrosesan Data Pribadi (PDP)</span> — jemaat/keluarga
@@ -429,7 +429,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               </label>
             </div>
             {konsenPDP && tanggalKonsenPDP && (
-              <p className="text-xs text-green-700 pl-7">
+              <p className="text-xs text-green-700 sm:pl-7">
                 Disetujui pada {new Date(tanggalKonsenPDP).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             )}
@@ -514,7 +514,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                   value={watch('newKelompokId') ?? ''}
                   onChange={(e) => setValue('newKelompokId', e.target.value ? Number(e.target.value) : null)}
                   className={cn(
-                    'w-full px-3 py-2.5 rounded-lg border text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500',
+                    'w-full px-3 py-3 sm:py-2.5 rounded-lg border text-base sm:text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500',
                     errors.newKelompokId ? 'border-red-400 focus:ring-red-400' : 'border-gray-300',
                   )}
                 >
@@ -571,7 +571,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                     setValue('keluargaId', null)
                   }}
                   placeholder="Ketik nama kepala keluarga atau nomor KK..."
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500"
                 />
               </div>
 
@@ -676,18 +676,20 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                   {...register('newAlamat')}
                   rows={2}
                   placeholder="Jl. Contoh No. 1"
-                  className="w-full px-3 py-2.5 rounded-lg border border-blue-200 text-sm outline-none bg-white focus:ring-2 focus:ring-blue-400 resize-none"
+                  className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-blue-200 text-base sm:text-sm outline-none bg-white focus:ring-2 focus:ring-blue-400 resize-none"
                 />
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <InputField label="RT" {...register('newRt')} placeholder="001" />
                 <InputField label="RW" {...register('newRw')} placeholder="005" />
                 <div className="col-span-2">
                   <InputField label="Kelurahan" {...register('newKelurahan')} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <InputField label="Kecamatan" {...register('newKecamatan')} />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="col-span-2 sm:col-span-1">
+                  <InputField label="Kecamatan" {...register('newKecamatan')} />
+                </div>
                 <InputField label="Kota" {...register('newKota')} placeholder="Jakarta" />
                 <InputField label="Kode Pos" {...register('newKodePos')} placeholder="13210" />
               </div>
@@ -705,7 +707,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               {...register('alamatKtp')}
               rows={3}
               placeholder="Jl. Nama Jalan No. XX, RT 000/RW 000, Kelurahan, Kecamatan, Kota, Kode Pos"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
+              className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
             />
           </div>
 
@@ -723,7 +725,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                   setDomisiliDifferent(e.target.checked)
                   if (!e.target.checked) setValue('alamatDomisili', null)
                 }}
-                className="w-4 h-4 rounded text-brand-600"
+                className="w-5 h-5 sm:w-4 sm:h-4 rounded text-brand-600"
               />
               <span className="text-sm text-gray-600">Domisili berbeda dari KTP</span>
             </label>
@@ -732,7 +734,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                 {...register('alamatDomisili')}
                 rows={3}
                 placeholder="Jl. Nama Jalan No. XX, RT 000/RW 000, Kelurahan, Kecamatan, Kota, Kode Pos"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
+                className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none bg-white focus:ring-2 focus:ring-brand-500 resize-none"
               />
             )}
             {domisiliDifferent && alamatDomisili && (
@@ -751,22 +753,24 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Latitude</label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   step="any"
                   value={watch('latitude') ?? ''}
                   onChange={(e) => setValue('latitude', e.target.value ? parseFloat(e.target.value) : null)}
                   placeholder="-6.2088"
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Longitude</label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   step="any"
                   value={watch('longitude') ?? ''}
                   onChange={(e) => setValue('longitude', e.target.value ? parseFloat(e.target.value) : null)}
                   placeholder="106.8456"
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm font-mono outline-none bg-white focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
@@ -797,7 +801,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
       )}
 
       {/* ── Navigasi tab + Submit ─────────────────────────── */}
-      <div className="flex items-center justify-between pt-5 mt-2 border-t">
+      <div className="sticky bottom-0 z-10 bg-white -mx-4 sm:mx-0 -mb-4 sm:mb-0 px-4 sm:px-0 pt-3 sm:pt-5 pb-4 sm:pb-0 mt-4 sm:mt-2 border-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
         <div className="flex gap-2">
           {activeTab !== 'identitas' && (
             <button
@@ -806,7 +810,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                 const idx = TABS.findIndex((t) => t.key === activeTab)
                 setActiveTab(TABS[idx - 1].key)
               }}
-              className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition"
+              className="flex-1 sm:flex-none px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition"
             >
               ← Sebelumnya
             </button>
@@ -818,7 +822,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
                 const idx = TABS.findIndex((t) => t.key === activeTab)
                 setActiveTab(TABS[idx + 1].key)
               }}
-              className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition"
+              className="flex-1 sm:flex-none px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition"
             >
               Selanjutnya →
             </button>
@@ -827,7 +831,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700
+          className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-brand-600 hover:bg-brand-700
             disabled:bg-brand-300 text-white text-sm font-medium rounded-lg transition"
         >
           {isSubmitting && <Loader2 size={16} className="animate-spin" />}
@@ -844,7 +848,7 @@ function TambahAnakButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center justify-center gap-2 w-full px-4 py-2.5
+      className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-2.5
         border border-dashed border-brand-300 text-brand-600 hover:bg-brand-50
         text-sm font-medium rounded-lg transition"
     >
@@ -863,14 +867,14 @@ function AnggotaTable({ anggota }: { anggota: any[] }) {
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
         Anggota Keluarga ({anggota.length})
       </p>
-      <div className="rounded-lg border overflow-hidden">
+      <div className="rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b">
               <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Nama</th>
               <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Status</th>
               <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">JK</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Keanggotaan</th>
+              <th className="hidden sm:table-cell text-left px-3 py-2 text-xs font-semibold text-gray-500">Keanggotaan</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -894,7 +898,7 @@ function AnggotaTable({ anggota }: { anggota: any[] }) {
                 <td className="px-3 py-2 text-center text-xs text-gray-500">
                   {w.jenisKelamin === 'L' ? 'L' : 'P'}
                 </td>
-                <td className="px-3 py-2">
+                <td className="hidden sm:table-cell px-3 py-2">
                   <span className={cn(
                     'px-2 py-0.5 rounded-full text-xs font-medium',
                     STATUS_KEANGGOTAAN_COLOR[w.statusKeanggotaan] ?? 'bg-gray-100 text-gray-500',

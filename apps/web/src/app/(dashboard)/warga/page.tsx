@@ -68,8 +68,8 @@ function AnggotaQuickForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-50 rounded-xl border p-4 space-y-3">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tambah Anggota</p>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="sm:col-span-2">
           <InputField
             label="Nama Lengkap" required
             {...register('namaLengkap')}
@@ -96,7 +96,7 @@ function AnggotaQuickForm({
           {...register('statusKeluarga')}
           error={errors.statusKeluarga}
         />
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <InputField label="Tanggal Lahir" type="date" {...register('tanggalLahir')} error={errors.tanggalLahir as any} />
         </div>
       </div>
@@ -104,7 +104,7 @@ function AnggotaQuickForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700
+          className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-3 sm:py-2 bg-brand-600 hover:bg-brand-700
             disabled:bg-brand-300 text-white text-sm font-medium rounded-lg transition"
         >
           {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
@@ -740,7 +740,7 @@ export default function WargaPage() {
             <div className="flex justify-end pt-2 border-t">
               <button
                 onClick={closeModal}
-                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition"
+                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition"
               >
                 Selesai
               </button>
