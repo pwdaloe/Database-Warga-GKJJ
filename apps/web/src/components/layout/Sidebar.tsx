@@ -130,7 +130,7 @@ const NAV_GROUPS: NavGroup[] = [
 ]
 
 // ── Komponen Sidebar ─────────────────────────────────────────
-export function Sidebar() {
+export function Sidebar({ open = false, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
 
@@ -140,7 +140,19 @@ export function Sidebar() {
   })).filter((group) => group.items.length > 0)
 
   return (
-    <aside className="w-64 min-h-screen bg-brand-900 text-white flex flex-col">
+    <>
+    {/* Backdrop drawer (mobile) */}
+    {open && (
+      <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={onClose} aria-hidden="true" />
+    )}
+    <aside
+      className={cn(
+        'w-64 bg-brand-900 text-white flex flex-col',
+        // Mobile/tablet: drawer geser dari kiri. Desktop: sidebar tetap.
+        'fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:z-auto lg:min-h-screen lg:translate-x-0',
+        open ? 'translate-x-0' : '-translate-x-full',
+      )}
+    >
 
       {/* ── Logo & versi ─────────────────────────────────── */}
       <div className="px-5 py-4 border-b border-white/10">
@@ -233,5 +245,6 @@ export function Sidebar() {
         </div>
       )}
     </aside>
+    </>
   )
 }

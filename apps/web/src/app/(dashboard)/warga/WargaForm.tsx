@@ -316,8 +316,8 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InputField
                 label="Nama Lengkap" required
                 {...register('namaLengkap')}
@@ -356,7 +356,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
       {/* ── Tab: Keanggotaan ──────────────────────────────── */}
       {activeTab === 'keanggotaan' && (
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectField
               label="Status dalam Keluarga" required
               options={[
@@ -391,7 +391,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               <label htmlFor="sudahBaptis" className="text-sm font-medium text-gray-700">Sudah Baptis</label>
             </div>
             {sudahBaptis && (
-              <div className="grid grid-cols-2 gap-4 pl-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                 <InputField label="Tanggal Baptis" type="date" {...register('tanggalBaptis')} error={errors.tanggalBaptis as any} />
                 <InputField label="Tempat Baptis" {...register('tempatBaptis')} error={errors.tempatBaptis} />
               </div>
@@ -405,7 +405,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
               <label htmlFor="sudahSidi" className="text-sm font-medium text-gray-700">Sudah Sidi</label>
             </div>
             {sudahSidi && (
-              <div className="grid grid-cols-2 gap-4 pl-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                 <InputField label="Nomor Sidi" {...register('nomorSidi')} error={errors.nomorSidi} />
                 <InputField label="Tanggal Sidi" type="date" {...register('tanggalSidi')} error={errors.tanggalSidi as any} />
               </div>
@@ -440,14 +440,14 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
       {/* ── Tab: Kontak ───────────────────────────────────── */}
       {activeTab === 'kontak' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField label="Telepon" type="tel" {...register('telepon')} error={errors.telepon} placeholder="08xx-xxxx-xxxx" />
             <InputField label="WhatsApp" type="tel" {...register('whatsapp')} error={errors.whatsapp} placeholder="08xx-xxxx-xxxx" />
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <InputField label="Email" type="email" {...register('email')} error={errors.email} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectField
               label="Pendidikan Terakhir"
               options={PENDIDIKAN.map((p) => ({ value: p, label: p }))}

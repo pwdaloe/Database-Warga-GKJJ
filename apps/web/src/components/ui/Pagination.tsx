@@ -16,8 +16,8 @@ export function Pagination({ page, totalPages, total, limit, onChange }: Props) 
   const to = Math.min(page * limit, total)
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t bg-white">
-      <p className="text-sm text-gray-500">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t bg-white">
+      <p className="text-xs sm:text-sm text-gray-500">
         Menampilkan <span className="font-medium">{from}–{to}</span> dari{' '}
         <span className="font-medium">{total}</span> data
       </p>
@@ -26,7 +26,7 @@ export function Pagination({ page, totalPages, total, limit, onChange }: Props) 
           onClick={() => onChange(page - 1)}
           disabled={page <= 1}
           className={cn(
-            'p-2 rounded-lg text-sm transition',
+            'p-2.5 sm:p-2 rounded-lg text-sm transition',
             page <= 1
               ? 'text-gray-300 cursor-not-allowed'
               : 'text-gray-600 hover:bg-gray-100',
@@ -44,7 +44,7 @@ export function Pagination({ page, totalPages, total, limit, onChange }: Props) 
               key={p}
               onClick={() => onChange(p)}
               className={cn(
-                'w-8 h-8 rounded-lg text-sm transition',
+                'w-9 h-9 sm:w-8 sm:h-8 rounded-lg text-sm transition',
                 p === page
                   ? 'bg-brand-600 text-white font-medium'
                   : 'text-gray-600 hover:bg-gray-100',
@@ -58,7 +58,7 @@ export function Pagination({ page, totalPages, total, limit, onChange }: Props) 
           onClick={() => onChange(page + 1)}
           disabled={page >= totalPages}
           className={cn(
-            'p-2 rounded-lg text-sm transition',
+            'p-2.5 sm:p-2 rounded-lg text-sm transition',
             page >= totalPages
               ? 'text-gray-300 cursor-not-allowed'
               : 'text-gray-600 hover:bg-gray-100',

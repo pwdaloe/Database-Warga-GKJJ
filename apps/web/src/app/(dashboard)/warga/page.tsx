@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  Plus, Search, Users, Pencil, Trash2, Eye, Filter,
+  Plus, Search, Users, Pencil, Trash2, Eye, Filter, Phone,
   UserPlus, CheckCircle2, Loader2, Crown, AlertCircle, MapPin,
 } from 'lucide-react'
 import { format, differenceInYears } from 'date-fns'
@@ -261,11 +261,11 @@ export default function WargaPage() {
     : 'Tambah Warga Baru'
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Data Warga</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Data Warga</h1>
           <p className="text-gray-500 text-sm mt-1">
             {meta
               ? isPenatua
@@ -283,53 +283,53 @@ export default function WargaPage() {
         {canEdit && (
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700
+            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 shrink-0 whitespace-nowrap bg-brand-600 hover:bg-brand-700
               text-white text-sm font-medium rounded-lg transition"
           >
             <Plus size={18} />
-            Tambah Warga
+            Tambah<span className="hidden sm:inline">&nbsp;Warga</span>
           </button>
         )}
       </div>
 
       {/* Search & Filter */}
       <div className="bg-white rounded-xl border shadow-sm mb-4">
-        <div className="p-4 flex gap-3 items-center">
+        <div className="p-3 sm:p-4 flex gap-2 sm:gap-3 items-center">
           <form onSubmit={handleSearch} className="flex-1 flex gap-2">
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Cari nama, nomor anggota, NIK, telepon..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm
+                placeholder="Cari nama, no. anggota, NIK..."
+                className="w-full pl-9 pr-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm
                   outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
-            <button type="submit" className="px-4 py-2.5 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700 transition">
+            <button type="submit" className="px-4 py-3 sm:py-2.5 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700 transition">
               Cari
             </button>
           </form>
           <button
             onClick={() => setShowFilter(!showFilter)}
             className={cn(
-              'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition',
+              'flex items-center gap-2 px-3 py-3 sm:py-2.5 rounded-lg border text-sm transition',
               showFilter ? 'bg-brand-50 border-brand-300 text-brand-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50',
             )}
           >
             <Filter size={15} />
-            Filter
+            <span className="hidden sm:inline">Filter</span>
           </button>
         </div>
 
         {showFilter && (
-          <div className="px-4 pb-4 border-t pt-3 flex gap-3 flex-wrap">
+          <div className="px-3 sm:px-4 pb-4 border-t pt-3 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
             {!isPenatua && (
               <>
                 <select
                   value={wilayahId ?? ''}
                   onChange={(e) => { setWilayahId(e.target.value ? Number(e.target.value) : undefined); setKelompokId(undefined); setPage(1) }}
-                  className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
                 >
                   <option value="">Semua Wilayah</option>
                   {wilayahList.map((w) => <option key={w.id} value={w.id}>{w.nama}</option>)}
@@ -337,7 +337,7 @@ export default function WargaPage() {
                 <select
                   value={kelompokId ?? ''}
                   onChange={(e) => { setKelompokId(e.target.value ? Number(e.target.value) : undefined); setPage(1) }}
-                  className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
                 >
                   <option value="">Semua Kelompok</option>
                   {wilayahList
@@ -351,7 +351,7 @@ export default function WargaPage() {
             <select
               value={statusKeanggotaan}
               onChange={(e) => { setStatusKeanggotaan(e.target.value); setPage(1) }}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
             >
               <option value="">Semua Status</option>
               <option value="AKTIF">Aktif</option>
@@ -363,7 +363,7 @@ export default function WargaPage() {
             <select
               value={jenisKelamin}
               onChange={(e) => { setJenisKelamin(e.target.value); setPage(1) }}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
             >
               <option value="">Semua Gender</option>
               <option value="L">Laki-laki</option>
@@ -372,7 +372,7 @@ export default function WargaPage() {
             <select
               value={dataStatus}
               onChange={(e) => { setDataStatus(e.target.value); setPage(1) }}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
             >
               <option value="">Semua Status Dokumen</option>
               <option value="DRAFT">Draft (Perlu Validasi)</option>
@@ -386,7 +386,7 @@ export default function WargaPage() {
                 setStatusKeanggotaan(''); setJenisKelamin('')
                 setDataStatus(''); setSearch(''); setSearchInput(''); setPage(1)
               }}
-              className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 underline"
+              className="px-3 py-2.5 sm:py-2 text-sm text-gray-500 hover:text-gray-700 underline text-left sm:text-center"
             >
               Reset
             </button>
@@ -408,6 +408,98 @@ export default function WargaPage() {
             <p className="text-sm mt-1">Tambahkan warga atau ubah filter pencarian</p>
           </div>
         ) : (
+          <>
+          {/* Mobile: daftar kartu */}
+          <ul className="md:hidden divide-y">
+            {wargaList.map((w: any) => {
+              const usia = w.tanggalLahir
+                ? differenceInYears(new Date(), new Date(w.tanggalLahir))
+                : null
+              const kontak = w.whatsapp ?? w.telepon
+              return (
+                <li key={w.id} className="p-4">
+                  <div
+                    className="flex items-start gap-3 cursor-pointer"
+                    onClick={() => router.push(`/warga/${w.id}`)}
+                  >
+                    <div className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0',
+                      w.jenisKelamin === 'L' ? 'bg-blue-500' : 'bg-pink-500',
+                    )}>
+                      {w.namaLengkap.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 leading-snug break-words">{w.namaLengkap}</p>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        {w.nomorInduk && (
+                          <span className="text-xs font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                            {w.nomorInduk}
+                          </span>
+                        )}
+                        <Badge value={w.statusKeluarga} type="statusKeluarga" />
+                        <Badge value={w.dataStatus} type="dataStatus" />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1.5">
+                        {w.keluarga?.kelompok?.nama ?? '—'}
+                        {w.keluarga?.kelompok?.wilayah?.nama ? ` · ${w.keluarga.kelompok.wilayah.nama}` : ''}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {w.tanggalLahir
+                          ? `${format(new Date(w.tanggalLahir), 'd MMM yyyy', { locale: localeId })} · ${usia} tahun`
+                          : 'Tanggal lahir —'}
+                      </p>
+                      <div className="flex gap-1.5 mt-1.5">
+                        <span className={cn('text-[11px] px-2 py-0.5 rounded-full font-medium',
+                          w.sudahBaptis ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'
+                        )}>Baptis</span>
+                        <span className={cn('text-[11px] px-2 py-0.5 rounded-full font-medium',
+                          w.sudahSidi ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400'
+                        )}>Sidi</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Aksi — area sentuh min. 44px */}
+                  <div className="flex gap-2 mt-3">
+                    {kontak && (
+                      <a
+                        href={`tel:${kontak}`}
+                        className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 active:bg-gray-100"
+                      >
+                        <Phone size={15} /> Telepon
+                      </a>
+                    )}
+                    <button
+                      onClick={() => router.push(`/warga/${w.id}`)}
+                      className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 active:bg-gray-100"
+                    >
+                      <Eye size={15} /> Detail
+                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => { setEditData(w); setWizard({ step: 1 }); setModalOpen(true) }}
+                        className="flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-50 border border-brand-200 text-sm text-brand-700 active:bg-brand-100"
+                      >
+                        <Pencil size={15} /> Edit
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => setConfirmDelete(w)}
+                        aria-label="Hapus"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-red-200 text-red-600 active:bg-red-50"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+
+          {/* Desktop/tablet: tabel */}
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -520,6 +612,8 @@ export default function WargaPage() {
               })}
             </tbody>
           </table>
+          </div>
+          </>
         )}
 
         {meta && meta.total > 0 && (
@@ -663,7 +757,7 @@ export default function WargaPage() {
             Tindakan ini tidak dapat dibatalkan.
           </p>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
+            <button onClick={() => setConfirmDelete(null)} className="px-4 py-2.5 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition">
               Batal
             </button>
             <button
