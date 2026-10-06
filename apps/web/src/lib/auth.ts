@@ -74,6 +74,7 @@ export const ROLE_LABELS: Record<string, string> = {
   STAF_ADMIN: 'Staf Administrasi',
   PENATUA_KELOMPOK: 'Penatua Kelompok',
   VIEWER: 'Viewer',
+  JEMAAT: 'Jemaat',
 }
 
 export const ROLE_COLORS: Record<string, string> = {
@@ -83,4 +84,5 @@ export const ROLE_COLORS: Record<string, string> = {
   STAF_ADMIN: 'bg-green-100 text-green-700',
   PENATUA_KELOMPOK: 'bg-yellow-100 text-yellow-700',
   VIEWER: 'bg-gray-100 text-gray-700',
+  JEMAAT: 'bg-teal-100 text-teal-700',
 }

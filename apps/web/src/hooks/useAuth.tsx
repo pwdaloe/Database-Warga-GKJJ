@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token, user } = await loginRequest(username, password)
     saveToken(token)
     setUser(user)
-    router.push('/dashboard')
+    router.push(user.role === 'JEMAAT' ? '/profil-saya' : '/dashboard')
   }, [router])
 
   const refreshUser = useCallback(async () => {

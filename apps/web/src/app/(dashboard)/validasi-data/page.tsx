@@ -268,7 +268,7 @@ export default function ValidasiDataPage() {
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-gray-900 leading-tight break-words">{w.namaLengkap}</div>
+                      <div className="font-medium text-gray-900 leading-tight break-words">{w.namaLengkap}{w.diubahMandiriAt && <span className="ml-2 align-middle text-[11px] font-medium px-1.5 py-0.5 rounded bg-teal-50 text-teal-700">Diubah mandiri oleh jemaat</span>}</div>
                       <div className="text-xs text-gray-400 mt-0.5">{nomorWarga(w) ?? '—'}</div>
                       <div className="text-sm text-gray-700 mt-1.5 break-words">
                         {kelompok ? `${kelompok.kode} — ${kelompok.nama}` : '—'}
@@ -352,7 +352,7 @@ export default function ValidasiDataPage() {
                       </td>
                     )}
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900 leading-tight">{w.namaLengkap}</div>
+                      <div className="font-medium text-gray-900 leading-tight">{w.namaLengkap}{w.diubahMandiriAt && <span className="ml-2 align-middle text-[11px] font-medium px-1.5 py-0.5 rounded bg-teal-50 text-teal-700">Diubah mandiri oleh jemaat</span>}</div>
                       <div className="text-xs text-gray-400 mt-0.5">{nomorWarga(w) ?? '—'}</div>
                     </td>
                     <td className="px-4 py-3">

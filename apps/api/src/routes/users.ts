@@ -13,7 +13,7 @@ export const usersRouter = Router()
 usersRouter.use(authenticate)
 usersRouter.use(authorize('SUPERADMIN', 'KEPALA_KANTOR'))
 
-export const ROLES = ['SUPERADMIN','KEPALA_KANTOR','MAJELIS','STAF_ADMIN','PENATUA_KELOMPOK','VIEWER'] as const
+export const ROLES = ['SUPERADMIN','KEPALA_KANTOR','MAJELIS','STAF_ADMIN','PENATUA_KELOMPOK','VIEWER','JEMAAT'] as const
 
 const userSelect = {
   id: true, nama: true, username: true, email: true, whatsapp: true,
@@ -43,6 +43,10 @@ function parseWa(input: string | null | undefined): string | null {
   return n
 }
 
+function assertJemaatTertaut(role: string, wargaId: number | null | undefined) {
+  if (role === 'JEMAAT' && !wargaId) throw new AppError(400, 'Role Jemaat wajib ditautkan ke data warga')
+}
+
 const createSchema = z.object({
   nama:        z.string().min(2).max(150),
   username:    z.string().min(3).max(50).regex(/^[a-zA-Z0-9._-]+$/, 'Hanya huruf, angka, titik, underscore, strip'),
@@ -58,6 +62,7 @@ const createSchema = z.object({
 // POST /api/users
 usersRouter.post('/', async (req, res) => {
   const data = createSchema.parse(req.body)
+  assertJemaatTertaut(data.role, data.wargaId)
 
   // Cek duplikat username / email
   const existing = await prisma.user.findFirst({
@@ -108,6 +113,7 @@ const updateSchema = z.object({
 usersRouter.put('/:id', async (req, res) => {
   const id = Number(req.params['id'])
   const data = updateSchema.parse(req.body)
+  assertJemaatTertaut(data.role, data.wargaId)
 
   // Cek duplikat (kecuali diri sendiri)
   const existing = await prisma.user.findFirst({

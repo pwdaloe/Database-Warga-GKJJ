@@ -17,6 +17,8 @@ import { dashboardRouter } from './routes/dashboard.js'
 import { pengaturanRouter } from './routes/pengaturan.js'
 import { usersRouter } from './routes/users.js'
 import { hubungiRouter } from './routes/hubungi.js'
+import { profilRouter } from './routes/profil.js'
+import { jemaatGuard } from './middleware/jemaatGuard.js'
 import { publicRouter } from './routes/public.js'
 import { logsRouter } from './routes/logs.js'
 import { perpindahanRouter } from './routes/perpindahan.js'
@@ -66,6 +68,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// Pagar role JEMAAT — sebelum router mana pun (fail-closed)
+app.use('/api', jemaatGuard)
+
 // Routes
 app.use('/api/auth',       authRouter)
 app.use('/api/wilayah',    wilayahRouter)
@@ -77,6 +82,7 @@ app.use('/api/dashboard',  dashboardRouter)
 app.use('/api/pengaturan', pengaturanRouter)
 app.use('/api/users',      usersRouter)
 app.use('/api/hubungi',    hubungiRouter)
+app.use('/api/profil-saya', profilRouter)
 app.use('/api/public',     publicRouter)
 app.use('/api/logs',       logsRouter)
 app.use('/api/perpindahan', perpindahanRouter)

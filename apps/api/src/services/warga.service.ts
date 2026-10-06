@@ -59,6 +59,7 @@ const wargaInclude = {
 } satisfies Prisma.WargaInclude
 
 const wargaDetailInclude = {
+  catatanJemaat: { where: { jenis: 'CATATAN' as const }, take: 1 },
   keluarga: {
     include: {
       kelompok: { include: { wilayah: true } },
@@ -379,7 +380,7 @@ export async function bulkValidasiWarga(
 
   const updateData =
     action === 'validate'
-      ? { dataStatus: 'AKTIF' as const, validatedBy: userId, validatedAt: new Date() }
+      ? { dataStatus: 'AKTIF' as const, validatedBy: userId, validatedAt: new Date(), diubahMandiriAt: null }
       : { dataStatus: 'DRAFT' as const, validatedBy: null, validatedAt: null }
 
   const result = await prisma.warga.updateMany({

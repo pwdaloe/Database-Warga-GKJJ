@@ -317,6 +317,14 @@ export default function WargaDetailPage() {
             </div>
           )}
 
+          {/* Catatan dari jemaat (terpisah dari catatan internal) */}
+          {warga.catatanJemaat?.[0]?.isi && (
+            <div className="bg-teal-50 rounded-xl border border-teal-100 p-4 sm:p-6 md:col-span-2">
+              <h2 className="text-sm font-semibold text-teal-700 uppercase tracking-wide mb-3">Catatan dari Jemaat</h2>
+              <p className="text-sm text-gray-700 whitespace-pre-line break-words">{warga.catatanJemaat[0].isi}</p>
+            </div>
+          )}
+
           {/* Catatan */}
           {warga.catatan && (
             <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6 md:col-span-2">

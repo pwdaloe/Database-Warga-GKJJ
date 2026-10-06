@@ -8,7 +8,7 @@ export type StatusDalamKeluarga = 'KEPALA' | 'ISTRI' | 'ANAK' | 'MENANTU' | 'CUC
 export type StatusKeanggotaan = 'AKTIF' | 'NON_AKTIF' | 'KATEKUMEN' | 'PINDAH_KELUAR' | 'MENINGGAL'
 export type StatusKeluarga = 'AKTIF' | 'NON_AKTIF'
 export type DataStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'VALIDATED'
-export type UserRole = 'SUPERADMIN' | 'KEPALA_KANTOR' | 'MAJELIS' | 'STAF_ADMIN' | 'PENATUA_KELOMPOK' | 'VIEWER'
+export type UserRole = 'SUPERADMIN' | 'KEPALA_KANTOR' | 'MAJELIS' | 'STAF_ADMIN' | 'PENATUA_KELOMPOK' | 'VIEWER' | 'JEMAAT'
 export type JenisPerpindahan = 'MASUK' | 'KELUAR' | 'MENINGGAL'
 
 // ── Master Data ──────────────────────────────────────────────

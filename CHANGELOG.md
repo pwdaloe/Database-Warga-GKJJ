@@ -3,6 +3,41 @@
 
 ---
 
+## [2026-10-06 WIB] — Sprint 11/11 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Selasa, 6 Oktober 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 11 Selesai: Role Jemaat — Profil Saya, Verifikasi Staf, Catatan Jemaat
+- **Role `JEMAAT`** (wajib tertaut ke warga; pembuatan lewat form Pengguna, tidak bisa lewat import Excel). Akun tanpa tautan: 403 fail-closed
+- **Pagar global `jemaatGuard`**: banyak route lama hanya memakai `authenticate` tanpa `authorize` (GET `/warga`, `/keluarga`, `/dashboard`, …), sehingga
+  role baru akan lolos ke sana walau `authorize(...)` tidak menyebut JEMAAT. Pagar menolak JEMAAT di **semua** route `/api/*` kecuali Profil Saya, Hubungi (GET),
+  auth, system, public, dan autocomplete kelurahan. Route baru otomatis tertutup. Tes: 22 jalur ditolak (termasuk route yang belum ada); mutation check (pagar dimatikan → 13 tes gagal)
+- **Profil Saya** (`GET/PUT /api/profil-saya`): id warga selalu dari akun login, bukan parameter. Whitelist Zod `.strict()` — nama lengkap, status keanggotaan, sakramen,
+  relasi keluarga, `dataStatus`, konsen, koordinat → 400. Field: identitas (nama panggilan, tempat/tanggal lahir, NIK, golongan darah), kontak (telepon, WhatsApp + centang
+  tampilkan, email, pendidikan, pekerjaan), alamat (KTP, domisili + centang "berbeda dengan KTP"), catatan jemaat
+- **Alamat KK hanya kepala keluarga**: non-kepala 403 dan **tidak ada** field lain di request yang sama yang tertulis; kolom terkunci di UI
+- **NIK**: 16 digit, bentrok dengan warga lain ditolak, terenkripsi, dimasker di tampilan (`3171••••••••0001`), tidak ada di audit log; kosong = tidak diubah
+- **Verifikasi staf**: setiap perubahan mengembalikan `dataStatus` ke DRAFT (KK ikut), menandai `diubahMandiriAt` (badge "Diubah mandiri oleh jemaat" di Validasi Data), tercatat di
+  `audit_log` (nilai lama/baru, `sumber: jemaat`); validasi staf mengosongkan penanda. Validator: Superadmin, Kepala Kantor, Staf Admin
+- **Catatan jemaat** terpisah (`catatan_jemaat`, kolom `jenis` CATATAN/KEBUTUHAN/SURVEI siap dikembangkan); tampil bagi staf di Detail Warga; `Warga.catatan` internal tidak tersentuh
+- **Web**: halaman Profil Saya 3 tab (mobile-first), sidebar & redirect pasca-login ke Profil Saya, `ProtectedRoute` membatasi JEMAAT, role Jemaat di form Pengguna (wajib pilih warga)
+- **Migrasi aditif** (`role_jemaat_catatan`, `warga_diubah_mandiri`; nilai enum baru `JEMAAT`), data lama tidak berubah
+- Tes: API 232 → 287 (+55), web 110 → 127 (+17); **mutation check**: hapus field dari `getProfil` → 2 tes gagal; hapus pengecekan kepala keluarga → 1 gagal; hapus field dari helper form → 1 gagal.
+  Diverifikasi juga dengan query nyata ke DB lokal (baris uji dibuat lalu dihapus): kepala mengubah profil/KK/catatan, anggota ditolak 403 dan KK tidak berubah
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+- UI Profil Saya **belum divalidasi visual di browser** (hanya tes komponen, type-check, build, dan query nyata ke DB lokal)
+- Migrasi Sprint 10 dan 11 **belum dijalankan di produksi** (`prisma migrate deploy` — konfirmasi Daru). Nilai enum `JEMAAT` ditambahkan lewat `ALTER TYPE ADD VALUE`
+- Aplikasi mobile `/m` tidak disesuaikan untuk JEMAAT; API menolak, dan halaman dialihkan ke Profil Saya (LOW)
+- Belum ada alur membuat akun Jemaat massal (hanya satu per satu lewat form Pengguna)
+
+### 🏃 Next Sprint
+Belum direncanakan. Kandidat: pembuatan akun Jemaat massal (pilih banyak warga → kirim wa.me berurutan), survei/kebutuhan jemaat (`CatatanJemaat.jenis`), pengingat belum login
+
+---
+
 ## [2026-10-06 WIB] — Sprint 10/11 | ✅ DONE
 
 **Project**: Database Warga GKJJ

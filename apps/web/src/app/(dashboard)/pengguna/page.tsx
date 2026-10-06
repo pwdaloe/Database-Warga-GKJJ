@@ -18,7 +18,7 @@ import { InfoAkunModal, type InfoAkun } from './InfoAkunModal'
 
 const ROLES = [
   'SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS',
-  'STAF_ADMIN', 'PENATUA_KELOMPOK', 'VIEWER',
+  'STAF_ADMIN', 'PENATUA_KELOMPOK', 'VIEWER', 'JEMAAT',
 ] as const
 
 // ── Form user ─────────────────────────────────────────────────
@@ -122,6 +122,9 @@ function UserForm({
             ))}
           </select>
         </div>
+        {form.role === 'JEMAAT' && !form.wargaId && (
+          <p className="sm:col-span-2 text-xs text-red-600">Role Jemaat wajib ditautkan ke warga (pilih warga di atas).</p>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Kelompok</label>
           <select
@@ -146,7 +149,7 @@ function UserForm({
           className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
           Batal
         </button>
-        <button type="submit" disabled={loading}
+        <button type="submit" disabled={loading || (form.role === 'JEMAAT' && !form.wargaId)}
           className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 sm:py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 rounded-lg">
           {loading && <Loader2 size={14} className="animate-spin" />}
           Simpan

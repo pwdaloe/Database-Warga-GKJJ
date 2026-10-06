@@ -168,17 +168,19 @@ model Warga {
   updatedBy                Int?                @map("updated_by")
   validatedBy              Int?                @map("validated_by")
   validatedAt              DateTime?           @map("validated_at")
+  diubahMandiriAt          DateTime?           @map("diubah_mandiri_at") // diisi saat jemaat mengubah data sendiri; dikosongkan saat staf memvalidasi
   createdAt                DateTime            @default(now()) @map("created_at")
   updatedAt                DateTime            @updatedAt @map("updated_at")
 
-  keluarga               Keluarga?     @relation(fields: [keluargaId], references: [id])
-  createdByUser          User?         @relation("WargaCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser          User?         @relation("WargaUpdatedBy", fields: [updatedBy], references: [id])
-  validatedByUser        User?         @relation("WargaValidatedBy", fields: [validatedBy], references: [id])
-  kelompokSebagaiPenatua Kelompok[]    @relation("KelompokPenatua")
-  keluargaSebagaiKepala  Keluarga[]    @relation("KeluargaKepala")
-  perpindahans           Perpindahan[] @relation("WargaPerpindahan")
-  user                   User?         @relation("WargaUser")
+  keluarga               Keluarga?       @relation(fields: [keluargaId], references: [id])
+  createdByUser          User?           @relation("WargaCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser          User?           @relation("WargaUpdatedBy", fields: [updatedBy], references: [id])
+  validatedByUser        User?           @relation("WargaValidatedBy", fields: [validatedBy], references: [id])
+  kelompokSebagaiPenatua Kelompok[]      @relation("KelompokPenatua")
+  keluargaSebagaiKepala  Keluarga[]      @relation("KeluargaKepala")
+  perpindahans           Perpindahan[]   @relation("WargaPerpindahan")
+  catatanJemaat          CatatanJemaat[]
+  user                   User?           @relation("WargaUser")
 
   @@index([keluargaId])
   @@index([namaLengkap])
@@ -360,6 +362,7 @@ enum UserRole {
   STAF_ADMIN
   PENATUA_KELOMPOK
   VIEWER
+  JEMAAT // akun warga: hanya data dirinya sendiri (Profil Saya) + Hubungi
 
   @@map("user_role_enum")
 }
@@ -433,4 +436,28 @@ enum JenisKontakGereja {
   PENDETA_EMERITUS
 
   @@map("jenis_kontak_gereja_enum")
+}
+
+// Catatan yang diisi jemaat sendiri (terpisah dari Warga.catatan internal).
+// `jenis` disiapkan untuk survei / kebutuhan jemaat ke depan.
+model CatatanJemaat {
+  id        Int                @id @default(autoincrement())
+  wargaId   Int                @map("warga_id")
+  jenis     JenisCatatanJemaat @default(CATATAN)
+  isi       String             @db.Text
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  warga Warga @relation(fields: [wargaId], references: [id], onDelete: Cascade)
+
+  @@index([wargaId, jenis])
+  @@map("catatan_jemaat")
+}
+
+enum JenisCatatanJemaat {
+  CATATAN
+  KEBUTUHAN
+  SURVEI
+
+  @@map("jenis_catatan_jemaat_enum")
 }

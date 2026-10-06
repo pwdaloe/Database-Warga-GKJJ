@@ -706,7 +706,7 @@ Deploy ke production
 | Notifikasi ulang tahun jemaat | 🗓️ Planned | WhatsApp otomatis |
 | Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
 | Tautkan warga ke pengguna + notifikasi akun via WhatsApp (template configurable) | ✅ Selesai (Sprint 10) | Pilih warga saat tambah pengguna (nama & WA terisi otomatis), kirim info portal jemaat.gkjjakarta.org + password default. Lihat `docs/FITUR_NOTIFIKASI_AKUN_WA.md` |
-| Role Jemaat (lihat & ubah data pribadi sendiri) + menu Hubungi (WA Center, majelis kelompok, Kepala Kantor, Pendeta via wa.me) | 🚧 Hubungi selesai (Sprint 10); Role Jemaat → Sprint 11 | Tambahan dari request di atas; keputusan disetujui 2026-10-06, lihat bagian 10–14 dokumen yang sama |
+| Role Jemaat (lihat & ubah data pribadi sendiri) + menu Hubungi (WA Center, majelis kelompok, Kepala Kantor, Pendeta via wa.me) | ✅ Selesai (Sprint 10 Hubungi, Sprint 11 Role Jemaat) | Tambahan dari request di atas; keputusan disetujui 2026-10-06, lihat bagian 10–14 dokumen yang sama |
 
 ---
 

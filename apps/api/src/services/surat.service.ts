@@ -10,6 +10,7 @@ const ROLE_LABELS: Record<string, string> = {
   STAF_ADMIN: 'Staf Administrasi',
   PENATUA_KELOMPOK: 'Penatua Kelompok',
   VIEWER: 'Viewer',
+  JEMAAT: 'Jemaat',
 }
 
 const JUDUL_SURAT: Record<string, string> = {

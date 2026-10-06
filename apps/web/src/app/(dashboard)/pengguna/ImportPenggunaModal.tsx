@@ -11,6 +11,7 @@ import { api } from '@/lib/api'
 import { ROLE_LABELS } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 
+// JEMAAT tidak dapat diimport: wajib ditautkan ke warga lewat form Pengguna
 const ROLES = ['SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK', 'VIEWER']
 
 type ParsedRow = {

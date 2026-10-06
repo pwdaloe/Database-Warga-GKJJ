@@ -237,7 +237,7 @@ Dampak ke rancangan: baris "Kepala Kantor" pada tabel 11 berubah dari otomatis m
 - **Daftar Pendeta** dapat diaktifkan/dinonaktifkan per orang dan mendukung **Pendeta Emeritus** (jenis kontak tersendiri, ditandai "Emeritus").
 - Menu **Hubungi tampil untuk semua role**.
 - Majelis kelompok hanya tampil bila penatua mencentang **"boleh ditampilkan ke jemaat"** (tab Kontak form Warga).
-- **Status implementasi:** fase 1 dan fase 5 selesai di **Sprint 10**; fase 4 (Role Jemaat) dijadwalkan di **Sprint 11**.
+- **Status implementasi:** fase 1 dan fase 5 selesai di **Sprint 10**; fase 4 (Role Jemaat) selesai di **Sprint 11**.
 
 ## 14. Kriteria Selesai (tambahan)
 

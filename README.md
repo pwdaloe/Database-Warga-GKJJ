@@ -166,6 +166,15 @@ Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off
 - **Pencarian & filter** — cari nama, username, email, atau kelompok; filter **Role**, **Kelompok** (termasuk "Tanpa kelompok"), dan **Status** (Aktif/Nonaktif); ringkasan "N dari M akun" saat memfilter, tombol Reset, dan pesan jika tidak ada yang cocok
 - Akses hanya untuk **Superadmin** dan **Kepala Kantor**
 
+#### Role Jemaat & Profil Saya
+Akun **Jemaat** (role `JEMAAT`, wajib ditautkan ke warga lewat form Pengguna) hanya melihat **Profil Saya** dan **Hubungi**; semua route API lain ditolak oleh pagar global `jemaatGuard`.
+- **Dapat diubah**: Identitas (nama panggilan, tempat/tanggal lahir, NIK, golongan darah), Kontak (telepon, WhatsApp + centang boleh ditampilkan, email, pendidikan, pekerjaan, catatan jemaat), Alamat (KTP, domisili — centang "berbeda dengan KTP")
+- **Alamat Rumah Tangga (KK)** hanya dapat diubah oleh **kepala keluarga**; anggota lain hanya melihat
+- **Tidak dapat diubah**: nama lengkap, nomor anggota, status keanggotaan, sakramen, relasi keluarga, status data
+- NIK dimasker di tampilan; kosong berarti tidak diubah. Server memakai whitelist ketat (field di luar daftar → 400)
+- **Verifikasi staf**: perubahan mengembalikan data ke status Draft dan muncul di **Validasi Data** dengan penanda "Diubah mandiri oleh jemaat"; tercatat di audit log (nilai lama/baru, sumber jemaat)
+- **Catatan jemaat** terpisah dari catatan internal; tampil bagi staf di Detail Warga (struktur siap untuk survei/kebutuhan jemaat)
+
 #### Hubungi
 Menu untuk **semua role** berisi tombol **Chat WhatsApp** (`wa.me`, langsung membuka aplikasi WhatsApp):
 1. **GKJ WhatsApp Center**
@@ -254,8 +263,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 18 | 232 (akun & WhatsApp: password acak, notifikasi, template, kontak gereja, Hubungi per role, normalisasi nomor, crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem, penomoran KK) |
-| Frontend (`apps/web`) | 17 | 110 (halaman Hubungi, modal Info Akun, Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner, round-trip form Keluarga) |
+| Backend (`apps/api`) | 19 | 287 (role Jemaat: pagar global, Profil Saya, whitelist, NIK, alamat KK kepala keluarga, catatan, audit, akun & WhatsApp: password acak, notifikasi, template, kontak gereja, Hubungi per role, normalisasi nomor, crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem, penomoran KK) |
+| Frontend (`apps/web`) | 20 | 127 (Profil Saya, payload profil, pembatasan Jemaat di ProtectedRoute, halaman Hubungi, modal Info Akun, Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner, round-trip form Keluarga) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -363,6 +372,7 @@ Database-Warga-GKJJ/
 │   │       │   ├── import.ts       # Batch import Excel (warga & pengguna)
 │   │       │   ├── users.ts        # Manajemen pengguna + password acak + notifikasi WhatsApp
 │   │       │   ├── hubungi.ts      # Menu Hubungi (semua role)
+│   │       │   ├── profil.ts       # Profil Saya (khusus role JEMAAT)
 │   │       │   ├── logs.ts         # Activity log
 │   │       │   ├── perpindahan.ts  # CRUD + approve/validate + surat.pdf + kirim-email
 │   │       │   └── public.ts       # Endpoint publik (tanpa auth)
@@ -392,6 +402,7 @@ Database-Warga-GKJJ/
 │           │   │   ├── pengguna/   # Manajemen pengguna + Import Pengguna
 │           │   │   ├── log/        # Log aktivitas
 │           │   │   ├── hubungi/    # Menu Hubungi (wa.me)
+│           │   │   ├── profil-saya/ # Profil Saya (role Jemaat)
 │           │   │   └── pengaturan/ # Pengaturan sistem (komisi, kelurahan, template pesan, kontak gereja)
 │           │   ├── kebijakan-cookie/  # Kebijakan cookie (publik, tanpa auth)
 │           │   ├── kebijakan-privasi/ # Kebijakan privasi (publik, tanpa auth)
@@ -647,6 +658,7 @@ Authorization: Bearer <token>
 | `POST` | `/users/:id/reset-password` | Reset password pengguna (kosong → acak, respons `passwordBaru`) |
 | `POST` | `/users/:id/notifikasi` | Render pesan WhatsApp + tautan `wa.me`, catat log tersamar |
 | `GET` | `/hubungi` | Kontak untuk menu Hubungi — semua role login |
+| `GET/PUT` | `/profil-saya` | Data diri sendiri (khusus role Jemaat; id dari akun login, whitelist field, perubahan masuk antrean Validasi Data) |
 | `GET` | `/logs` | Log aktivitas (filter: status, path, userId) |
 | `DELETE` | `/logs` | Hapus log lama (`?days=90`) |
 | `POST` | `/import/warga` | Import batch warga dari Excel (max 200 baris per call) |
@@ -675,6 +687,7 @@ Authorization: Bearer <token>
 > ¹ **MAJELIS / STAF_ADMIN** — melihat semua field, termasuk koordinat rumah (latitude/longitude)  
 > ² **PENATUA_KELOMPOK** — NIK dan Alamat KTP disembunyikan; koordinat rumah boleh dilihat dan diisi. Saat mengedit, nilai NIK/Alamat KTP yang kosong **tidak menimpa** data tersimpan (bisa mengisi/mengubah, tidak bisa menghapus)  
 > **VIEWER** — NIK, Alamat KTP, Koordinat GPS, Telepon, WhatsApp, dan Email disembunyikan (read-only); peta Dashboard tidak ditampilkan dan `GET /dashboard/map` mengembalikan daftar kosong
+> **JEMAAT** — di luar tabel di atas: hanya **Profil Saya** (data dirinya sendiri) dan **Hubungi**; seluruh endpoint lain ditolak oleh pagar global (`jemaatGuard`). Tidak melihat data warga lain, dashboard, maupun menu Sistem
 
 **Scoping Penatua Kelompok (di-enforce di backend, fail-closed):**
 - Baca: daftar/detail Warga & Keluarga, statistik, chart, dan peta Dashboard hanya untuk kelompoknya. Penatua yang **belum punya kelompok** tidak melihat data apa pun (bukan semua data) dan mendapat `403` pada detail.

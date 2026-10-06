@@ -304,6 +304,9 @@ importRouter.post(
         if (!(ROLES as readonly string[]).includes(role))
           throw new Error(`Role tidak valid: "${raw.role}" — gunakan salah satu: ${ROLES.join(', ')}`)
 
+        if (role === 'JEMAAT')
+          throw new Error('Role JEMAAT tidak dapat diimport — buat lewat form Pengguna (wajib ditautkan ke warga)')
+
         // ── Cek duplikat username / email ───────────────────
         const existing = await prisma.user.findFirst({
           where: { OR: [{ username }, { email }] },

@@ -17,6 +17,7 @@ import {
   Activity,
   ShieldCheck,
   Phone,
+  UserRound,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/auth'
@@ -37,6 +38,12 @@ interface NavGroup {
 }
 
 const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Akun Saya',
+    items: [
+      { label: 'Profil Saya', href: '/profil-saya', icon: UserRound, roles: ['JEMAAT'] },
+    ],
+  },
   {
     label: 'Beranda',
     items: [
@@ -112,7 +119,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: 'Hubungi',
         href: '/hubungi',
         icon: Phone,
-        roles: ['SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK', 'VIEWER'],
+        roles: ['SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK', 'VIEWER', 'JEMAAT'],
       },
     ],
   },
