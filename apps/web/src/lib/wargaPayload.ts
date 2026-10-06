@@ -84,6 +84,7 @@ export function wargaToFormDefaults(w: Record<string, any>) {
     tanggalSidi: tgl(w.tanggalSidi),
     telepon: w.telepon,
     whatsapp: w.whatsapp,
+    whatsappBolehDitampilkan: w.whatsappBolehDitampilkan ?? false,
     email: w.email,
     pendidikanTerakhir: w.pendidikanTerakhir,
     pekerjaan: w.pekerjaan,

@@ -16,6 +16,7 @@ import { importRouter } from './routes/import.js'
 import { dashboardRouter } from './routes/dashboard.js'
 import { pengaturanRouter } from './routes/pengaturan.js'
 import { usersRouter } from './routes/users.js'
+import { hubungiRouter } from './routes/hubungi.js'
 import { publicRouter } from './routes/public.js'
 import { logsRouter } from './routes/logs.js'
 import { perpindahanRouter } from './routes/perpindahan.js'
@@ -75,6 +76,7 @@ app.use('/api/import',     importRouter)
 app.use('/api/dashboard',  dashboardRouter)
 app.use('/api/pengaturan', pengaturanRouter)
 app.use('/api/users',      usersRouter)
+app.use('/api/hubungi',    hubungiRouter)
 app.use('/api/public',     publicRouter)
 app.use('/api/logs',       logsRouter)
 app.use('/api/perpindahan', perpindahanRouter)

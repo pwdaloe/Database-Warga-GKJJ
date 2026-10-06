@@ -13,6 +13,8 @@ import { Modal } from '@/components/ui/Modal'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { ImportPenggunaModal } from './ImportPenggunaModal'
+import { WargaPicker } from './WargaPicker'
+import { InfoAkunModal, type InfoAkun } from './InfoAkunModal'
 
 const ROLES = [
   'SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS',
@@ -22,11 +24,13 @@ const ROLES = [
 // ── Form user ─────────────────────────────────────────────────
 function UserForm({
   initial,
+  usedWargaIds,
   onSubmit,
   onCancel,
   loading,
 }: {
   initial?: AppUser
+  usedWargaIds: Set<number>
   onSubmit: (data: any) => void
   onCancel: () => void
   loading: boolean
@@ -36,19 +40,45 @@ function UserForm({
     nama:       initial?.nama       ?? '',
     username:   initial?.username   ?? '',
     email:      initial?.email      ?? '',
+    whatsapp:   initial?.whatsapp   ?? '',
+    wargaId:    initial?.warga?.id  ?? null as number | null,
     password:   '',
     role:       initial?.role       ?? 'VIEWER',
     kelompokId: initial?.kelompokId ?? null as number | null,
   })
 
+  const [wargaTertaut, setWargaTertaut] = useState(initial?.warga ?? null)
+
   function set(k: string, v: any) { setForm((f) => ({ ...f, [k]: v })) }
+
+  // Payload: password kosong tidak dikirim (server membuat password acak); WA kosong → null
+  function submit() {
+    const { password, whatsapp, ...rest } = form
+    onSubmit({ ...rest, whatsapp: whatsapp.trim() || null, ...(password ? { password } : {}) })
+  }
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); onSubmit(form) }}
+      onSubmit={(e) => { e.preventDefault(); submit() }}
       className="space-y-4"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Tautkan ke Warga</label>
+          <WargaPicker
+            selected={wargaTertaut}
+            usedWargaIds={new Set([...usedWargaIds].filter((id) => id !== initial?.warga?.id))}
+            onSelect={(w) => {
+              setWargaTertaut({ id: w.id, namaLengkap: w.namaLengkap } as any)
+              setForm((f) => ({
+                ...f, wargaId: w.id, nama: w.namaLengkap,
+                whatsapp: w.whatsapp ?? f.whatsapp, email: w.email ?? f.email,
+              }))
+            }}
+            onClear={() => { setWargaTertaut(null); set('wargaId', null) }}
+          />
+          <p className="mt-1 text-xs text-gray-400">Nama, WhatsApp, dan email terisi otomatis dari data warga; tetap bisa diubah.</p>
+        </div>
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Nama Lengkap <span className="text-red-500">*</span></label>
           <input value={form.nama} onChange={(e) => set('nama', e.target.value)} required
@@ -67,13 +97,20 @@ function UserForm({
           <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} required
             className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">No. WhatsApp</label>
+          <input type="tel" value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)}
+            placeholder="08xx-xxxx-xxxx"
+            className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
         {!initial && (
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password <span className="text-red-500">*</span></label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
             <input type="password" value={form.password} onChange={(e) => set('password', e.target.value)}
-              required={!initial} minLength={8} autoComplete="new-password"
-              placeholder="Minimal 8 karakter"
+              minLength={form.password ? 8 : undefined} autoComplete="new-password"
+              placeholder="Kosongkan = dibuat acak"
               className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500" />
+            <p className="mt-1 text-xs text-gray-400">Kosong: password acak, wajib diganti saat login pertama.</p>
           </div>
         )}
         <div>
@@ -127,7 +164,7 @@ function ResetPasswordModal({
   loading,
 }: {
   user: AppUser
-  onConfirm: (password: string) => void
+  onConfirm: (password?: string) => void
   onCancel: () => void
   loading: boolean
 }) {
@@ -139,21 +176,24 @@ function ResetPasswordModal({
       </p>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Password Baru <span className="text-red-500">*</span>
+          Password Baru
         </label>
         <input
           type="password" value={pw} onChange={(e) => setPw(e.target.value)}
-          minLength={8} autoComplete="new-password" placeholder="Minimal 8 karakter"
+          minLength={pw ? 8 : undefined} autoComplete="new-password" placeholder="Kosongkan = dibuat acak"
           className="w-full px-3 py-3 sm:py-2.5 rounded-lg border border-gray-300 text-base sm:text-sm outline-none focus:ring-2 focus:ring-brand-500"
         />
+        <p className="mt-1 text-xs text-gray-400">
+          Kosong: password acak dibuat otomatis, pengguna wajib menggantinya saat login, lalu Anda dapat mengirimnya via WhatsApp.
+        </p>
       </div>
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
         <button onClick={onCancel} className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50">
           Batal
         </button>
         <button
-          onClick={() => pw.length >= 8 && onConfirm(pw)}
-          disabled={pw.length < 8 || loading}
+          onClick={() => onConfirm(pw || undefined)}
+          disabled={(pw.length > 0 && pw.length < 8) || loading}
           className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 sm:py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 rounded-lg"
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
@@ -174,6 +214,7 @@ export default function PenggunaPage() {
   const [resetUser, setResetUser]           = useState<AppUser | null>(null)
   const [serverError, setServerError]       = useState('')
   const [importOpen, setImportOpen]         = useState(false)
+  const [infoAkun, setInfoAkun]             = useState<InfoAkun | null>(null)
 
   // Search & filter (client-side — daftar pengguna kecil dan sudah dimuat penuh)
   const [search, setSearch]           = useState('')
@@ -220,7 +261,10 @@ export default function PenggunaPage() {
       if (editUser) {
         await update.mutateAsync({ id: editUser.id, data: formData })
       } else {
-        await create.mutateAsync(formData)
+        const baru = await create.mutateAsync(formData)
+        if (baru.passwordAwal) {
+          setInfoAkun({ user: baru, password: baru.passwordAwal, templateKode: 'AKUN_BARU' })
+        }
       }
       setModalOpen(false)
       setEditUser(null)
@@ -237,9 +281,12 @@ export default function PenggunaPage() {
     }
   }
 
-  async function handleReset(password: string) {
+  async function handleReset(password?: string) {
     if (!resetUser) return
-    await resetPassword.mutateAsync({ id: resetUser.id, password })
+    const hasil = await resetPassword.mutateAsync({ id: resetUser.id, password })
+    if (hasil.passwordBaru) {
+      setInfoAkun({ user: resetUser, password: hasil.passwordBaru, templateKode: 'RESET_PASSWORD' })
+    }
     setResetUser(null)
   }
 
@@ -556,6 +603,7 @@ export default function PenggunaPage() {
         )}
         <UserForm
           initial={editUser ?? undefined}
+          usedWargaIds={new Set(users.flatMap((u) => (u.warga ? [u.warga.id] : [])))}
           onSubmit={handleSave}
           onCancel={() => { setModalOpen(false); setEditUser(null) }}
           loading={isSaving}
@@ -578,6 +626,9 @@ export default function PenggunaPage() {
           />
         )}
       </Modal>
+
+      {/* Modal info akun (password sekali tampil + kirim WhatsApp) */}
+      <InfoAkunModal info={infoAkun} onClose={() => setInfoAkun(null)} />
 
       {/* Modal import excel */}
       <ImportPenggunaModal open={importOpen} onClose={() => setImportOpen(false)} />

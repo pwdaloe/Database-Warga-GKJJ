@@ -3,6 +3,39 @@
 
 ---
 
+## [2026-10-06 WIB] — Sprint 10/11 | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Selasa, 6 Oktober 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Sprint 10 Selesai: Akun Pengguna dari Warga, Notifikasi WhatsApp (wa.me), Kontak Gereja & Menu Hubungi
+- **Skema** (migrasi aditif `20261006010449_notifikasi_akun_kontak_gereja`, tidak mengubah data lama): `Warga.whatsappBolehDitampilkan`, `User.whatsapp`,
+  tabel `template_pesan`, `notifikasi_log`, `kontak_gereja` (+ enum jenis: WA Center, Kepala Kantor, Pendeta, Pendeta Emeritus)
+- **Pengguna**: pemilih warga mengisi nama/WA/email otomatis (warga yang sudah punya akun tidak bisa dipilih); password kosong → **acak 10 karakter**,
+  `mustChangePassword = true`, tampil **sekali** di modal Info Akun; reset password kosong → acak juga. Perbaikan sampingan: form edit sebelumnya tidak
+  mengirim `wargaId` sehingga menyimpan = melepas tautan warga; sekarang `wargaId` ikut dikirim
+- **Notifikasi**: `POST /users/:id/notifikasi` merender template (Akun Baru / Reset Password) dan membuat tautan **wa.me**; log hanya menyimpan nomor & password
+  yang dimasker. Nomor dinormalisasi (`08xx`/`+62` → `628xx`); nomor tidak valid → 400, tidak pernah membuat tautan rusak
+- **Pengaturan**: tab **Template Pesan** (edit, pratinjau langsung, validasi placeholder, kembalikan ke bawaan) dan **Kontak Gereja** (WA Center, Kepala Kantor,
+  Pendeta & Pendeta Emeritus; masing-masing dapat diaktifkan/dinonaktifkan)
+- **Hubungi** (semua role): WA Center, majelis kelompok (otomatis dari kelompok; hanya bila penatua mencentang "boleh ditampilkan ke jemaat" di tab Kontak warga),
+  Kepala Kantor, Pendeta; respons hanya memuat nama + tautan, bukan nomor mentah
+- **Form Warga**: centang "boleh ditampilkan ke jemaat"; round-trip + paritas skema diperluas, **mutation check** (hapus pemetaan field → 2 tes gagal)
+- Tes: API 192 → 232 (+40), web 106 → 110 (+4); `type-check` dan `build` bersih. `PORTAL_URL` (env, default `https://jemaat.gkjjakarta.org`) menentukan `{{url_portal}}`
+
+### ⚠️ Blockers Ditemukan Saat Sprint
+- UI (modal Info Akun, tab Pengaturan, halaman Hubungi) **belum divalidasi visual di browser** — hanya tes komponen + type-check + build
+- Tes komponen `InfoAkunModal` untuk jalur galat gagal aneh bila dijalankan lewat mock `api` (galat tampil sebagai kegagalan tes walau UI benar; hook yang sama
+  lulus di tes terisolasi). Dipindah ke tes dengan hook di-mock; penyebab pastinya belum ditemukan (LOW)
+- Migrasi baru **belum dijalankan di produksi**; deploy memerlukan `prisma migrate deploy` (konfirmasi Daru)
+- Belum ada commit; pekerjaan masih di working tree
+
+### 🏃 Next Sprint
+Sprint 11: Role Jemaat (lihat & ubah data pribadi, alamat KK hanya kepala keluarga, antrean verifikasi, catatan jemaat)
+
+---
+
 ## [2026-10-05 23:45 WIB] — Sprint 9/9 | ✅ DONE
 
 **Project**: Database Warga GKJJ

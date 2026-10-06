@@ -202,8 +202,14 @@ GKJJ
 4. Pilih kelompok (wajib untuk Penatua Kelompok)
 5. Klik **Simpan**
 
+**Akun dari data warga & notifikasi WhatsApp:**
+- Di form Tambah Pengguna, cari dan pilih **warga** → nama, WhatsApp, dan email terisi otomatis
+- Kosongkan kolom Password → sistem membuat **password acak**; pengguna wajib menggantinya saat login pertama
+- Setelah disimpan, modal **Info Akun** menampilkan password **sekali saja** beserta pesan siap kirim; klik **Kirim via WhatsApp** (membuka WhatsApp dengan pesan terisi)
+- Isi pesan dapat diubah di **Pengaturan → Template Pesan**; kontak di menu **Hubungi** diatur di **Pengaturan → Kontak Gereja**
+
 **Manajemen akun:**
-- **Reset Password:** klik ikon kunci di baris pengguna → isi password baru
+- **Reset Password** (kosongkan = password acak + kirim ulang via WhatsApp): klik ikon kunci di baris pengguna → isi password baru
 - **Nonaktifkan Akun:** klik ikon on/off → akun tidak bisa login
 - Akun yang dinonaktifkan tidak dihapus dari sistem (riwayat terjaga)
 
@@ -699,6 +705,8 @@ Deploy ke production
 | Pencatatan perpindahan jemaat | 🗓️ Planned | Masuk, Keluar, Meninggal + surat |
 | Notifikasi ulang tahun jemaat | 🗓️ Planned | WhatsApp otomatis |
 | Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
+| Tautkan warga ke pengguna + notifikasi akun via WhatsApp (template configurable) | ✅ Selesai (Sprint 10) | Pilih warga saat tambah pengguna (nama & WA terisi otomatis), kirim info portal jemaat.gkjjakarta.org + password default. Lihat `docs/FITUR_NOTIFIKASI_AKUN_WA.md` |
+| Role Jemaat (lihat & ubah data pribadi sendiri) + menu Hubungi (WA Center, majelis kelompok, Kepala Kantor, Pendeta via wa.me) | 🚧 Hubungi selesai (Sprint 10); Role Jemaat → Sprint 11 | Tambahan dari request di atas; keputusan disetujui 2026-10-06, lihat bagian 10–14 dokumen yang sama |
 
 ---
 

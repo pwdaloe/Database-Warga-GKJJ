@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Settings, MapPin, Users, Pencil, Trash2, Plus, Loader2, Check, X } from 'lucide-react'
+import { Settings, MapPin, Users, MessageSquareText, Phone, Pencil, Trash2, Plus, Loader2, Check, X } from 'lucide-react'
 import {
   useMasterKelurahan, useKelurahanMutations,
   useKomisiConfig, useKomisiMutations,
@@ -9,8 +9,10 @@ import {
 } from '@/hooks/usePengaturan'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
+import { TemplatePesanTab } from './TemplatePesanTab'
+import { KontakGerejaTab } from './KontakGerejaTab'
 
-type Tab = 'komisi' | 'kelurahan'
+type Tab = 'komisi' | 'kelurahan' | 'template' | 'kontak'
 
 // ── Inline editor untuk KomisiConfig ─────────────────────────
 function KomisiRow({ komisi, canEdit }: { komisi: KomisiConfig; canEdit: boolean }) {
@@ -286,6 +288,8 @@ export default function PengaturanPage() {
         {([
           { key: 'komisi',    label: 'Rentang Umur Komisi', icon: Users },
           { key: 'kelurahan', label: 'Master Kelurahan',    icon: MapPin },
+          { key: 'template',  label: 'Template Pesan',      icon: MessageSquareText },
+          { key: 'kontak',    label: 'Kontak Gereja',       icon: Phone },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
             className={cn(
@@ -328,6 +332,8 @@ export default function PengaturanPage() {
 
       {/* Tab: Kelurahan */}
       {tab === 'kelurahan' && <TabKelurahan canEdit={canEdit} />}
+      {tab === 'template' && <TemplatePesanTab canEdit={canEdit} />}
+      {tab === 'kontak' && <KontakGerejaTab canEdit={canEdit} />}
     </div>
   )
 }

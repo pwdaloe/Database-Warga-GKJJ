@@ -16,6 +16,7 @@ import {
   UserCog,
   Activity,
   ShieldCheck,
+  Phone,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/auth'
@@ -101,6 +102,17 @@ const NAV_GROUPS: NavGroup[] = [
         href: '/import',
         icon: Upload,
         roles: ['SUPERADMIN', 'KEPALA_KANTOR', 'STAF_ADMIN'],
+      },
+    ],
+  },
+  {
+    label: 'Bantuan',
+    items: [
+      {
+        label: 'Hubungi',
+        href: '/hubungi',
+        icon: Phone,
+        roles: ['SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK', 'VIEWER'],
       },
     ],
   },

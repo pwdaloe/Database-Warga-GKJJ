@@ -269,7 +269,7 @@ export default function WargaDetailPage() {
             </h2>
             <dl className="space-y-3">
               <InfoRow label="Telepon" value={warga.telepon} />
-              <InfoRow label="WhatsApp" value={warga.whatsapp} />
+              <InfoRow label="WhatsApp" value={warga.whatsapp ? `${warga.whatsapp}${warga.whatsappBolehDitampilkan ? ' · boleh ditampilkan ke jemaat' : ''}` : warga.whatsapp} />
               <InfoRow label="Email" value={warga.email} />
             </dl>
           </div>

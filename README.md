@@ -46,7 +46,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 - Tambah, edit, hapus data warga dengan form multi-tab:
   - **Tab Identitas** — nama, foto, NIK, tempat/tanggal lahir, golongan darah
   - **Tab Keanggotaan** — status keluarga (Kepala KK, Istri, Anak, dll.), status keanggotaan, sakramen baptis & sidi
-  - **Tab Kontak** — telepon, WhatsApp, email, pendidikan, pekerjaan
+  - **Tab Kontak** — telepon, WhatsApp (dengan centang **boleh ditampilkan ke jemaat**, dipakai menu Hubungi untuk majelis kelompok), email, pendidikan, pekerjaan
   - **Tab Keluarga** — pilih/cari keluarga, atau buat keluarga baru otomatis saat warga sebagai Kepala KK (dengan validasi wajib pilih kelompok). Untuk Kepala yang sudah punya KK, tab ini menampilkan ringkasan keluarga dan anggotanya
   - **Tab Alamat** — blok **Alamat Rumah Tangga (KK)** untuk Kepala Keluarga (dimuat dari data KK; perubahan disimpan ke KK dan data warga dalam satu transaksi), Alamat KTP, Alamat Domisili (jika berbeda), koordinat GPS (latitude/longitude). Kolom koordinat menerima desimal koma (`-6,2088`), dan menempel `-6.2088, 106.8456` dari Google Maps mengisi kedua kolom sekaligus; input tidak valid ditolak dengan pesan (rentang −90..90 / −180..180). Koordinat tampil di **Detail Warga** (tautan Google Maps) dan di peta Dashboard
 - **Foto warga** — upload foto, dikompres otomatis di browser (max 400px, JPEG 80%), disimpan sebagai base64
@@ -157,12 +157,23 @@ Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off
 
 #### Manajemen Pengguna
 - Daftar pengguna: nama, username, email, role, kelompok, status aktif, waktu login terakhir
-- Tambah pengguna baru dengan form: nama, username, email, password (min. 8 karakter), role, kelompok
-- **Edit** — ubah semua field kecuali password
-- **Reset Password** — modal khusus, password baru minimal 8 karakter
+- Tambah pengguna baru dengan form: **tautan ke warga** (cari warga → nama, WhatsApp, email terisi otomatis; warga yang sudah punya akun tidak bisa dipilih), nama, username, email, No. WhatsApp, password, role, kelompok
+- **Password acak** — kolom password dikosongkan → sistem membuat password acak 10 karakter dan akun **wajib ganti password saat login pertama**; password hanya tampil sekali di modal **Info Akun** (tidak disimpan)
+- **Notifikasi WhatsApp** — modal Info Akun menyiapkan pesan dari template (Akun Baru / Reset Password) dan tombol **Kirim via WhatsApp** membuka tautan `wa.me` dengan pesan terisi; log pengiriman menyamarkan nomor & password
+- **Edit** — ubah semua field kecuali password (tautan warga ikut tersimpan)
+- **Reset Password** — kosongkan untuk password acak (lalu kirim via WhatsApp), atau isi manual minimal 8 karakter
 - **Toggle Aktif/Nonaktif** — akun nonaktif tidak bisa login
 - **Pencarian & filter** — cari nama, username, email, atau kelompok; filter **Role**, **Kelompok** (termasuk "Tanpa kelompok"), dan **Status** (Aktif/Nonaktif); ringkasan "N dari M akun" saat memfilter, tombol Reset, dan pesan jika tidak ada yang cocok
 - Akses hanya untuk **Superadmin** dan **Kepala Kantor**
+
+#### Hubungi
+Menu untuk **semua role** berisi tombol **Chat WhatsApp** (`wa.me`, langsung membuka aplikasi WhatsApp):
+1. **GKJ WhatsApp Center**
+2. **Majelis kelompok** — otomatis dari kelompok pengguna/keluarga; tampil hanya bila penatua mencentang "boleh ditampilkan ke jemaat"
+3. **Kepala Kantor**
+4. **Pendeta** (termasuk Pendeta Emeritus yang aktif)
+
+Kontak 1, 3, 4 diatur di **Pengaturan → Kontak Gereja**. Endpoint hanya mengembalikan nama + tautan, bukan nomor mentah.
 
 #### Log Aktivitas
 - Setiap operasi **POST/PUT/PATCH/DELETE** otomatis dicatat ke tabel `activity_log`
@@ -179,6 +190,14 @@ Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off
 - Konfigurasi min/max usia dan warna per komisi (default: Anak 0–11, Pra-Remaja 12–14, Remaja 15–18, Pemuda 19–35, Dewasa 36–59, Adiyuswa ≥60)
 - Edit inline dengan color picker
 - Langsung memperbarui chart distribusi di Dashboard
+
+**Tab Template Pesan:**
+- Isi pesan WhatsApp untuk **Akun Baru** dan **Reset Password**; placeholder `{{nama}}`, `{{username}}`, `{{password}}`, `{{url_portal}}`, `{{role}}`, `{{kelompok}}`
+- Pratinjau langsung dengan data contoh, validasi placeholder salah ketik, tombol kembalikan ke teks bawaan
+- Alamat portal (`{{url_portal}}`) dari env `PORTAL_URL` (default `https://jemaat.gkjjakarta.org`)
+
+**Tab Kontak Gereja:**
+- GKJ WhatsApp Center, Kepala Kantor, Pendeta, dan Pendeta Emeritus — diinput manual, masing-masing dapat **diaktifkan/dinonaktifkan** (nonaktif tidak tampil di Hubungi)
 
 **Tab Master Kelurahan:**
 - 63 kelurahan Jakarta Timur pre-seeded (10 kecamatan: Cakung, Cipayung, Ciracas, Duren Sawit, Jatinegara, Kramat Jati, Makasar, Matraman, Pasar Rebo, Pulo Gadung)
@@ -235,8 +254,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 16 | 192 (crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem, penomoran KK) |
-| Frontend (`apps/web`) | 14 | 106 (Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner, round-trip form Keluarga) |
+| Backend (`apps/api`) | 18 | 232 (akun & WhatsApp: password acak, notifikasi, template, kontak gereja, Hubungi per role, normalisasi nomor, crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem, penomoran KK) |
+| Frontend (`apps/web`) | 17 | 110 (halaman Hubungi, modal Info Akun, Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner, round-trip form Keluarga) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -342,7 +361,8 @@ Database-Warga-GKJJ/
 │   │       │   ├── dashboard.ts    # Stats, komisi chart, peta
 │   │       │   ├── pengaturan.ts   # Master kelurahan & komisi config
 │   │       │   ├── import.ts       # Batch import Excel (warga & pengguna)
-│   │       │   ├── users.ts        # Manajemen pengguna
+│   │       │   ├── users.ts        # Manajemen pengguna + password acak + notifikasi WhatsApp
+│   │       │   ├── hubungi.ts      # Menu Hubungi (semua role)
 │   │       │   ├── logs.ts         # Activity log
 │   │       │   ├── perpindahan.ts  # CRUD + approve/validate + surat.pdf + kirim-email
 │   │       │   └── public.ts       # Endpoint publik (tanpa auth)
@@ -371,7 +391,8 @@ Database-Warga-GKJJ/
 │           │   │   ├── import/     # Wizard import Excel (warga & pengguna)
 │           │   │   ├── pengguna/   # Manajemen pengguna + Import Pengguna
 │           │   │   ├── log/        # Log aktivitas
-│           │   │   └── pengaturan/ # Pengaturan sistem
+│           │   │   ├── hubungi/    # Menu Hubungi (wa.me)
+│           │   │   └── pengaturan/ # Pengaturan sistem (komisi, kelurahan, template pesan, kontak gereja)
 │           │   ├── kebijakan-cookie/  # Kebijakan cookie (publik, tanpa auth)
 │           │   ├── kebijakan-privasi/ # Kebijakan privasi (publik, tanpa auth)
 │           │   └── m/              # PWA mobile untuk Penatua Kelompok
@@ -614,13 +635,18 @@ Authorization: Bearer <token>
 | `POST/PUT/DELETE` | `/pengaturan/kelurahan/:id` | CRUD kelurahan |
 | `GET` | `/pengaturan/komisi` | Daftar komisi config |
 | `PUT` | `/pengaturan/komisi/:id` | Update rentang usia komisi |
+| `GET/PUT` | `/pengaturan/template-pesan(/:kode)` | Template pesan WhatsApp (`AKUN_BARU`, `RESET_PASSWORD`) — Superadmin/Kepala Kantor |
+| `POST` | `/pengaturan/template-pesan/preview` · `/:kode/default` | Pratinjau dengan data contoh · kembalikan ke bawaan |
+| `GET/POST/PUT/DELETE` | `/pengaturan/kontak-gereja(/:id)` | Kontak WA Center/Kepala Kantor/Pendeta/Emeritus; `PATCH /:id/toggle` aktif/nonaktif |
 
 ### Sistem
 | Method | Endpoint | Keterangan |
 |---|---|---|
 | `GET/POST/PUT` | `/users` | CRUD pengguna |
 | `PATCH` | `/users/:id/toggle` | Toggle aktif/nonaktif |
-| `POST` | `/users/:id/reset-password` | Reset password pengguna |
+| `POST` | `/users/:id/reset-password` | Reset password pengguna (kosong → acak, respons `passwordBaru`) |
+| `POST` | `/users/:id/notifikasi` | Render pesan WhatsApp + tautan `wa.me`, catat log tersamar |
+| `GET` | `/hubungi` | Kontak untuk menu Hubungi — semua role login |
 | `GET` | `/logs` | Log aktivitas (filter: status, path, userId) |
 | `DELETE` | `/logs` | Hapus log lama (`?days=90`) |
 | `POST` | `/import/warga` | Import batch warga dari Excel (max 200 baris per call) |

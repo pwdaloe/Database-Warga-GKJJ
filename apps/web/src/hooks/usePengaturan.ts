@@ -113,3 +113,76 @@ export function useDashboardMap(kelurahan?: string) {
     },
   })
 }
+
+
+// ── Template pesan WhatsApp ───────────────────────────────────
+export interface TemplatePesan { id: number; kode: 'AKUN_BARU' | 'RESET_PASSWORD'; nama: string; isi: string; updatedAt: string }
+
+export function useTemplatePesan() {
+  return useQuery({
+    queryKey: ['template-pesan'],
+    queryFn: async () => {
+      const res = await api.get('/pengaturan/template-pesan')
+      return res.data.data as { templates: TemplatePesan[]; placeholders: string[]; urlPortal: string }
+    },
+  })
+}
+
+export function useTemplatePesanMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['template-pesan'] })
+  const save = useMutation({
+    mutationFn: ({ kode, isi }: { kode: string; isi: string }) =>
+      api.put(`/pengaturan/template-pesan/${kode}`, { isi }).then((r) => r.data.data),
+    onSuccess: invalidate,
+  })
+  const reset = useMutation({
+    mutationFn: (kode: string) => api.post(`/pengaturan/template-pesan/${kode}/default`).then((r) => r.data.data),
+    onSuccess: invalidate,
+  })
+  const preview = useMutation({
+    mutationFn: (isi: string) =>
+      api.post('/pengaturan/template-pesan/preview', { isi }).then((r) => r.data.data.pesan as string),
+  })
+  return { save, reset, preview }
+}
+
+// ── Kontak Gereja ─────────────────────────────────────────────
+export type JenisKontak = 'WA_CENTER' | 'KEPALA_KANTOR' | 'PENDETA' | 'PENDETA_EMERITUS'
+export interface KontakGereja {
+  id: number; jenis: JenisKontak; nama: string; whatsapp: string
+  keterangan: string | null; aktif: boolean; urutan: number
+}
+
+export function useKontakGereja() {
+  return useQuery({
+    queryKey: ['kontak-gereja'],
+    queryFn: async () => (await api.get('/pengaturan/kontak-gereja')).data.data as KontakGereja[],
+  })
+}
+
+export function useKontakGerejaMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ['kontak-gereja'] })
+    qc.invalidateQueries({ queryKey: ['hubungi'] })
+  }
+  const create = useMutation({
+    mutationFn: (data: Partial<KontakGereja>) => api.post('/pengaturan/kontak-gereja', data).then((r) => r.data.data),
+    onSuccess: invalidate,
+  })
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<KontakGereja> }) =>
+      api.put(`/pengaturan/kontak-gereja/${id}`, data).then((r) => r.data.data),
+    onSuccess: invalidate,
+  })
+  const toggle = useMutation({
+    mutationFn: (id: number) => api.patch(`/pengaturan/kontak-gereja/${id}/toggle`).then((r) => r.data.data),
+    onSuccess: invalidate,
+  })
+  const remove = useMutation({
+    mutationFn: (id: number) => api.delete(`/pengaturan/kontak-gereja/${id}`).then((r) => r.data.data),
+    onSuccess: invalidate,
+  })
+  return { create, update, toggle, remove }
+}

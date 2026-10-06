@@ -69,6 +69,7 @@ const schema = z.object({
   tanggalSidi:        z.string().optional().nullable(),
   telepon:            z.string().max(20).optional().nullable(),
   whatsapp:           z.string().max(20).optional().nullable(),
+  whatsappBolehDitampilkan: z.boolean().default(false),
   email:              z.string().email('Format email tidak valid').optional().nullable().or(z.literal('')),
   pendidikanTerakhir: z.string().max(50).optional().nullable(),
   pekerjaan:          z.string().max(100).optional().nullable(),
@@ -472,7 +473,16 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField label="Telepon" type="tel" {...register('telepon')} error={errors.telepon} placeholder="08xx-xxxx-xxxx" />
-            <InputField label="WhatsApp" type="tel" {...register('whatsapp')} error={errors.whatsapp} placeholder="08xx-xxxx-xxxx" />
+            <div>
+              <InputField label="WhatsApp" type="tel" {...register('whatsapp')} error={errors.whatsapp} placeholder="08xx-xxxx-xxxx" />
+              <label className="mt-2 flex items-start gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox" id="whatsappBolehDitampilkan" {...register('whatsappBolehDitampilkan')}
+                  className="mt-0.5 w-4 h-4 rounded text-brand-600"
+                />
+                <span>Boleh ditampilkan ke jemaat (menu Hubungi, bila bertugas sebagai majelis kelompok)</span>
+              </label>
+            </div>
             <div className="sm:col-span-2">
               <InputField label="Email" type="email" {...register('email')} error={errors.email} />
             </div>

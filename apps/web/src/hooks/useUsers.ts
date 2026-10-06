@@ -6,13 +6,15 @@ export interface AppUser {
   nama: string
   username: string
   email: string
+  whatsapp: string | null
+  mustChangePassword: boolean
   role: string
   aktif: boolean
   kelompokId: number | null
   lastLogin: string | null
   createdAt: string
   kelompok: { id: number; kode: string; nama: string } | null
-  warga: { id: number; namaLengkap: string; fotoUrl: string | null } | null
+  warga: { id: number; namaLengkap: string; fotoUrl: string | null; whatsapp: string | null } | null
 }
 
 export function useUserList() {
@@ -43,10 +45,22 @@ export function useUserMutations() {
     onSuccess: invalidate,
   })
   const resetPassword = useMutation({
-    mutationFn: ({ id, password }: { id: number; password: string }) =>
-      api.post(`/users/${id}/reset-password`, { password }).then((r) => r.data.data),
+    // password kosong → server membuat password acak dan mengembalikannya (passwordBaru)
+    mutationFn: ({ id, password }: { id: number; password?: string }) =>
+      api.post(`/users/${id}/reset-password`, password ? { password } : {}).then((r) => r.data.data as { message: string; passwordBaru?: string }),
     onSuccess: invalidate,
   })
 
   return { create, update, toggle, resetPassword }
+}
+
+export type TemplateKode = 'AKUN_BARU' | 'RESET_PASSWORD'
+export interface NotifikasiResult { nomor: string; pesan: string; waLink: string }
+
+/** Menyiapkan pesan WhatsApp (render template + tautan wa.me) dan mencatat log (password dimasker) */
+export function useNotifikasiAkun() {
+  return useMutation({
+    mutationFn: ({ id, templateKode, password }: { id: number; templateKode: TemplateKode; password: string }) =>
+      api.post(`/users/${id}/notifikasi`, { templateKode, password }).then((r) => r.data.data as NotifikasiResult),
+  })
 }

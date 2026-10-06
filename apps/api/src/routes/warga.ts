@@ -47,6 +47,7 @@ const bodySchema = z.object({
   tanggalSidi:        z.string().date().optional().nullable(),
   telepon:            z.string().max(20).optional().nullable(),
   whatsapp:           z.string().max(20).optional().nullable(),
+  whatsappBolehDitampilkan: z.boolean().optional(),
   email:              z.string().email().max(100).optional().nullable(),
   pendidikanTerakhir: z.string().max(50).optional().nullable(),
   pekerjaan:          z.string().max(100).optional().nullable(),

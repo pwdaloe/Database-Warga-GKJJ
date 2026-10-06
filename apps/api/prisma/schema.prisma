@@ -19,13 +19,13 @@ datasource db {
 model ActivityLog {
   id           BigInt   @id @default(autoincrement())
   userId       Int?     @map("user_id")
-  userNama     String?  @db.VarChar(150) @map("user_nama")
+  userNama     String?  @map("user_nama") @db.VarChar(150)
   method       String   @db.VarChar(10)
   path         String   @db.VarChar(500)
   statusCode   Int      @map("status_code")
-  errorMessage String?  @db.Text @map("error_message")
+  errorMessage String?  @map("error_message") @db.Text
   bodySnapshot Json?    @map("body_snapshot")
-  ipAddress    String?  @db.VarChar(45) @map("ip_address")
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
   durasiMs     Int?     @map("durasi_ms")
   createdAt    DateTime @default(now()) @map("created_at")
 
@@ -40,7 +40,7 @@ model MasterKelurahan {
   nama      String  @db.VarChar(100)
   kecamatan String  @db.VarChar(100)
   kota      String  @db.VarChar(100)
-  kodePos   String? @db.VarChar(10) @map("kode_pos")
+  kodePos   String? @map("kode_pos") @db.VarChar(10)
 
   @@index([nama])
   @@map("master_kelurahan")
@@ -58,35 +58,35 @@ model KomisiConfig {
 }
 
 model Wilayah {
-  id          Int        @id @default(autoincrement())
-  kode        String     @unique @db.VarChar(5)
-  nama        String     @db.VarChar(100)
-  keterangan  String?    @db.Text
-  aktif       Boolean    @default(true)
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  id         Int      @id @default(autoincrement())
+  kode       String   @unique @db.VarChar(5)
+  nama       String   @db.VarChar(100)
+  keterangan String?  @db.Text
+  aktif      Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
-  kelompoks   Kelompok[]
+  kelompoks Kelompok[]
 
   @@map("wilayah")
 }
 
 model Kelompok {
-  id                Int       @id @default(autoincrement())
-  wilayahId         Int       @map("wilayah_id")
-  kode              String    @unique @db.VarChar(5)
-  nama              String    @db.VarChar(100)
-  penatamaId        Int?      @map("penatua_id")
-  penatua_nama_temp String?   @db.VarChar(150)
-  aktif             Boolean   @default(true)
-  keterangan        String?   @db.Text
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id                Int      @id @default(autoincrement())
+  wilayahId         Int      @map("wilayah_id")
+  kode              String   @unique @db.VarChar(5)
+  nama              String   @db.VarChar(100)
+  penatamaId        Int?     @map("penatua_id")
+  penatua_nama_temp String?  @db.VarChar(150)
+  aktif             Boolean  @default(true)
+  keterangan        String?  @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
-  wilayah           Wilayah   @relation(fields: [wilayahId], references: [id])
-  penatua           Warga?    @relation("KelompokPenatua", fields: [penatamaId], references: [id])
-  keluargas         Keluarga[]
-  users             User[]
+  wilayah   Wilayah    @relation(fields: [wilayahId], references: [id])
+  penatua   Warga?     @relation("KelompokPenatua", fields: [penatamaId], references: [id])
+  keluargas Keluarga[]
+  users     User[]
 
   @@map("kelompok")
 }
@@ -96,88 +96,89 @@ model Kelompok {
 // ============================================================
 
 model Keluarga {
-  id              Int            @id @default(autoincrement())
-  nomorKeluarga   String?        @unique @db.VarChar(20) @map("nomor_keluarga")
-  kelompokId      Int?           @map("kelompok_id")
-  alamat          String?        @db.Text
-  rt              String?        @db.VarChar(5)
-  rw              String?        @db.VarChar(5)
-  kelurahan       String?        @db.VarChar(100)
-  kecamatan       String?        @db.VarChar(100)
-  kota            String?        @db.VarChar(100)
-  kodePos         String?        @db.VarChar(10) @map("kode_pos")
-  teleponRumah    String?        @db.VarChar(20) @map("telepon_rumah")
-  status          StatusKeluarga @default(AKTIF)
-  dataStatus      DataStatus     @default(DRAFT) @map("data_status")
-  catatan         String?        @db.Text
-  createdBy       Int?           @map("created_by")
-  updatedBy       Int?           @map("updated_by")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
+  id            Int            @id @default(autoincrement())
+  nomorKeluarga String?        @unique @map("nomor_keluarga") @db.VarChar(20)
+  kelompokId    Int?           @map("kelompok_id")
+  alamat        String?        @db.Text
+  rt            String?        @db.VarChar(5)
+  rw            String?        @db.VarChar(5)
+  kelurahan     String?        @db.VarChar(100)
+  kecamatan     String?        @db.VarChar(100)
+  kota          String?        @db.VarChar(100)
+  kodePos       String?        @map("kode_pos") @db.VarChar(10)
+  teleponRumah  String?        @map("telepon_rumah") @db.VarChar(20)
+  status        StatusKeluarga @default(AKTIF)
+  dataStatus    DataStatus     @default(DRAFT) @map("data_status")
+  catatan       String?        @db.Text
+  createdBy     Int?           @map("created_by")
+  updatedBy     Int?           @map("updated_by")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
-  kepalakeluargaId  Int?           @map("kepala_keluarga_id")
+  kepalakeluargaId Int? @map("kepala_keluarga_id")
 
-  kelompok          Kelompok?      @relation(fields: [kelompokId], references: [id])
-  kepalaKeluarga    Warga?         @relation("KeluargaKepala", fields: [kepalakeluargaId], references: [id])
-  createdByUser     User?          @relation("KeluargaCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser     User?          @relation("KeluargaUpdatedBy", fields: [updatedBy], references: [id])
-  wargas            Warga[]
+  kelompok       Kelompok? @relation(fields: [kelompokId], references: [id])
+  kepalaKeluarga Warga?    @relation("KeluargaKepala", fields: [kepalakeluargaId], references: [id])
+  createdByUser  User?     @relation("KeluargaCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?     @relation("KeluargaUpdatedBy", fields: [updatedBy], references: [id])
+  wargas         Warga[]
 
   @@index([kelompokId])
   @@map("keluarga")
 }
 
 model Warga {
-  id                     Int                  @id @default(autoincrement())
-  keluargaId             Int?                 @map("keluarga_id")
-  nomorAnggota           String?              @unique @db.VarChar(20) @map("nomor_anggota")
-  nomorInduk             String?              @unique @db.VarChar(30) @map("nomor_induk")
-  namaLengkap            String               @db.VarChar(150) @map("nama_lengkap")
-  namaPanggilan          String?              @db.VarChar(50) @map("nama_panggilan")
-  jenisKelamin           JenisKelamin         @map("jenis_kelamin")
-  tempatLahir            String?              @db.VarChar(100) @map("tempat_lahir")
-  tanggalLahir           DateTime?            @db.Date @map("tanggal_lahir")
-  nik                    String?              @unique @db.VarChar(64)   // encrypted AES-256
-  golonganDarah          GolonganDarah?       @map("golongan_darah")
-  fotoUrl                String?              @db.Text @map("foto_url")
-  statusKeluarga         StatusDalamKeluarga  @default(LAINNYA) @map("status_keluarga")
-  statusKeanggotaan      StatusKeanggotaan    @default(AKTIF) @map("status_keanggotaan")
-  sudahBaptis            Boolean              @default(false) @map("sudah_baptis")
-  tanggalBaptis          DateTime?            @db.Date @map("tanggal_baptis")
-  tempatBaptis           String?              @db.VarChar(150) @map("tempat_baptis")
-  sudahSidi              Boolean              @default(false) @map("sudah_sidi")
-  nomorSidi              String?              @db.VarChar(30) @map("nomor_sidi")
-  tanggalSidi            DateTime?            @db.Date @map("tanggal_sidi")
-  telepon                String?              @db.VarChar(20)
-  whatsapp               String?              @db.VarChar(20)
-  email                  String?              @db.VarChar(100)
-  pendidikanTerakhir     String?              @db.VarChar(50) @map("pendidikan_terakhir")
-  pekerjaan              String?              @db.VarChar(100)
-  alamatKtp              String?              @db.Text @map("alamat_ktp")
-  alamatDomisili         String?              @db.Text @map("alamat_domisili")
-  latitude               Float?
-  longitude              Float?
-  dataStatus             DataStatus           @default(DRAFT) @map("data_status")
-  catatan                String?              @db.Text
+  id                       Int                 @id @default(autoincrement())
+  keluargaId               Int?                @map("keluarga_id")
+  nomorAnggota             String?             @unique @map("nomor_anggota") @db.VarChar(20)
+  nomorInduk               String?             @unique @map("nomor_induk") @db.VarChar(30)
+  namaLengkap              String              @map("nama_lengkap") @db.VarChar(150)
+  namaPanggilan            String?             @map("nama_panggilan") @db.VarChar(50)
+  jenisKelamin             JenisKelamin        @map("jenis_kelamin")
+  tempatLahir              String?             @map("tempat_lahir") @db.VarChar(100)
+  tanggalLahir             DateTime?           @map("tanggal_lahir") @db.Date
+  nik                      String?             @unique @db.VarChar(64) // encrypted AES-256
+  golonganDarah            GolonganDarah?      @map("golongan_darah")
+  fotoUrl                  String?             @map("foto_url") @db.Text
+  statusKeluarga           StatusDalamKeluarga @default(LAINNYA) @map("status_keluarga")
+  statusKeanggotaan        StatusKeanggotaan   @default(AKTIF) @map("status_keanggotaan")
+  sudahBaptis              Boolean             @default(false) @map("sudah_baptis")
+  tanggalBaptis            DateTime?           @map("tanggal_baptis") @db.Date
+  tempatBaptis             String?             @map("tempat_baptis") @db.VarChar(150)
+  sudahSidi                Boolean             @default(false) @map("sudah_sidi")
+  nomorSidi                String?             @map("nomor_sidi") @db.VarChar(30)
+  tanggalSidi              DateTime?           @map("tanggal_sidi") @db.Date
+  telepon                  String?             @db.VarChar(20)
+  whatsapp                 String?             @db.VarChar(20)
+  whatsappBolehDitampilkan Boolean             @default(false) @map("whatsapp_boleh_ditampilkan")
+  email                    String?             @db.VarChar(100)
+  pendidikanTerakhir       String?             @map("pendidikan_terakhir") @db.VarChar(50)
+  pekerjaan                String?             @db.VarChar(100)
+  alamatKtp                String?             @map("alamat_ktp") @db.Text
+  alamatDomisili           String?             @map("alamat_domisili") @db.Text
+  latitude                 Float?
+  longitude                Float?
+  dataStatus               DataStatus          @default(DRAFT) @map("data_status")
+  catatan                  String?             @db.Text
   // ── PDP compliance ─────────────────────────────────────────
-  konsenPDP              Boolean              @default(false) @map("konsen_pdp")
-  tanggalKonsen          DateTime?            @map("tanggal_konsen")
-  retensiHingga          DateTime?            @map("retensi_hingga")   // hapus setelah tanggal ini
-  createdBy              Int?                 @map("created_by")
-  updatedBy              Int?                 @map("updated_by")
-  validatedBy            Int?                 @map("validated_by")
-  validatedAt            DateTime?            @map("validated_at")
-  createdAt              DateTime             @default(now()) @map("created_at")
-  updatedAt              DateTime             @updatedAt @map("updated_at")
+  konsenPDP                Boolean             @default(false) @map("konsen_pdp")
+  tanggalKonsen            DateTime?           @map("tanggal_konsen")
+  retensiHingga            DateTime?           @map("retensi_hingga") // hapus setelah tanggal ini
+  createdBy                Int?                @map("created_by")
+  updatedBy                Int?                @map("updated_by")
+  validatedBy              Int?                @map("validated_by")
+  validatedAt              DateTime?           @map("validated_at")
+  createdAt                DateTime            @default(now()) @map("created_at")
+  updatedAt                DateTime            @updatedAt @map("updated_at")
 
-  keluarga               Keluarga?            @relation(fields: [keluargaId], references: [id])
-  createdByUser          User?                @relation("WargaCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser          User?                @relation("WargaUpdatedBy", fields: [updatedBy], references: [id])
-  validatedByUser        User?                @relation("WargaValidatedBy", fields: [validatedBy], references: [id])
-  kelompokSebagaiPenatua   Kelompok[]           @relation("KelompokPenatua")
-  keluargaSebagaiKepala    Keluarga[]           @relation("KeluargaKepala")
-  perpindahans           Perpindahan[]        @relation("WargaPerpindahan")
-  user                   User?                @relation("WargaUser")
+  keluarga               Keluarga?     @relation(fields: [keluargaId], references: [id])
+  createdByUser          User?         @relation("WargaCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser          User?         @relation("WargaUpdatedBy", fields: [updatedBy], references: [id])
+  validatedByUser        User?         @relation("WargaValidatedBy", fields: [validatedBy], references: [id])
+  kelompokSebagaiPenatua Kelompok[]    @relation("KelompokPenatua")
+  keluargaSebagaiKepala  Keluarga[]    @relation("KeluargaKepala")
+  perpindahans           Perpindahan[] @relation("WargaPerpindahan")
+  user                   User?         @relation("WargaUser")
 
   @@index([keluargaId])
   @@index([namaLengkap])
@@ -192,22 +193,22 @@ model Warga {
 // ============================================================
 
 model Perpindahan {
-  id                  Int              @id @default(autoincrement())
-  wargaId             Int              @map("warga_id")
-  jenis               JenisPerpindahan
-  gerejaAsalTujuan    String?          @db.VarChar(200) @map("gereja_asal_tujuan")
-  tanggalPerpindahan  DateTime?        @db.Date @map("tanggal_perpindahan")
-  nomorSurat          String?          @db.VarChar(50) @map("nomor_surat")
-  approvedBy          Int?             @map("approved_by")
-  approvedAt          DateTime?        @map("approved_at")
-  validatedBy         Int?             @map("validated_by")
-  validatedAt         DateTime?        @map("validated_at")
-  keterangan          String?          @db.Text
-  createdAt           DateTime         @default(now()) @map("created_at")
+  id                 Int              @id @default(autoincrement())
+  wargaId            Int              @map("warga_id")
+  jenis              JenisPerpindahan
+  gerejaAsalTujuan   String?          @map("gereja_asal_tujuan") @db.VarChar(200)
+  tanggalPerpindahan DateTime?        @map("tanggal_perpindahan") @db.Date
+  nomorSurat         String?          @map("nomor_surat") @db.VarChar(50)
+  approvedBy         Int?             @map("approved_by")
+  approvedAt         DateTime?        @map("approved_at")
+  validatedBy        Int?             @map("validated_by")
+  validatedAt        DateTime?        @map("validated_at")
+  keterangan         String?          @db.Text
+  createdAt          DateTime         @default(now()) @map("created_at")
 
-  warga               Warga            @relation("WargaPerpindahan", fields: [wargaId], references: [id])
-  approvedByUser      User?            @relation("PerpindahanApprovedBy", fields: [approvedBy], references: [id])
-  validatedByUser     User?            @relation("PerpindahanValidatedBy", fields: [validatedBy], references: [id])
+  warga           Warga @relation("WargaPerpindahan", fields: [wargaId], references: [id])
+  approvedByUser  User? @relation("PerpindahanApprovedBy", fields: [approvedBy], references: [id])
+  validatedByUser User? @relation("PerpindahanValidatedBy", fields: [validatedBy], references: [id])
 
   @@map("perpindahan")
 }
@@ -217,31 +218,32 @@ model Perpindahan {
 // ============================================================
 
 model User {
-  id            Int       @id @default(autoincrement())
-  wargaId       Int?      @unique @map("warga_id")
-  nama          String    @db.VarChar(150)
-  username      String    @unique @db.VarChar(50)
-  email         String    @unique @db.VarChar(100)
-  passwordHash  String    @db.VarChar(255) @map("password_hash")
-  resetTokenHash   String?   @map("reset_token_hash")
-  resetTokenExpiry DateTime? @map("reset_token_expiry")
-  role          UserRole
-  kelompokId    Int?      @map("kelompok_id")
-  aktif         Boolean   @default(true)
-  mustChangePassword Boolean @default(false) @map("must_change_password")
-  lastLogin     DateTime? @map("last_login")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id                 Int       @id @default(autoincrement())
+  wargaId            Int?      @unique @map("warga_id")
+  nama               String    @db.VarChar(150)
+  username           String    @unique @db.VarChar(50)
+  email              String    @unique @db.VarChar(100)
+  whatsapp           String?   @db.VarChar(20)
+  passwordHash       String    @map("password_hash") @db.VarChar(255)
+  resetTokenHash     String?   @map("reset_token_hash")
+  resetTokenExpiry   DateTime? @map("reset_token_expiry")
+  role               UserRole
+  kelompokId         Int?      @map("kelompok_id")
+  aktif              Boolean   @default(true)
+  mustChangePassword Boolean   @default(false) @map("must_change_password")
+  lastLogin          DateTime? @map("last_login")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  warga            Warga?     @relation("WargaUser", fields: [wargaId], references: [id])
-  kelompok         Kelompok?  @relation(fields: [kelompokId], references: [id])
-  auditLogs        AuditLog[]
-  importLogs       ImportLog[]
-  keluargasCreated Keluarga[] @relation("KeluargaCreatedBy")
-  keluargasUpdated Keluarga[] @relation("KeluargaUpdatedBy")
-  wargasCreated    Warga[]    @relation("WargaCreatedBy")
-  wargasUpdated    Warga[]    @relation("WargaUpdatedBy")
-  wargasValidated  Warga[]    @relation("WargaValidatedBy")
+  warga                Warga?        @relation("WargaUser", fields: [wargaId], references: [id])
+  kelompok             Kelompok?     @relation(fields: [kelompokId], references: [id])
+  auditLogs            AuditLog[]
+  importLogs           ImportLog[]
+  keluargasCreated     Keluarga[]    @relation("KeluargaCreatedBy")
+  keluargasUpdated     Keluarga[]    @relation("KeluargaUpdatedBy")
+  wargasCreated        Warga[]       @relation("WargaCreatedBy")
+  wargasUpdated        Warga[]       @relation("WargaUpdatedBy")
+  wargasValidated      Warga[]       @relation("WargaValidatedBy")
   perpindahanApproved  Perpindahan[] @relation("PerpindahanApprovedBy")
   perpindahanValidated Perpindahan[] @relation("PerpindahanValidatedBy")
 
@@ -260,10 +262,10 @@ model AuditLog {
   recordId  Int         @map("record_id")
   dataLama  Json?       @map("data_lama")
   dataBaru  Json?       @map("data_baru")
-  ipAddress String?     @db.VarChar(45) @map("ip_address")
+  ipAddress String?     @map("ip_address") @db.VarChar(45)
   createdAt DateTime    @default(now()) @map("created_at")
 
-  user      User?       @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@index([tabel, recordId])
   @@index([userId])
@@ -271,17 +273,17 @@ model AuditLog {
 }
 
 model ImportLog {
-  id            Int          @id @default(autoincrement())
-  userId        Int?         @map("user_id")
-  filename      String       @db.VarChar(255)
-  totalRows     Int?         @map("total_rows")
-  successCount  Int          @default(0) @map("success_count")
-  errorCount    Int          @default(0) @map("error_count")
-  errorDetail   Json?        @map("error_detail")
-  status        ImportStatus @default(PROCESSING)
-  createdAt     DateTime     @default(now()) @map("created_at")
+  id           Int          @id @default(autoincrement())
+  userId       Int?         @map("user_id")
+  filename     String       @db.VarChar(255)
+  totalRows    Int?         @map("total_rows")
+  successCount Int          @default(0) @map("success_count")
+  errorCount   Int          @default(0) @map("error_count")
+  errorDetail  Json?        @map("error_detail")
+  status       ImportStatus @default(PROCESSING)
+  createdAt    DateTime     @default(now()) @map("created_at")
 
-  user          User?        @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@map("import_log")
 }
@@ -369,7 +371,7 @@ enum AuditAction {
   APPROVE
   VALIDATE
   IMPORT
-  ACCESS    // baca data pribadi sensitif — PDP audit trail
+  ACCESS // baca data pribadi sensitif — PDP audit trail
 
   @@map("audit_action_enum")
 }
@@ -380,4 +382,55 @@ enum ImportStatus {
   FAILED
 
   @@map("import_status_enum")
+}
+
+// ============================================================
+// NOTIFIKASI AKUN & KONTAK GEREJA
+// ============================================================
+
+model TemplatePesan {
+  id        Int      @id @default(autoincrement())
+  kode      String   @unique @db.VarChar(40)
+  nama      String   @db.VarChar(100)
+  isi       String   @db.Text
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("template_pesan")
+}
+
+model NotifikasiLog {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  templateKode String   @map("template_kode") @db.VarChar(40)
+  nomorMasker  String   @map("nomor_masker") @db.VarChar(30)
+  pesanMasker  String   @map("pesan_masker") @db.Text
+  createdBy    Int?     @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("notifikasi_log")
+}
+
+model KontakGereja {
+  id         Int               @id @default(autoincrement())
+  jenis      JenisKontakGereja
+  nama       String            @db.VarChar(150)
+  whatsapp   String            @db.VarChar(20)
+  keterangan String?           @db.VarChar(150)
+  aktif      Boolean           @default(true)
+  urutan     Int               @default(0)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+
+  @@map("kontak_gereja")
+}
+
+enum JenisKontakGereja {
+  WA_CENTER
+  KEPALA_KANTOR
+  PENDETA
+  PENDETA_EMERITUS
+
+  @@map("jenis_kontak_gereja_enum")
 }
