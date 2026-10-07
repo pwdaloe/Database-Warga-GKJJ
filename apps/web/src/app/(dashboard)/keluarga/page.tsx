@@ -190,6 +190,7 @@ export default function KeluargaPage() {
                     <p className="text-xs text-gray-500 inline-flex items-center gap-1 pt-0.5">
                       <Users size={13} />
                       {k.wargas?.length ?? 0} anggota
+                      {(k.wargas?.length ?? 0) === 0 && <span className="ml-1.5 text-[11px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700" title="KK ini tidak memiliki anggota. Periksa apakah duplikat, lalu hapus bila tidak diperlukan.">KK kosong</span>}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -261,6 +262,7 @@ export default function KeluargaPage() {
                       <span className="inline-flex items-center gap-1 text-gray-600">
                         <Users size={14} />
                         {k.wargas?.length ?? 0}
+                        {(k.wargas?.length ?? 0) === 0 && <span className="ml-1.5 text-[11px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700" title="KK ini tidak memiliki anggota. Periksa apakah duplikat, lalu hapus bila tidak diperlukan.">KK kosong</span>}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">

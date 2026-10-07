@@ -20,8 +20,8 @@ vi.mock('../../src/utils/prisma.js', () => ({
       findUnique: vi.fn(),
     },
     $transaction: vi.fn(async (fn: any) => fn({
-      keluarga: { create: vi.fn(), update: vi.fn() },
-      warga: { create: vi.fn(), update: vi.fn() },
+      keluarga: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
+      warga: { create: vi.fn(), update: vi.fn(async ({ data }: any) => ({ id: 1, ...data })) },
     })),
   },
 }))
@@ -59,8 +59,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockedTransaction.mockImplementation(async (fn: any) =>
     fn({
-      keluarga: { create: vi.fn(), update: vi.fn() },
-      warga: { create: vi.fn(), update: vi.fn() },
+      keluarga: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
+      warga: { create: vi.fn(), update: vi.fn(async ({ data }: any) => ({ id: 1, ...data })) },
     }),
   )
 })

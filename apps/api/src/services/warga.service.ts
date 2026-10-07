@@ -307,9 +307,25 @@ export async function updateWarga(
     ...(tanggalKonsenUpdate !== undefined ? { tanggalKonsen: tanggalKonsenUpdate } : {}),
   }
 
+  // Warga yang meninggalkan KK lamanya (pindah KK, buat KK baru, atau tidak lagi berstatus KEPALA) tidak boleh
+  // tetap tercatat sebagai kepala di KK itu — kalau tidak, KK lama (kosong) tampil sebagai baris ganda "Tri Endah"
+  // di Data Keluarga dengan kepala yang sudah pindah.
+  const statusSetelah = (data.statusKeluarga as string | undefined) ?? (existing.statusKeluarga as string)
+  const buatKkBaru = encryptedData.statusKeluarga === 'KEPALA' && !encryptedData.keluargaId && !!newKeluarga
+  const pindahKk = data.keluargaId !== undefined && data.keluargaId !== existing.keluargaId
+  const lepasKepalaDi: number | null =
+    existing.keluargaId && existing.statusKeluarga === 'KEPALA' && (buatKkBaru || pindahKk || statusSetelah !== 'KEPALA')
+      ? (existing.keluargaId as number)
+      : null
+  const lepasKepala = (tx: Prisma.TransactionClient) =>
+    lepasKepalaDi
+      ? tx.keluarga.updateMany({ where: { id: lepasKepalaDi, kepalakeluargaId: id }, data: { kepalakeluargaId: null } })
+      : Promise.resolve(null)
+
   // Warga diubah jadi Kepala KK baru (belum punya KK) → buat KK dalam transaksi
-  if (encryptedData.statusKeluarga === 'KEPALA' && !encryptedData.keluargaId && newKeluarga) {
+  if (buatKkBaru && newKeluarga) {
     return prisma.$transaction(async (tx) => {
+      await lepasKepala(tx)
       const keluarga = await tx.keluarga.create({
         data: {
           ...newKeluarga,
@@ -339,6 +355,17 @@ export async function updateWarga(
         where: { id: keluargaAkhir },
         data: { ...alamatKeluarga, updatedBy: userId },
       })
+      return tx.warga.update({
+        where: { id },
+        data: { ...encryptedData, updatedBy: userId },
+        include: wargaInclude,
+      })
+    })
+  }
+
+  if (lepasKepalaDi) {
+    return prisma.$transaction(async (tx) => {
+      await lepasKepala(tx)
       return tx.warga.update({
         where: { id },
         data: { ...encryptedData, updatedBy: userId },

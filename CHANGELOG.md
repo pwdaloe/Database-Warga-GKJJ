@@ -3,6 +3,27 @@
 
 ---
 
+## [2026-10-07 WIB] — Maintenance | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Rabu, 7 Oktober 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Perbaikan: KK ganda setelah Kepala Keluarga pindah KK (laporan produksi: Tri Endah Sulantari)
+- **Gejala**: satu warga tampil di dua baris Data Keluarga dengan kepala yang sama
+- **Akar masalah** (dibuktikan dari `activity_log` produksi): warga Kepala KK dipindah ke KK lain (`LAINNYA` di KK 70), lalu dijadikan Kepala lagi sehingga sistem membuat KK baru (KK 105).
+  `kepala_keluarga_id` di KK lama (87, kini kosong) tidak dibersihkan, jadi KK kosong itu masih menunjuk dia sebagai kepala
+- **Perbaikan**: `updateWarga` mengosongkan `kepala_keluarga_id` di KK lama (hanya bila warga itu memang kepalanya) saat ia pindah KK, membentuk KK baru, atau tidak lagi berstatus KEPALA;
+  edit biasa tidak memakai transaksi tambahan. Data Keluarga memberi lencana **"KK kosong"** pada KK tanpa anggota
+- **Tes**: 6 tes baru (`warga.kepala-kk.test.ts`), mutation check (pelepasan dimatikan → 4 gagal); API 293, web 127
+- **Data produksi yang sudah terlanjur** tidak diubah oleh perbaikan ini: KK 87 perlu dihapus manual oleh Superadmin/Kepala Kantor, dan posisi Tri Endah (KK 70 vs KK 105) perlu dikonfirmasi staf
+
+### ⚠️ Blockers Ditemukan
+- Perbaikan belum dideploy ke produksi (perubahan kode saja, tanpa perubahan skema)
+- Cakupan KK kosong lain di produksi belum diketahui (query pengecekan menunggu dijalankan di VPS)
+
+---
+
 ## [2026-10-06 WIB] — Sprint 11/11 | ✅ DONE
 
 **Project**: Database Warga GKJJ
