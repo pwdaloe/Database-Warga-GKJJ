@@ -534,35 +534,45 @@
       "issue": "Langkah 6 menyuruh fallback 'tidak ada browser tool' padahal tool Claude in Chrome tersedia via ToolSearch; verifikasi visual tidak pernah dicoba (4x berturut-turut)",
       "suggested_fix": "Sebelum fallback: muat tool chrome lewat ToolSearch, jalankan dev server (apps/web), buka halaman yang disentuh sprint, tangkap layar & console; fallback hanya bila tool benar-benar tidak ada",
       "priority": "HIGH",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-07",
+      "applied_summary": "Langkah 6: blok 'Verifikasi Visual UI' baru — muat tool Claude in Chrome via ToolSearch, jalankan dev server lokal, buka halaman yang disentuh, tangkap layar/console, ulangi di lebar ponsel dan per role; fallback hanya bila tool tidak tersedia; laporan wajib menyebut halaman yang dilihat"
     },
     {
       "skill": "security.md / review.md",
       "issue": "Tidak ada pemeriksaan 'role baru': route yang hanya authenticate otomatis terbuka bagi role baru. Pemeriksaan route masih memakai pola Python (grep @router. backend/app/api)",
       "suggested_fix": "Tambah checklist role baru: enumerasi route tanpa authorize, pagar global fail-closed + tes matriks, tes jalur tak dikenal; ganti grep Python dengan grep Express (router.get/post/put/patch/delete tanpa authorize)",
       "priority": "HIGH",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-07",
+      "applied_summary": "security.md: grep Python diganti pemeriksaan Express + bagian baru 3y 'Role Baru = Fail-Open' (enumerasi route, pagar global fail-closed, tes matriks, mutation check, id dari akun & whitelist strict); review.md: grep Python diganti, CRITICAL bila enum role bertambah tanpa pagar + tes matriks"
     },
     {
       "skill": "qa.md",
       "issue": "Tes round-trip hanya menutup field; integritas relasional (penunjuk kepala KK, KK kosong, warga tanpa KK) tidak diuji dan tidak ada audit data produksi; tidak ada catatan perilaku Vitest 4 untuk promise tertolak",
       "suggested_fix": "Tambah 'integrity check': kumpulan query SELECT read-only (KK kosong, kepala_keluarga_id tidak cocok dengan keluarga_id kepala, warga KEPALA tanpa KK, duplikat NIK) + tes untuk setiap operasi yang memindahkan relasi; catat workaround Vitest 4",
       "priority": "HIGH",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-07",
+      "applied_summary": "qa.md: bagian 4.3c — tes relasi untuk operasi pemindah relasi, 6 query integritas read-only, aturan hapus data; catatan perilaku Vitest 4 dan kebocoran mock antar tes"
     },
     {
       "skill": "sprint.md",
       "issue": "Langkah 8 (git commit otomatis) dan Langkah 10 (email) bertentangan dengan CLAUDE.md ('jangan commit kecuali diminta'); sesi menanganinya manual dengan bertanya",
       "suggested_fix": "Langkah 8/10: commit & email hanya bila diminta pengguna atau diizinkan CLAUDE.md; default tanya/lewati dan catat di laporan",
       "priority": "MED",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-07",
+      "applied_summary": "sprint.md: Langkah 8 patuhi CLAUDE.md (commit/push tidak otomatis bila dilarang); Langkah 10B email bersyarat dan dilewati bila alamat pemilik ambigu"
     },
     {
       "skill": "devops.md",
       "issue": "Tidak ada prosedur analisis salinan dump produksi dan gerbang pasca-deploy tertulis (versi, pm2, tabel baru, backup disalin keluar)",
       "suggested_fix": "Tambah bagian 'analisis salinan produksi' (docker postgres:16 pg_restore -f -, null NIK, terapkan migrasi baru, hapus salinan) dan 'gerbang pasca-deploy' (curl /api/system/status, pm2 list, tabel baru, scp backup dengan tanda kutip untuk zsh)",
       "priority": "MED",
-      "applied": false
+      "applied": true,
+      "applied_date": "2026-10-07",
+      "applied_summary": "devops.md: Langkah 8c baru — jalur deploy (db push), gerbang pasca-deploy, scp dengan tanda kutip zsh, prosedur analisis salinan produksi (docker pg16, null NIK, terapkan migrasi, hapus salinan)"
     }
   ],
   "improvement_history": [
@@ -673,6 +683,36 @@
       "skill": "repo (.gitignore)",
       "change": "*.tsbuildinfo masuk .gitignore dan dilepas dari git (git rm --cached); nasib docs/final-import-pengguna.xlsx menunggu keputusan pemilik",
       "trigger": "RETRO 2026-10-05: bug data-nyata 8x, deploy VPS 4x, kerja di luar sprint 2x, audit dependensi, ux path monorepo"
+    },
+    {
+      "date": "2026-10-07",
+      "skill": "sprint.md",
+      "change": "Langkah 6: blok 'Verifikasi Visual UI' baru — muat tool Claude in Chrome via ToolSearch, jalankan dev server lokal, buka halaman yang disentuh, tangkap layar/console, ulangi di lebar ponsel dan per role; fallback hanya bila tool tidak tersedia; laporan wajib menyebut halaman yang dilihat",
+      "trigger": "RETRO 2026-10-07: recurring blocker data-nyata 9x, verifikasi visual 4x, role baru fail-open"
+    },
+    {
+      "date": "2026-10-07",
+      "skill": "security.md / review.md",
+      "change": "security.md: grep Python diganti pemeriksaan Express + bagian baru 3y 'Role Baru = Fail-Open' (enumerasi route, pagar global fail-closed, tes matriks, mutation check, id dari akun & whitelist strict); review.md: grep Python diganti, CRITICAL bila enum role bertambah tanpa pagar + tes matriks",
+      "trigger": "RETRO 2026-10-07: recurring blocker data-nyata 9x, verifikasi visual 4x, role baru fail-open"
+    },
+    {
+      "date": "2026-10-07",
+      "skill": "qa.md",
+      "change": "qa.md: bagian 4.3c — tes relasi untuk operasi pemindah relasi, 6 query integritas read-only, aturan hapus data; catatan perilaku Vitest 4 dan kebocoran mock antar tes",
+      "trigger": "RETRO 2026-10-07: recurring blocker data-nyata 9x, verifikasi visual 4x, role baru fail-open"
+    },
+    {
+      "date": "2026-10-07",
+      "skill": "sprint.md",
+      "change": "sprint.md: Langkah 8 patuhi CLAUDE.md (commit/push tidak otomatis bila dilarang); Langkah 10B email bersyarat dan dilewati bila alamat pemilik ambigu",
+      "trigger": "RETRO 2026-10-07: recurring blocker data-nyata 9x, verifikasi visual 4x, role baru fail-open"
+    },
+    {
+      "date": "2026-10-07",
+      "skill": "devops.md",
+      "change": "devops.md: Langkah 8c baru — jalur deploy (db push), gerbang pasca-deploy, scp dengan tanda kutip zsh, prosedur analisis salinan produksi (docker pg16, null NIK, terapkan migrasi, hapus salinan)",
+      "trigger": "RETRO 2026-10-07: recurring blocker data-nyata 9x, verifikasi visual 4x, role baru fail-open"
     }
   ],
   "maintenance_batches": [

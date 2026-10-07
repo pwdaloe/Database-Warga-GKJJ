@@ -225,6 +225,44 @@ bukan string sintetis; uji juga serialisasi tipe `BigInt`/`Date` ke JSON.
 
 <!-- improved: tambah pola tes round-trip + mutation check — retro 2026-10-05, blocker "bug data-nyata lolos dari test" 8x HIGH, kandidat qa.md pending sejak retro 2026-10-03 (2026-10-05) -->
 
+### 4.3c — Integritas Relasional & Audit Data Produksi
+
+Tes round-trip (4.3b) menjaga **field**; ia tidak menjaga **relasi**. Kasus produksi 2026-10-07: Kepala KK dipindah ke KK lain,
+KK lama kosong tetapi `kepala_keluarga_id` masih menunjuk dia → satu orang tampil di dua baris, dan 14 KK kosong menumpuk
+tanpa terdeteksi.
+
+**Tes wajib untuk setiap operasi yang memindahkan atau mengganti relasi** (pindah KK, jadi Kepala baru, ganti kepala,
+hapus anggota): assert penunjuk di sisi lama dikosongkan **hanya bila** entitas itu memang pemiliknya (`where` memuat id
+entitas), dan edit biasa tidak membuka transaksi tambahan. Contoh: `apps/api/tests/services/warga.kepala-kk.test.ts`.
+Mutation check wajib (matikan pelepasan → tes gagal).
+
+**Kumpulan query integritas (read-only; jalankan terhadap produksi setelah tiap deploy dan secara berkala, hasil ideal 0 baris):**
+```sql
+-- KK tanpa anggota
+select k.id,k.nomor_keluarga,k.kepala_keluarga_id from keluarga k where not exists (select 1 from warga w where w.keluarga_id=k.id);
+-- Penunjuk kepala basi: kepala tercatat tetapi orangnya berada di KK lain / tanpa KK
+select k.id,k.nomor_keluarga,w.id as kepala_id,w.keluarga_id from keluarga k join warga w on w.id=k.kepala_keluarga_id where w.keluarga_id is distinct from k.id;
+-- Lebih dari satu KEPALA dalam satu KK
+select keluarga_id,count(*) from warga where status_keluarga='KEPALA' and keluarga_id is not null group by 1 having count(*)>1;
+-- Warga berstatus KEPALA tanpa KK
+select id,nama_lengkap from warga where status_keluarga='KEPALA' and keluarga_id is null;
+-- KK punya anggota tetapi kepala_keluarga_id kosong
+select k.id,k.nomor_keluarga from keluarga k where k.kepala_keluarga_id is null and exists (select 1 from warga w where w.keluarga_id=k.id);
+-- Kemungkinan duplikat orang
+select nama_lengkap,tanggal_lahir,count(*) from warga group by 1,2 having count(*)>1;
+```
+Jangan menghapus data hanya karena sebuah query mengembalikan baris: tampilkan dulu, cek di data (siapa yang membuat, status,
+posisi kepala sekarang), minta persetujuan, pastikan ada backup, lalu hapus lewat UI/API yang menolak KK berpenghuni.
+
+<!-- improved: tes relasi + query integritas — retro 2026-10-07: "bug data-nyata lolos dari test" kini 9x; varian integritas relasional (KK kosong, penunjuk kepala basi) ditemukan pengguna, bukan tes (2026-10-07) -->
+
+**Catatan Vitest 4:** promise tertolak yang dikembalikan `vi.fn` (`mockRejectedValue`, `mockImplementation(() => Promise.reject())`)
+ditandai sebagai galat tes walau sudah ditangani komponen. Untuk menguji jalur galat, pakai fungsi biasa (bukan `vi.fn`)
+yang mencatat panggilannya sendiri, atau mock pada tingkat hook/komponen. Mock bersama yang sudah ber-`mockResolvedValue` juga
+bocor antar tes bila hanya `vi.clearAllMocks()`: setel ulang implementasi di `beforeEach`.
+
+<!-- improved: catatan perilaku Vitest 4 — retro 2026-10-07: 2x tes jalur galat gagal aneh (2026-10-07) -->
+
 ### 4.4 — Tulis Test Frontend (Vitest + React Testing Library)
 
 Untuk setiap komponen penting di `apps/web` yang belum tercover (pola sudah ada di `apps/web/src/components/ui/Badge.test.tsx` dan `Pagination.test.tsx`):

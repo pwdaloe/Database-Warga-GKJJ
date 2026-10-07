@@ -245,6 +245,34 @@ Aturan yang harus disampaikan ke pengguna:
 
 <!-- improved: pre-flight deploy VPS (kepemilikan file, git status, backup) — retro 2026-10-05, blocker deploy 4x HIGH (2026-10-05) -->
 
+## Langkah 8c — Gerbang Pasca-Deploy & Analisis Salinan Produksi
+
+**Jalur deploy proyek ini:** `bash deploy/2-deploy.sh prod` di VPS (`/var/www/gkjj`, user `gkjj`, PM2 sebagai root). Skrip
+memakai **`prisma db push`** (bukan `migrate deploy`) setelah backup `pg_dump` otomatis. Baca skrip sebelum memberi perintah
+deploy; jangan menebak. Akses SSH memakai password, jadi pengguna yang menjalankan perintah. Aplikasi **sudah dipakai
+entry data** — tanyakan jadwal deploy, jangan deploy atas inisiatif sendiri.
+
+**Gerbang pasca-deploy (semua harus terpenuhi sebelum dinyatakan selesai):**
+```bash
+curl -s https://api.gkjjakarta.org/api/system/status      # "version" = hash commit yang dideploy, "maintenance": false
+pm2 list                                                  # gkjj-api & gkjj-web online; ↺ kumulatif, naik ±1 per deploy itu wajar
+ls -lh /var/backups/gkjj | tail -3                        # dump baru sesaat sebelum deploy
+# tabel/kolom baru terpasang (sesuai migrasi sprint), mis.: psql "$DB" -c "\dt" | grep nama_tabel
+```
+Lalu salin backup ke Mac (zsh: **beri tanda kutip** agar `*` tidak diperluas lokal):
+`scp 'gkjj-vps:/var/backups/gkjj/gkjj_prod_*.dump' ~/Backups/gkjj/` dan jalankan query integritas dari `qa.md` 4.3c.
+
+**Analisis salinan produksi di Mac (hanya baca; berisi data warga → hapus setelah selesai):**
+1. `pg_restore` Mac (v15) menolak dump PG16 (`unsupported version (1.15)`): konversi lewat Docker —
+   `docker run --rm -v ~/Backups/gkjj:/b:ro postgres:16-alpine pg_restore --no-owner --no-privileges -f - /b/<berkas>.dump > $TMPDIR/salinan.sql`
+2. Buat database sementara (mis. `gkjj_prod_copy`) di Postgres lokal dan muat SQL itu.
+3. Dump dibuat **sebelum** deploy → terapkan migrasi baru (`apps/api/prisma/migrations/*/migration.sql`) ke salinan agar skema sama dengan kode.
+4. Kunci `ENCRYPTION_KEY` lokal berbeda → dekripsi NIK gagal (`bad decrypt`): `update warga set nik=null` **di salinan saja**.
+5. Jalankan fungsi/service asli terhadap salinan lewat `DATABASE_URL=...` untuk mereproduksi tampilan pengguna per peran.
+6. Selesai: `DROP DATABASE` salinan, hapus `$TMPDIR/*.sql`. Jangan menyimpan data warga di luar `~/Backups/gkjj`.
+
+<!-- improved: gerbang pasca-deploy + prosedur analisis salinan produksi — retro 2026-10-07: 3 deploy lancar tetapi gerbang tidak tertulis; panduan awal salah menyebut migrate deploy; pg_restore versi & kunci NIK jadi hambatan (2026-10-07) -->
+
 ## Langkah 9 — Tulis DEVOPS_STATUS.md
 
 Buat atau update file `DEVOPS_STATUS.md` di root project. Ambil timestamp:

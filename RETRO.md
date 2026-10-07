@@ -76,11 +76,11 @@
 
 | Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
 |-----------|-----------|---------|-----------------|--------|
-| HIGH | sprint.md | Fallback "tidak ada browser tool" dipakai tanpa mencoba tool Claude in Chrome (4x) | Muat tool chrome lewat ToolSearch, jalankan dev server, buka halaman yang disentuh, tangkap layar & console; fallback hanya bila tool benar-benar tidak ada | ⬜ pending |
-| HIGH | security.md / review.md | Tidak ada pemeriksaan role baru; pola grep masih Python | Checklist role baru: enumerasi route tanpa `authorize`, pagar global fail-closed + tes matriks; ganti grep Python dengan grep Express | ⬜ pending |
-| HIGH | qa.md | Tes round-trip hanya field; tidak ada integritas relasional/audit data produksi; catatan Vitest 4 | Tambah kumpulan query integritas read-only + tes tiap operasi pemindah relasi; catat workaround Vitest 4 | ⬜ pending |
-| MED | sprint.md | Langkah 8/10 (commit & email otomatis) bertentangan dengan CLAUDE.md | Commit/email hanya bila diminta atau diizinkan CLAUDE.md | ⬜ pending |
-| MED | devops.md | Tidak ada prosedur analisis salinan produksi & gerbang pasca-deploy tertulis | Tambah bagian analisis salinan (docker pg16, null NIK, terapkan migrasi, hapus) dan gerbang pasca-deploy | ⬜ pending |
+| HIGH | sprint.md | Fallback "tidak ada browser tool" dipakai tanpa mencoba tool Claude in Chrome (4x) | Muat tool chrome lewat ToolSearch, jalankan dev server, buka halaman yang disentuh, tangkap layar & console; fallback hanya bila tool benar-benar tidak ada | ✅ applied (2026-10-07) |
+| HIGH | security.md / review.md | Tidak ada pemeriksaan role baru; pola grep masih Python | Checklist role baru: enumerasi route tanpa `authorize`, pagar global fail-closed + tes matriks; ganti grep Python dengan grep Express | ✅ applied (2026-10-07) |
+| HIGH | qa.md | Tes round-trip hanya field; tidak ada integritas relasional/audit data produksi; catatan Vitest 4 | Tambah kumpulan query integritas read-only + tes tiap operasi pemindah relasi; catat workaround Vitest 4 | ✅ applied (2026-10-07) |
+| MED | sprint.md | Langkah 8/10 (commit & email otomatis) bertentangan dengan CLAUDE.md | Commit/email hanya bila diminta atau diizinkan CLAUDE.md | ✅ applied (2026-10-07) |
+| MED | devops.md | Tidak ada prosedur analisis salinan produksi & gerbang pasca-deploy tertulis | Tambah bagian analisis salinan (docker pg16, null NIK, terapkan migrasi, hapus) dan gerbang pasca-deploy | ✅ applied (2026-10-07) |
 
 ### 💡 Rekomendasi untuk Siklus Berikutnya
 

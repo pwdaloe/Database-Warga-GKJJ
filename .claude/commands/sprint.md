@@ -222,6 +222,23 @@ Setelah semua task selesai, jalankan perintah verifikasi dari section `## Verifi
 
 Semua verifikasi harus ✅ sebelum lanjut ke langkah berikutnya.
 
+### Verifikasi Visual UI (wajib dicoba sebelum fallback)
+
+Kalau sprint menyentuh `apps/web`, **coba verifikasi visual dulu** — jangan langsung memakai fallback di bawah. Sesi
+sering memiliki tool Claude in Chrome (`mcp__claude-in-chrome__*`) yang *deferred*: ia tidak terlihat sampai dimuat.
+
+1. Muat tool dalam **satu** panggilan ToolSearch:
+   `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__tabs_create_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer,mcp__claude-in-chrome__read_page,mcp__claude-in-chrome__read_console_messages,mcp__claude-in-chrome__resize_window`
+2. Jalankan API + web **lokal** di latar belakang (`npm run dev --workspace=apps/api`, `npm run dev --workspace=apps/web`)
+   dan login dengan akun dev/seed. **Jangan** memakai domain produksi atau kredensial pengguna nyata.
+3. Buka setiap halaman yang disentuh sprint: tangkap layar, jalankan alur utama (klik tombol, buka modal), baca
+   `read_console_messages` (pola `error|Error`), lalu ulangi pada lebar ponsel (`resize_window` ±390px).
+4. Untuk fitur berbasis role, ulangi dengan akun role yang relevan (mis. akun Jemaat uji) — bukan hanya Superadmin.
+5. Hanya bila tool **benar-benar tidak tersedia** atau gagal 2–3 kali, pakai fallback di bawah dan nyatakan di laporan.
+6. Laporan akhir wajib menyebut **halaman apa saja yang benar-benar dilihat** dan bukti yang ditemukan (bukan sekadar "sudah dicek").
+
+<!-- improved: coba tool Claude in Chrome sebelum fallback "tidak ada browser tool" — retro 2026-10-07: UI Sprint 9, 10, 11 dilaporkan "belum divalidasi visual" 4x berturut-turut padahal tool tersedia lewat ToolSearch (2026-10-07) -->
+
 **Kalau sprint menyentuh `apps/web` dan DoD meminta uji interaktif ("coba manual via `npm run dev`",
 klik tombol, lihat badge/modal) tapi sesi ini tidak punya browser/screenshot tool tersedia**: jangan
 klaim UI sudah diverifikasi. Fallback ke:
@@ -250,6 +267,13 @@ npm run type-check --workspace=apps/web 2>&1 | tail -20
 Perbaiki semua error lint sebelum commit.
 
 ## Langkah 8 — Git Commit
+
+**Patuhi `CLAUDE.md`.** Kalau `CLAUDE.md` melarang commit tanpa permintaan eksplisit (mis. "Jangan commit kecuali diminta
+eksplisit oleh user"), **jangan commit otomatis**: laporkan bahwa pekerjaan selesai dan masih di working tree, lalu tanya
+apakah mau di-commit (dan di-push). Lanjut ke bawah hanya bila pengguna meminta atau `CLAUDE.md` mengizinkan.
+Perubahan `git push`, deploy, dan migrasi DB produksi selalu butuh konfirmasi terpisah.
+
+<!-- improved: commit/push tidak otomatis bila CLAUDE.md melarang — retro 2026-10-07: sprint.md meminta commit & email otomatis, bertentangan dengan CLAUDE.md; sesi menanganinya manual (2026-10-07) -->
 
 ```bash
 git add -A
@@ -298,7 +322,11 @@ Setelah sprint selesai, jalankan PM report. Lakukan langkah-langkah berikut (ini
 Sprint N+1: [baca nama dari sprints/sprint_(N+1).md jika ada]
 ```
 
-**B. Kirim email notifikasi:**
+**B. Kirim email notifikasi** — hanya bila pengguna memintanya atau `CLAUDE.md` menyebut alamat pemilik dan mengizinkan.
+Kalau alamat pemilik ambigu (mis. berbeda antara `CLAUDE.md` dan konteks pengguna), **lewati dan tulis di laporan**
+bahwa email tidak dikirim; email adalah tindakan keluar yang tidak bisa ditarik.
+
+<!-- improved: email notifikasi bersyarat — retro 2026-10-07 (2026-10-07) -->
 
 ```bash
 EMAIL_BODY="Halo,

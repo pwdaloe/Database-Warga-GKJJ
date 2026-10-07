@@ -83,10 +83,15 @@ Baca file auth backend (biasanya `backend/app/api/v1/endpoints/auth.py`, `backen
 **Cek endpoint yang harusnya terlindungi:**
 
 ```bash
-# Cari endpoint tanpa auth dependency
-grep -rn "def.*route\|@.*router\.\(get\|post\|put\|delete\|patch\)" \
-  backend/app/api --include="*.py" -A 3 | grep -v "Depends(get_current_user)\|Depends(require_" | head -40
+# Router yang tidak memasang authenticate di level router (Express, apps/api)
+for f in apps/api/src/routes/*.ts; do grep -q "\.use(authenticate" "$f" || echo "TANPA authenticate level router: $f"; done
+
+# Route yang hanya authenticate TANPA authorize = terbuka untuk SEMUA role (termasuk role yang ditambah nanti)
+grep -n "Router\.\(get\|post\|put\|patch\|delete\)(" apps/api/src/routes/*.ts | head -80
+grep -c "authorize(" apps/api/src/routes/*.ts
 ```
+
+<!-- improved: ganti grep Python (@router/backend/app/api, tidak cocok untuk Express) dengan pemeriksaan Express — retro 2026-10-07 (2026-10-07) -->
 
 Flagging endpoint yang tidak punya auth dependency tapi nama/path-nya sensitif (admin, user, data, export, dll).
 
@@ -106,6 +111,21 @@ satu endpoint:
 - **Tulis-balik nilai tersaring**: pastikan nilai `null` hasil redaksi yang dikirim balik oleh form tidak menimpa data tersimpan.
 
 <!-- improved: cek konsistensi fail-closed/tulis/redaksi lintas endpoint — retro 2026-10-05: penatua bisa menulis ke kelompok lain, koordinat bocor di peta, nilai redaksi menimpa data (2026-10-05) -->
+
+### 3y. Role Baru = Fail-Open Secara Default (wajib setiap ada role ditambahkan)
+
+Tambah nilai ke enum role **tidak** otomatis menutup route lama. Route yang hanya memakai `authenticate` (tanpa
+`authorize(...)`) terbuka untuk setiap pengguna yang login, termasuk role baru. Setiap kali enum role bertambah:
+1. Enumerasi route tanpa `authorize` (perintah di 3 di atas) dan tentukan: perlu dibuka untuk role baru, atau ditutup?
+2. Untuk role yang seharusnya hanya mengakses sedikit hal, pasang **pagar global fail-closed** sebelum semua router
+   (daftar-izin `prefix + method`; selebihnya 403) — contoh: `apps/api/src/middleware/jemaatGuard.ts`.
+3. Wajib ada **tes matriks**: puluhan jalur lama (GET/PUT/POST/PATCH) → 403 untuk role baru, termasuk **jalur yang belum ada**
+   (membuktikan route baru otomatis tertutup), plus tes daftar-izin → 200.
+4. Mutation check: matikan pagar, tes matriks HARUS gagal; lalu kembalikan.
+5. Id data milik sendiri harus berasal dari akun yang login, **bukan** dari parameter URL/body (cegah IDOR); body diparse
+   dengan whitelist `.strict()` sehingga field di luar daftar ditolak (400), bukan diabaikan.
+
+<!-- improved: pemeriksaan role baru — retro 2026-10-07: role JEMAAT sempat lolos ke GET /warga, /keluarga, /dashboard karena hanya authenticate; ditutup dengan jemaatGuard (2026-10-07) -->
 
 ## Langkah 4 — Audit Input Validation & Injection
 

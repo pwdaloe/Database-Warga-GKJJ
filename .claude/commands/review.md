@@ -115,15 +115,22 @@ Untuk setiap endpoint baru/diubah:
 ### Authentication & Authorization
 
 ```bash
-# Endpoint tanpa auth dependency
-grep -rn "^@router\." backend/app/api/ 2>/dev/null -A5 | grep -v "Depends.*current_user\|#" | head -20
+# Router tanpa authenticate di level router (Express, apps/api)
+for f in apps/api/src/routes/*.ts; do grep -q "\.use(authenticate" "$f" || echo "TANPA authenticate: $f"; done
 
-# Endpoint yang ada auth-nya
-grep -rn "get_current_user\|current_user" backend/app/api/ 2>/dev/null | head -20
+# Route dan pemakaian authorize (route hanya authenticate = terbuka untuk semua role)
+grep -n "Router\.\(get\|post\|put\|patch\|delete\)(" apps/api/src/routes/*.ts | head -60
+grep -c "authorize(" apps/api/src/routes/*.ts
 ```
 
+<!-- improved: ganti grep Python (backend/app/api, get_current_user) dengan pemeriksaan Express — retro 2026-10-07 (2026-10-07) -->
+
 Tandai **CRITICAL** jika:
+- Diff menambah nilai ke enum role (mis. `UserRole`) tetapi tidak ada pagar fail-closed + tes matriks untuk role baru
+  (route lama yang hanya `authenticate` otomatis terbuka bagi role itu — lihat `security.md` bagian 3y)
 - Endpoint protected tidak punya auth dependency
+
+<!-- improved: cek role baru — retro 2026-10-07 (2026-10-07) -->
 - Authorization hanya di frontend, tidak di backend
 - User bisa akses resource milik user lain (missing ownership check)
 
