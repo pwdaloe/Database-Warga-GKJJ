@@ -1,6 +1,6 @@
 {
   "project": "Database Warga GKJJ",
-  "last_updated": "2026-10-05",
+  "last_updated": "2026-10-07",
   "note": "Retro 2026-10-03 (pasca Sprint 7, di luar alur /sprint): 4 fix/feat import & logs (2026-07-10) ditemukan lewat uji data nyata meski coverage import.ts 91%; relokasi folder ~/Documents -> ~/Projects + bentrok port Redis 6379; DB lokal kosong setelah relokasi (pulih via restore dump). sprints/.current_sprint = 8, belum ada sprint_08.md.",
   "sprints": [
     {
@@ -113,6 +113,30 @@
       "tasks_total": 5,
       "tasks_done": 5,
       "completion_pct": 100
+    },
+    {
+      "number": 10,
+      "name": "Akun Pengguna dari Warga, Notifikasi WhatsApp (wa.me), Kontak Gereja & Menu Hubungi",
+      "commit": "c3e3a70",
+      "status": "done",
+      "blockers_count": 3,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": 8,
+      "tasks_done": 8,
+      "completion_pct": 100
+    },
+    {
+      "number": 11,
+      "name": "Role Jemaat: Profil Saya, Verifikasi Staf, Catatan Jemaat",
+      "commit": "a19f6f0",
+      "status": "done",
+      "blockers_count": 4,
+      "high_severity_blockers": 1,
+      "fix_commits": 0,
+      "tasks_total": 7,
+      "tasks_done": 7,
+      "completion_pct": 100
     }
   ],
   "recurring_blockers": [
@@ -175,21 +199,21 @@
       "escalation_note": "Occurrence pertama, ditangani dengan aman (instance verifikasi sementara di port lain, tidak mematikan proses user). Tidak perlu perubahan skill — cukup pola reusable kalau situasi serupa terulang."
     },
     {
-      "item": "Tidak ada browser/screenshot tool tersedia untuk verifikasi UI interaktif sprint frontend — sprint.md Langkah 6 mengasumsikan akses browser nyata tanpa fallback eksplisit",
-      "occurrences": 1,
-      "severity": "MED",
+      "item": "Tidak ada browser/screenshot tool tersedia untuk verifikasi UI interaktif sprint frontend — sprint.md Langkah 6 mengasumsikan akses browser nyata tanpa fallback eksplisit | Berulang di Sprint 9 (banner), 10, 11. Sesi memiliki tool Claude in Chrome (deferred, via ToolSearch) tetapi tidak dipakai; UI Sprint 10-11 baru diverifikasi lewat tes komponen.",
+      "occurrences": 4,
+      "severity": "HIGH",
       "first_seen": "2026-07-09 (Sprint 7)",
-      "last_seen": "2026-07-09 (Sprint 7)",
+      "last_seen": "Sprint 11",
       "resolved": false,
       "root_cause": "sprint.md Langkah 6 (Verifikasi Sprint) tidak punya panduan eksplisit untuk kasus sesi tanpa browser tool — penanganan yang benar (fallback ke curl + disclosure) saat ini murni dari instruksi umum skill /verify, bukan dari sprint.md sendiri.",
       "escalation_note": "Occurrence pertama. Berpotensi berulang di setiap sprint frontend selanjutnya kalau sesi tidak punya browser tool — didokumentasikan sebagai skill_improvement_candidate agar jadi standar konsisten."
     },
     {
-      "item": "Bug data-nyata di jalur import/serialisasi lolos dari test ber-mock prisma meski coverage tinggi (Excel Number vs string, NIK plaintext di import vs terenkripsi di jalur manual, VARCHAR overflow, BigInt tak ter-serialize di /api/logs)",
-      "occurrences": 8,
+      "item": "Bug data-nyata di jalur import/serialisasi lolos dari test ber-mock prisma meski coverage tinggi (Excel Number vs string, NIK plaintext di import vs terenkripsi di jalur manual, VARCHAR overflow, BigInt tak ter-serialize di /api/logs) | Kejadian ke-9 (2026-10-07): integritas RELASIONAL — Kepala KK pindah KK meninggalkan KK kosong dengan kepala_keluarga_id basi; 14 KK kosong lolos tanpa terdeteksi sejak 2026-10-05; ditemukan pengguna, bukan tes.",
+      "occurrences": 9,
       "severity": "HIGH",
       "first_seen": "2026-07-10 (pasca Sprint 7)",
-      "last_seen": "Maintenance 2026-10-05",
+      "last_seen": "Maintenance 2026-10-07",
       "resolved": false,
       "root_cause": "Test Sprint 6 memakai prisma mock dan input sintetis berbentuk string; tidak ada fixture Excel nyata, tidak ada paritas-check antar jalur tulis (import vs manual), dan tidak ada test serialisasi JSON untuk tipe BigInt/Decimal.",
       "escalation_note": "4 bug dalam satu hari = >=3x. Wajib jadi task sprint nyata (Sprint 8), bukan rekomendasi naratif.",
@@ -220,8 +244,8 @@
       "occurrences": 4,
       "severity": "HIGH",
       "first_seen": "Maintenance 2026-10-05",
-      "last_seen": "Maintenance 2026-10-05",
-      "resolved": false,
+      "last_seen": "2026-10-07 (3 deploy lancar: 263c59b, 78b3660, ad427d7; backup otomatis tiap deploy; 2 dump disalin ke luar VPS)",
+      "resolved": true,
       "note": "Perbaikan di deploy/2-deploy.sh (9d1db86, 0b7bd0e) sudah di-push; resolved setelah satu deploy nyata lolos tanpa error izin."
     },
     {
@@ -229,8 +253,8 @@
       "occurrences": 2,
       "severity": "MED",
       "first_seen": "Pasca Sprint 7 (2026-07-10)",
-      "last_seen": "Maintenance 2026-10-05",
-      "resolved": false,
+      "last_seen": "2026-10-07 (2 commit maintenance, entry CHANGELOG ditulis di commit yang sama)",
+      "resolved": true,
       "note": "Naik ke eskalasi bila terjadi lagi (>=3x)."
     },
     {
@@ -247,8 +271,8 @@
       "occurrences": 1,
       "severity": "MED",
       "first_seen": "Maintenance 2026-10-05",
-      "last_seen": "Maintenance 2026-10-05",
-      "resolved": false,
+      "last_seen": "Sprint 8 (bc7a695)",
+      "resolved": true,
       "note": "Kebijakan koordinat sudah diputuskan (semua role editor boleh); scoping fail-closed di /warga & /keluarga belum diseragamkan."
     },
     {
@@ -268,6 +292,46 @@
       "last_seen": "Sprint 9",
       "resolved": true,
       "note": "Direproduksi 1/4 run paralel; retry:2 di vitest.config.ts -> 10/10 run paralel lulus. Bukan bug aplikasi."
+    },
+    {
+      "item": "Role baru otomatis fail-open: banyak route lama hanya authenticate tanpa authorize (GET /warga, /keluarga, /dashboard), sehingga role JEMAAT lolos walau authorize(...) tidak menyebutnya. Ditemukan lewat penalaran, bukan skill/tes.",
+      "occurrences": 1,
+      "severity": "HIGH",
+      "first_seen": "Sprint 11",
+      "last_seen": "Sprint 11",
+      "resolved": true
+    },
+    {
+      "item": "Vitest 4 menandai promise tertolak yang dikembalikan vi.fn sebagai galat tes walau ditangani komponen (mockRejectedValue/mockImplementation(Promise.reject)); workaround: fungsi biasa atau mock tingkat hook",
+      "occurrences": 2,
+      "severity": "LOW",
+      "first_seen": "Sprint 10",
+      "last_seen": "Maintenance 2026-10-07",
+      "resolved": true
+    },
+    {
+      "item": "Analisis salinan dump produksi di Mac: pg_restore 15 tidak bisa membaca dump PG16 (butuh docker postgres:16), NIK terenkripsi tidak bisa didekripsi dengan kunci lokal (null-kan di salinan), dan migrasi baru harus diterapkan ke salinan; salinan harus dihapus setelah selesai",
+      "occurrences": 1,
+      "severity": "LOW",
+      "first_seen": "Maintenance 2026-10-07",
+      "last_seen": "Maintenance 2026-10-07",
+      "resolved": true
+    },
+    {
+      "item": "Panduan deploy yang diberikan menyebut prisma migrate deploy padahal deploy/2-deploy.sh memakai prisma db push; dikoreksi setelah membaca skrip",
+      "occurrences": 1,
+      "severity": "LOW",
+      "first_seen": "Sprint 11",
+      "last_seen": "Sprint 11",
+      "resolved": true
+    },
+    {
+      "item": "Asumsi data tanpa bukti: batch 14 KK kosong sempat diduga data uji; data (dientry user 1, VALIDASI, kepala sudah di KK lain) menunjukkan warga nyata yang dipindahkan",
+      "occurrences": 1,
+      "severity": "LOW",
+      "first_seen": "Maintenance 2026-10-07",
+      "last_seen": "Maintenance 2026-10-07",
+      "resolved": true
     }
   ],
   "skill_improvement_candidates": [
@@ -464,6 +528,41 @@
       "applied": true,
       "applied_date": "2026-10-05",
       "applied_summary": "*.tsbuildinfo masuk .gitignore dan dilepas dari git (git rm --cached); nasib docs/final-import-pengguna.xlsx menunggu keputusan pemilik"
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Langkah 6 menyuruh fallback 'tidak ada browser tool' padahal tool Claude in Chrome tersedia via ToolSearch; verifikasi visual tidak pernah dicoba (4x berturut-turut)",
+      "suggested_fix": "Sebelum fallback: muat tool chrome lewat ToolSearch, jalankan dev server (apps/web), buka halaman yang disentuh sprint, tangkap layar & console; fallback hanya bila tool benar-benar tidak ada",
+      "priority": "HIGH",
+      "applied": false
+    },
+    {
+      "skill": "security.md / review.md",
+      "issue": "Tidak ada pemeriksaan 'role baru': route yang hanya authenticate otomatis terbuka bagi role baru. Pemeriksaan route masih memakai pola Python (grep @router. backend/app/api)",
+      "suggested_fix": "Tambah checklist role baru: enumerasi route tanpa authorize, pagar global fail-closed + tes matriks, tes jalur tak dikenal; ganti grep Python dengan grep Express (router.get/post/put/patch/delete tanpa authorize)",
+      "priority": "HIGH",
+      "applied": false
+    },
+    {
+      "skill": "qa.md",
+      "issue": "Tes round-trip hanya menutup field; integritas relasional (penunjuk kepala KK, KK kosong, warga tanpa KK) tidak diuji dan tidak ada audit data produksi; tidak ada catatan perilaku Vitest 4 untuk promise tertolak",
+      "suggested_fix": "Tambah 'integrity check': kumpulan query SELECT read-only (KK kosong, kepala_keluarga_id tidak cocok dengan keluarga_id kepala, warga KEPALA tanpa KK, duplikat NIK) + tes untuk setiap operasi yang memindahkan relasi; catat workaround Vitest 4",
+      "priority": "HIGH",
+      "applied": false
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Langkah 8 (git commit otomatis) dan Langkah 10 (email) bertentangan dengan CLAUDE.md ('jangan commit kecuali diminta'); sesi menanganinya manual dengan bertanya",
+      "suggested_fix": "Langkah 8/10: commit & email hanya bila diminta pengguna atau diizinkan CLAUDE.md; default tanya/lewati dan catat di laporan",
+      "priority": "MED",
+      "applied": false
+    },
+    {
+      "skill": "devops.md",
+      "issue": "Tidak ada prosedur analisis salinan dump produksi dan gerbang pasca-deploy tertulis (versi, pm2, tabel baru, backup disalin keluar)",
+      "suggested_fix": "Tambah bagian 'analisis salinan produksi' (docker postgres:16 pg_restore -f -, null NIK, terapkan migrasi baru, hapus salinan) dan 'gerbang pasca-deploy' (curl /api/system/status, pm2 list, tabel baru, scp backup dengan tanda kutip untuk zsh)",
+      "priority": "MED",
+      "applied": false
     }
   ],
   "improvement_history": [
@@ -606,6 +705,22 @@
         "deploy script hardening + pg_dump backup",
         "koordinat & alamat KK data-loss fixes"
       ]
+    }
+  ],
+  "maintenance": [
+    {
+      "date": "2026-10-07",
+      "name": "KK ganda: Kepala KK pindah KK meninggalkan penunjuk kepala basi",
+      "commit": "78b3660",
+      "found_by": "pengguna di produksi",
+      "fix_commits": 1
+    },
+    {
+      "date": "2026-10-07",
+      "name": "UI hapus KK (detail + pesan galat modal) & pembersihan 14 KK kosong",
+      "commit": "ad427d7",
+      "found_by": "pengguna di produksi",
+      "fix_commits": 0
     }
   ]
 }

@@ -3,6 +3,95 @@
 
 ---
 
+## [2026-10-07] — Retrospektif Sprint 10–11 (+ 2 perbaikan produksi)
+
+**Project**: Database Warga GKJJ
+**Scope**: Sprint 10, Sprint 11, dan 2 commit maintenance (`78b3660`, `ad427d7`); 3 deploy ke produksi (`263c59b`, `78b3660`, `ad427d7`)
+**Reviewed**: Rabu, 7 Oktober 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 2 sprint (10, 11) + 2 maintenance |
+| Total tasks | 15 (8 + 7), 100% selesai |
+| Fix commits | 1 (`78b3660`, ditemukan pengguna di produksi) |
+| Pertumbuhan tes | API 192 → 293 (+101), web 106 → 131 (+25) |
+| Deploy ke produksi | 3, semuanya lancar, backup otomatis tiap deploy |
+| Unique blockers baru | 5 |
+| Recurring blockers | 2 naik (data-nyata 8x → 9x; verifikasi visual 1x → 4x) |
+| Blocker ditutup | 3 (deploy rapuh, kerja di luar sprint, scoping Penatua) |
+| Skill gap terdeteksi | 5 |
+
+### 🔁 Pola Blocker Sistemik
+
+#### Bug "data-nyata lolos dari test" — kini **9x**, HIGH, belum resolved (varian baru: integritas relasional)
+- **Kejadian baru (2026-10-07)**: Tri Endah Sulantari tampil di dua baris Data Keluarga. Penyebab (dibuktikan dari `activity_log` produksi): Kepala KK dipindah ke KK lain lalu dijadikan Kepala lagi → KK baru. KK lama kosong, `kepala_keluarga_id` masih menunjuk dia.
+- **Dampak lebih luas**: pengecekan menemukan **14 KK kosong** di produksi (13 di antaranya dibuat 5 Oktober, sebelum perbaikan; terjadi diam-diam selama entry data berjalan). Semua dibersihkan manual, dan hasil akhir 0 baris.
+- **Root cause**: seluruh tes round-trip (Sprint 8) menjaga **field** warga, bukan **relasi**. Tidak ada tes untuk operasi yang memindahkan relasi (pindah KK, jadi Kepala baru), dan tidak ada pemeriksaan integritas data produksi. Ditemukan oleh pengguna, bukan oleh tes atau pemantauan.
+- **Eskalasi (sudah ≥3x)**: sudah jadi task nyata di Sprint 8 untuk varian field. Varian relasional wajib jadi task nyata Sprint 12 (lihat Rekomendasi 1).
+- **Skill yang perlu diupdate**: `qa.md` (HIGH).
+
+#### Verifikasi visual UI tidak pernah dilakukan — kini **4x** (Sprint 9, 10, 11 + banner), dinaikkan MED → HIGH
+- Tiga sprint berturut-turut melaporkan "UI belum divalidasi di browser" dan melanjutkan.
+- **Root cause**: `sprint.md` Langkah 6 menyuruh fallback bila "tidak ada browser tool", padahal sesi punya tool **Claude in Chrome** (dimuat lewat ToolSearch). Fallback dipakai tanpa mencoba tool-nya. Akibatnya UI Sprint 10–11 (modal Info Akun, Profil Saya, Hubungi) baru pertama kali dilihat pengguna di produksi.
+- **Skill yang perlu diupdate**: `sprint.md` (HIGH). **Eskalasi ≥3x → task nyata** (Rekomendasi 2).
+
+#### Role baru otomatis fail-open — 1x, HIGH, resolved tetapi tidak ditangkap oleh skill
+- Banyak route lama hanya memakai `authenticate` tanpa `authorize` (daftar warga, keluarga, dashboard). Role JEMAAT akan lolos ke semua itu walau tidak disebut di `authorize(...)`. Ditemukan lewat penalaran di tengah sprint dan ditutup dengan pagar global `jemaatGuard` + tes matriks (22 jalur, mutation check 13 tes gagal).
+- **Root cause**: tidak ada skill yang menanyakan "route mana yang terbuka bagi role baru?". `review.md` dan `security.md` masih memakai pola grep Python (`@router.`, `backend/app/api`) yang tidak cocok untuk Express.
+- **Skill yang perlu diupdate**: `security.md`, `review.md` (HIGH).
+
+#### Alur deploy VPS rapuh — 4x → **RESOLVED**
+- 3 deploy hari ini lancar: versi terverifikasi lewat `/api/system/status`, `pm2` online, tabel baru terpasang, dump `pg_dump` otomatis dibuat tiap deploy, dua dump disalin ke Mac. Gerbang retro 5 Oktober terpenuhi. Catatan: tidak ada `EACCES` yang dilaporkan, tetapi log penuh tidak ditempel (disimpulkan dari keberhasilan deploy).
+
+#### Pekerjaan di luar `/sprint` tanpa entry CHANGELOG — 2x → **RESOLVED**
+- Kedua commit maintenance hari ini memuat entry CHANGELOG di commit yang sama.
+
+### 🐛 Pola Git Bermasalah
+
+- **Fix commits**: hanya 1 dari 6 commit (17%), turun dari 27% pada retro lalu. Satu-satunya fix berasal dari kelas "relasi tidak sinkron" (di atas).
+- **File sering diubah ulang** (Sprint 10–Maintenance): `CHANGELOG.md` (4x, wajar), `README.md` (3x), `warga.service.ts`, `users.ts`, `app.ts`, `Sidebar.tsx`, `pengguna/page.tsx` (masing-masing 2x). Tidak ada tanda pengerjaan ulang karena kesalahan.
+- **Satu salah langkah dalam sesi**: panduan deploy awal menyebut `prisma migrate deploy` padahal `deploy/2-deploy.sh` memakai `prisma db push`; dikoreksi setelah membaca skrip. Satu asumsi lain ("batch KK 5 Okt adalah data uji") dikoreksi setelah data produksi memperlihatkan warga nyata.
+
+### 🕳️ Gap Skill Coverage
+
+- **Role baru**: lihat di atas; tidak ada skill yang memeriksa. `review.md:119` dan `security.md:87` masih berisi pola Python.
+- **Integritas data produksi**: tidak ada skill/pemeriksaan untuk KK kosong, penunjuk kepala basi, warga tanpa KK. Ditemukan setelah 2 hari entry manual.
+- **Konflik `sprint.md` vs `CLAUDE.md`**: `sprint.md` Langkah 8 meminta commit otomatis dan Langkah 10 mengirim email, sedangkan `CLAUDE.md` melarang commit tanpa diminta. Sesi menanganinya dengan bertanya; skill tidak mengatur ini.
+- **Analisis salinan produksi**: tidak ada prosedur. Perlu `docker postgres:16` (pg_restore Mac versi 15 menolak dump PG16), kunci enkripsi NIK lokal berbeda (null-kan di salinan), migrasi baru harus diterapkan, dan salinan wajib dihapus.
+- **Keanehan alat uji**: Vitest 4 menandai promise tertolak dari `vi.fn` sebagai galat tes walau ditangani komponen (2x; tidak ada di `qa.md`).
+
+### ✅ Yang Berjalan Baik
+
+- **Mutation check dipakai konsisten** dan menangkap kerusakan di setiap sprint: profil (2 dan 1 tes gagal), pagar (13), pelepasan kepala KK (4), modal hapus (1).
+- **Keputusan desain dikonfirmasi bertahap** (password acak, wa.me, kepala keluarga saja yang ubah KK, verifikasi staf) dan dicatat di dokumen sebelum kode ditulis, sehingga tidak ada pengerjaan ulang fitur.
+- **Diagnosis berbasis bukti**: kasus KK ganda ditelusuri dari `activity_log` produksi + salinan backup, bukan tebakan; salinan dihapus setelahnya.
+- **Backup sebelum setiap aksi berisiko** (3 backup, 2 disalin keluar VPS) dan **pembersihan data dengan penjaga** (hanya KK tanpa anggota; hasil akhir diverifikasi 0 baris).
+- **Verifikasi query nyata di DB lokal** untuk `updateProfil` (baris uji sementara dihapus), menutup keterbatasan tes ber-mock prisma.
+- **Gerbang deploy retro 5 Oktober terpenuhi**; aplikasi tetap dipakai entry data saat tiga deploy berjalan.
+
+### 🔧 Kandidat Perbaikan Skill
+
+| Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
+|-----------|-----------|---------|-----------------|--------|
+| HIGH | sprint.md | Fallback "tidak ada browser tool" dipakai tanpa mencoba tool Claude in Chrome (4x) | Muat tool chrome lewat ToolSearch, jalankan dev server, buka halaman yang disentuh, tangkap layar & console; fallback hanya bila tool benar-benar tidak ada | ⬜ pending |
+| HIGH | security.md / review.md | Tidak ada pemeriksaan role baru; pola grep masih Python | Checklist role baru: enumerasi route tanpa `authorize`, pagar global fail-closed + tes matriks; ganti grep Python dengan grep Express | ⬜ pending |
+| HIGH | qa.md | Tes round-trip hanya field; tidak ada integritas relasional/audit data produksi; catatan Vitest 4 | Tambah kumpulan query integritas read-only + tes tiap operasi pemindah relasi; catat workaround Vitest 4 | ⬜ pending |
+| MED | sprint.md | Langkah 8/10 (commit & email otomatis) bertentangan dengan CLAUDE.md | Commit/email hanya bila diminta atau diizinkan CLAUDE.md | ⬜ pending |
+| MED | devops.md | Tidak ada prosedur analisis salinan produksi & gerbang pasca-deploy tertulis | Tambah bagian analisis salinan (docker pg16, null NIK, terapkan migrasi, hapus) dan gerbang pasca-deploy | ⬜ pending |
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. **Buat `sprints/sprint_12.md` untuk integritas data (task nyata, bukan saran)**: (a) kumpulan query integritas read-only (KK kosong, `kepala_keluarga_id` tidak cocok dengan KK kepala, warga berstatus KEPALA tanpa KK, duplikat NIK) dan menjalankannya terhadap produksi tiap selesai deploy; (b) tes relasional untuk setiap operasi yang memindahkan warga atau mengganti kepala; (c) pertimbangkan kendala basis data (mis. satu KEPALA aktif per KK) setelah audit data.
+2. **Jadikan verifikasi visual gerbang sprint**: jalankan `/improve` untuk `sprint.md`, lalu lakukan satu putaran uji visual atas UI Sprint 10–11 (modal Info Akun, tab Template Pesan & Kontak Gereja, Profil Saya sebagai akun Jemaat uji, Hubungi) di environment dev sebelum menambah fitur baru.
+3. **Jalankan `/improve`** untuk lima kandidat skill di atas (tiga HIGH).
+4. **Pilih kandidat Sprint 12** bersama Daru: akun Jemaat massal, survei/kebutuhan jemaat, pengingat belum login, penyesuaian `/m`. Jadwalkan juga upgrade Next 16 + Prisma 8 sebagai sprint tersendiri (sisa 6 temuan `npm audit`).
+5. **Uji akun Jemaat nyata satu kali di produksi** (buat satu akun uji, login, ubah satu field, lihat muncul di Validasi Data, nonaktifkan akun) — alur ini belum pernah dijalankan end-to-end di lingkungan nyata.
+
+---
+
 ## [2026-10-05] — Retrospektif Pasca Sprint 7 (Batch Mobile UI, Keamanan Dependensi, Deploy & Koreksi Data)
 
 **Project**: Database Warga GKJJ

@@ -696,17 +696,34 @@ Verifikasi oleh pemohon
 Deploy ke production
 ```
 
-### 9.4 Backlog Fitur yang Sedang Direncanakan
+### 9.4 Backlog Fitur
+
+*Diperbarui 7 Oktober 2026 (setelah Sprint 11).*
+
+**Sudah selesai (di production per 7 Oktober 2026)**
+
+| Fitur | Sprint | Keterangan |
+|---|---|---|
+| Pencatatan perpindahan jemaat | Sprint 7 | Pindah masuk/keluar/meninggal, 2 tahap sign-off, surat PDF, kirim email/WhatsApp |
+| Workflow validasi data via mobile | Awal proyek | Penatua entri sebagai Draft lewat aplikasi mobile (`/m`), staf memvalidasi di menu Validasi Data |
+| Tautkan warga ke pengguna + notifikasi akun via WhatsApp | Sprint 10 | Password acak, wajib ganti saat login pertama, template pesan configurable, tautan `wa.me` |
+| Menu Hubungi (semua role) | Sprint 10 | WA Center, majelis kelompok, Kepala Kantor, Pendeta/Emeritus; dikelola di Pengaturan → Kontak Gereja |
+| Role Jemaat + Profil Saya | Sprint 11 | Jemaat melihat dan mengubah data dirinya; perubahan masuk antrean Validasi Data |
+| Perbaikan KK kosong / kepala KK pindah | Maintenance | Penunjuk kepala dibersihkan saat pindah KK; lencana "KK kosong"; tombol Hapus KK di detail |
+
+**Direncanakan / ide**
 
 | Fitur | Status | Keterangan |
 |---|---|---|
-| Workflow validasi data via mobile | 🗓️ Planned | Penatua submit → staf validasi |
+| Pembuatan akun Jemaat massal | 🗓️ Usulan | Pilih banyak warga → akun + tautan WhatsApp berurutan (saat ini satu per satu) |
+| Survei & kebutuhan jemaat | 🗓️ Usulan | Struktur sudah siap (`CatatanJemaat.jenis`: CATATAN, KEBUTUHAN, SURVEI); belum ada antarmuka |
+| Pengingat akun belum login | 🗓️ Usulan | Template pengingat ditunda dari Sprint 10 |
+| Penyesuaian aplikasi mobile `/m` untuk Jemaat | 🗓️ Usulan | API sudah menolak; halaman `/m` dialihkan ke Profil Saya |
 | Laporan rekap per kelompok/wilayah | 🗓️ Planned | Export PDF/Excel |
-| Pencatatan perpindahan jemaat | 🗓️ Planned | Masuk, Keluar, Meninggal + surat |
-| Notifikasi ulang tahun jemaat | 🗓️ Planned | WhatsApp otomatis |
+| Notifikasi ulang tahun jemaat via WhatsApp | 🗓️ Planned | API daftar ulang tahun bulan ini sudah ada (`GET /warga/ulang-tahun`); belum ada tampilan maupun pengiriman |
 | Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
-| Tautkan warga ke pengguna + notifikasi akun via WhatsApp (template configurable) | ✅ Selesai (Sprint 10) | Pilih warga saat tambah pengguna (nama & WA terisi otomatis), kirim info portal jemaat.gkjjakarta.org + password default. Lihat `docs/FITUR_NOTIFIKASI_AKUN_WA.md` |
-| Role Jemaat (lihat & ubah data pribadi sendiri) + menu Hubungi (WA Center, majelis kelompok, Kepala Kantor, Pendeta via wa.me) | ✅ Selesai (Sprint 10 Hubungi, Sprint 11 Role Jemaat) | Tambahan dari request di atas; keputusan disetujui 2026-10-06, lihat bagian 10–14 dokumen yang sama |
+| Upgrade Next 16 + Prisma 8 | 🔧 Teknis | Menutup sisa 6 temuan `npm audit`; jangan pakai `npm audit fix --force` |
+| Penguatan bar pembaruan & pengujian visual | 🔧 Teknis | UI Sprint 10–11 baru diverifikasi lewat tes komponen, belum uji visual di browser |
 
 ---
 
