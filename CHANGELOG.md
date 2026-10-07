@@ -18,9 +18,19 @@
 - **Tes**: 6 tes baru (`warga.kepala-kk.test.ts`), mutation check (pelepasan dimatikan → 4 gagal); API 293, web 127
 - **Data produksi yang sudah terlanjur** tidak diubah oleh perbaikan ini: KK 87 perlu dihapus manual oleh Superadmin/Kepala Kantor, dan posisi Tri Endah (KK 70 vs KK 105) perlu dikonfirmasi staf
 
+### ✅ Pembersihan data produksi (dilakukan manual oleh Daru, 2026-10-07)
+- 14 KK kosong dihapus: KLG00008, 28, 33, 34, 36–40, 42–45, 87. Rinciannya: 1 duplikat kasus Tri Endah, 2 tanpa kepala (sisa data uji),
+  11 sisa KK batch 5 Okt yang kepalanya sudah dipindah ke KK lain (warga nyata, divalidasi, dientry user 1). Backup `gkjj_prod_20261007_172955.dump` dibuat sebelumnya; query KK kosong setelahnya: 0 baris
+- Keputusan staf: Tri Endah tetap Kepala di KK 105
+
+### ✅ Perbaikan UI hapus KK
+- Temuan: tombol hapus hanya ada di daftar Data Keluarga (Superadmin/Kepala Kantor); halaman detail KK tidak punya; penolakan server (KK masih punya anggota) dibuang diam-diam sehingga tombol terlihat tidak berfungsi
+- `HapusKeluargaModal` dipakai di daftar dan detail: peringatan + tombol nonaktif bila KK masih punya anggota, pesan galat server tampil di modal, kembali ke daftar setelah hapus dari detail
+- Tombol **Hapus KK** dan lencana "KK kosong" di halaman detail. 4 tes baru (mutation check: penampil galat dimatikan → 1 gagal); web 131 tes lulus
+- Catatan alat uji: Vitest 4 menandai promise tertolak yang dikembalikan `vi.fn` sebagai galat tes walau sudah ditangani komponen; tes jalur galat memakai fungsi biasa
+
 ### ⚠️ Blockers Ditemukan
-- Perbaikan belum dideploy ke produksi (perubahan kode saja, tanpa perubahan skema)
-- Cakupan KK kosong lain di produksi belum diketahui (query pengecekan menunggu dijalankan di VPS)
+- Perbaikan KK-pindah (78b3660) sudah dideploy; perbaikan UI hapus KK belum dideploy (perubahan tampilan saja, tanpa skema)
 
 ---
 

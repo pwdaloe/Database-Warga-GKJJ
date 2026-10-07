@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
 import { KeluargaForm } from './KeluargaForm'
+import { HapusKeluargaModal } from './HapusKeluargaModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -31,7 +32,7 @@ export default function KeluargaPage() {
 
   const { data, isLoading } = useKeluargaList({ page, limit: 20, search, kelompokId, wilayahId })
   const { data: wilayahList = [] } = useWilayahKelompok()
-  const { create, update, remove } = useKeluargaMutations()
+  const { create, update } = useKeluargaMutations()
 
   const canEdit = isRole('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK')
   const canDelete = isRole('SUPERADMIN', 'KEPALA_KANTOR')
@@ -52,11 +53,6 @@ export default function KeluargaPage() {
       setModalOpen(false)
       router.push(`/keluarga/${keluargaBaru.id}`)
     }
-  }
-
-  async function handleDelete(keluarga: any) {
-    await remove.mutateAsync(keluarga.id)
-    setConfirmDelete(null)
   }
 
   const keluargaList = data?.data ?? []
@@ -337,33 +333,7 @@ export default function KeluargaPage() {
       </Modal>
 
       {/* Modal Konfirmasi Hapus */}
-      <Modal
-        open={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
-        title="Konfirmasi Hapus"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-gray-700">
-            Hapus keluarga <span className="font-semibold">{confirmDelete?.nomorKeluarga}</span>?
-            Tindakan ini tidak dapat dibatalkan.
-          </p>
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-            <button
-              onClick={() => setConfirmDelete(null)}
-              className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-50 transition"
-            >
-              Batal
-            </button>
-            <button
-              onClick={() => handleDelete(confirmDelete)}
-              className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
-            >
-              Hapus
-            </button>
-          </div>
-        </div>
-      </Modal>
+      <HapusKeluargaModal keluarga={confirmDelete} onClose={() => setConfirmDelete(null)} />
     </div>
   )
 }

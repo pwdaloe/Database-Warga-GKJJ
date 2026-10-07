@@ -7,7 +7,7 @@ import { format, differenceInYears } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import {
   ArrowLeft, Pencil, Users, MapPin, Phone,
-  Crown, UserPlus, Home, Loader2,
+  Crown, UserPlus, Home, Loader2, Trash2,
 } from 'lucide-react'
 import { useKeluargaDetail, useKeluargaMutations } from '@/hooks/useKeluarga'
 import { useWargaMutations } from '@/hooks/useWarga'
@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { KeluargaForm } from '../KeluargaForm'
+import { HapusKeluargaModal } from '../HapusKeluargaModal'
 import { keluargaToFormDefaults, buildKeluargaPayload } from '@/lib/keluargaPayload'
 import { WargaForm, type WargaFormData } from '../../warga/WargaForm'
 import { cn, nomorWarga } from '@/lib/utils'
@@ -32,12 +33,14 @@ export default function KeluargaDetailPage() {
 
   const [editOpen, setEditOpen] = useState(false)
   const [tambahOpen, setTambahOpen] = useState(false)
+  const [hapusOpen, setHapusOpen] = useState(false)
 
   const { data: keluarga, isLoading } = useKeluargaDetail(Number(id))
   const { update } = useKeluargaMutations()
   const { create } = useWargaMutations()
 
   const canEdit = isRole('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK')
+  const canDelete = isRole('SUPERADMIN', 'KEPALA_KANTOR')
 
   async function handleEditKK(formData: any) {
     await update.mutateAsync({ id: Number(id), data: buildKeluargaPayload(formData) })
@@ -113,6 +116,9 @@ export default function KeluargaDetailPage() {
                 {keluarga.nomorKeluarga ?? '—'}
               </span>
               <Badge value={keluarga.dataStatus} type="dataStatus" />
+              {(keluarga.wargas?.length ?? 0) === 0 && (
+                <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">KK kosong</span>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-gray-600">
               <MapPin size={14} className="text-brand-500 shrink-0" />
@@ -122,6 +128,18 @@ export default function KeluargaDetailPage() {
               )}
             </div>
           </div>
+          <div className="flex items-center gap-2 shrink-0">
+          {canDelete && (
+            <button
+              onClick={() => setHapusOpen(true)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium text-red-600
+                border border-red-200 rounded-lg hover:bg-red-50 transition shrink-0 whitespace-nowrap"
+              aria-label="Hapus KK"
+            >
+              <Trash2 size={14} />
+              <span className="hidden sm:inline">Hapus KK</span>
+            </button>
+          )}
           {canEdit && (
             <button
               onClick={() => setEditOpen(true)}
@@ -133,6 +151,7 @@ export default function KeluargaDetailPage() {
               <span className="sm:hidden">Edit</span>
             </button>
           )}
+          </div>
         </div>
       </div>
 
@@ -402,6 +421,8 @@ export default function KeluargaDetailPage() {
           <p className="text-sm text-gray-700 whitespace-pre-line break-words">{keluarga.catatan}</p>
         </div>
       )}
+
+      <HapusKeluargaModal keluarga={hapusOpen ? keluarga : null} onClose={() => setHapusOpen(false)} onDeleted={() => router.push('/keluarga')} />
 
       {/* ── Modal Edit KK ─────────────────────────────────────── */}
       <Modal
