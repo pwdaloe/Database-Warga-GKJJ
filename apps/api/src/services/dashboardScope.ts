@@ -35,3 +35,40 @@ export function keluargaScope(user: Pick<JwtPayload, 'role' | 'kelompokId'>): Pr
   if (!user.kelompokId) return { id: NO_MATCH_ID }
   return { kelompokId: user.kelompokId }
 }
+
+export interface DashboardFilter {
+  wilayahId?: number
+  kelompokId?: number
+}
+
+/** Baca filter wilayah/kelompok dari query string; nilai tidak valid diabaikan. */
+export function parseDashboardFilter(query: Record<string, unknown>): DashboardFilter {
+  const toId = (v: unknown) => {
+    const n = Number(v)
+    return Number.isInteger(n) && n > 0 ? n : undefined
+  }
+  return { wilayahId: toId(query['wilayahId']), kelompokId: toId(query['kelompokId']) }
+}
+
+function kelompokFilter(f: DashboardFilter): Prisma.KelompokWhereInput | null {
+  if (f.kelompokId) return { id: f.kelompokId }
+  if (f.wilayahId) return { wilayahId: f.wilayahId }
+  return null
+}
+
+/** Cakupan pengguna digabung dengan filter dashboard (keduanya harus terpenuhi). */
+export function wargaWhere(
+  user: Pick<JwtPayload, 'role' | 'kelompokId'>,
+  f: DashboardFilter,
+): Prisma.WargaWhereInput {
+  const kf = kelompokFilter(f)
+  return kf ? { AND: [wargaScope(user), { keluarga: { kelompok: kf } }] } : wargaScope(user)
+}
+
+export function keluargaWhere(
+  user: Pick<JwtPayload, 'role' | 'kelompokId'>,
+  f: DashboardFilter,
+): Prisma.KeluargaWhereInput {
+  const kf = kelompokFilter(f)
+  return kf ? { AND: [keluargaScope(user), { kelompok: kf }] } : keluargaScope(user)
+}

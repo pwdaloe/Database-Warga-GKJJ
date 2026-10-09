@@ -85,21 +85,21 @@ export function useKomisiMutations() {
 
 // ── Dashboard stats ───────────────────────────────────────────
 
-export function useKomisiStats() {
+export function useKomisiStats(f: { wilayahId?: number; kelompokId?: number } = {}) {
   return useQuery({
-    queryKey: ['dashboard', 'komisi-stats'],
+    queryKey: ['dashboard', 'komisi-stats', f],
     queryFn: async () => {
-      const res = await api.get('/dashboard/komisi-stats')
+      const res = await api.get('/dashboard/komisi-stats', { params: f })
       return res.data.data as KomisiStat[]
     },
   })
 }
 
-export function useDashboardMap(kelurahan?: string) {
+export function useDashboardMap(kelurahan?: string, f: { wilayahId?: number; kelompokId?: number } = {}) {
   return useQuery({
-    queryKey: ['dashboard', 'map', kelurahan ?? ''],
+    queryKey: ['dashboard', 'map', kelurahan ?? '', f],
     queryFn: async () => {
-      const res = await api.get('/dashboard/map', { params: kelurahan ? { kelurahan } : {} })
+      const res = await api.get('/dashboard/map', { params: { ...(kelurahan ? { kelurahan } : {}), ...f } })
       return res.data.data as Array<{
         id: number
         namaLengkap: string

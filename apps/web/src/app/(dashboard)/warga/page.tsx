@@ -125,12 +125,15 @@ export default function WargaPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [kelompokId, setKelompokId] = useState<number | undefined>()
+  const [kelompokId, setKelompokId] = useState<number | undefined>(() => {
+    const v = Number(searchParams.get('kelompokId'))
+    return Number.isInteger(v) && v > 0 ? v : undefined
+  })
   const [wilayahId, setWilayahId] = useState<number | undefined>()
   const [statusKeanggotaan, setStatusKeanggotaan] = useState('')
   const [jenisKelamin, setJenisKelamin] = useState('')
   const [dataStatus, setDataStatus] = useState(() => searchParams.get('dataStatus') ?? '')
-  const [showFilter, setShowFilter] = useState(() => !!searchParams.get('dataStatus'))
+  const [showFilter, setShowFilter] = useState(() => !!(searchParams.get('dataStatus') || searchParams.get('kelompokId')))
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState<any>(null)

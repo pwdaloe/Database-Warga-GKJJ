@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useDashboardStats } from '@/hooks/useDashboard'
+import { useDashboardStats, useDashboardSebaran, useDashboardTerbaru } from '@/hooks/useDashboard'
+import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { useKomisiStats, useDashboardMap, useMasterKelurahan } from '@/hooks/usePengaturan'
 import { ROLE_LABELS } from '@/lib/auth'
 import { Users, Home, AlertCircle, MapPin, Loader2 } from 'lucide-react'
@@ -37,11 +38,23 @@ function KomisiTooltip({ active, payload }: any) {
 export default function DashboardPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const { data: stats, isLoading: statsLoading } = useDashboardStats()
-  const { data: komisiStats = [], isLoading: komisiLoading } = useKomisiStats()
+  const [wilayahId, setWilayahId] = useState<number | undefined>()
+  const [kelompokId, setKelompokId] = useState<number | undefined>()
+  const filter = { wilayahId, kelompokId }
+  const { data: wilayahList = [] } = useWilayahKelompok()
+  const { data: stats, isLoading: statsLoading } = useDashboardStats(filter)
+  const { data: sebaran = [], isLoading: sebaranLoading } = useDashboardSebaran(filter)
+  const { data: terbaru = [], isLoading: terbaruLoading } = useDashboardTerbaru(filter)
+  const { data: komisiStats = [], isLoading: komisiLoading } = useKomisiStats(filter)
   const { data: kelurahanList = [] } = useMasterKelurahan()
   const [selectedKelurahan, setSelectedKelurahan] = useState('')
-  const { data: mapData = [] } = useDashboardMap(selectedKelurahan || undefined)
+  const { data: mapData = [] } = useDashboardMap(selectedKelurahan || undefined, filter)
+
+  // Penatua Kelompok sudah dibatasi ke satu kelompok — filter tidak relevan
+  const showFilter = !stats?.kelompok
+  const kelompokOptions = wilayahId
+    ? wilayahList.find((w) => w.id === wilayahId)?.kelompoks ?? []
+    : wilayahList.flatMap((w) => w.kelompoks)
 
   // Daftar kelurahan unik dari master
   const kecamatanList = [...new Set(kelurahanList.map((k) => k.kecamatan))].sort()
@@ -71,11 +84,11 @@ export default function DashboardPage() {
     },
     {
       label: 'Kelompok Aktif',
-      value: 22,
+      value: stats?.kelompokAktif,
       icon: MapPin,
       color: 'bg-purple-500',
       // Jumlah kelompok hanya relevan untuk yang melihat seluruh jemaat
-      hidden: !!stats?.kelompok,
+      hidden: !!stats?.kelompok || !!kelompokId,
     },
     {
       label: 'Perlu Divalidasi',
@@ -104,6 +117,39 @@ export default function DashboardPage() {
           </span>
         )}
       </div>
+
+      {/* Filter dashboard */}
+      {showFilter && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <select
+            value={wilayahId ?? ''}
+            onChange={(e) => {
+              setWilayahId(e.target.value ? Number(e.target.value) : undefined)
+              setKelompokId(undefined)
+            }}
+            className="py-3 sm:py-2 px-3 rounded-lg border border-gray-300 text-base sm:text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            <option value="">Semua Wilayah</option>
+            {wilayahList.map((w) => <option key={w.id} value={w.id}>{w.kode} · {w.nama}</option>)}
+          </select>
+          <select
+            value={kelompokId ?? ''}
+            onChange={(e) => setKelompokId(e.target.value ? Number(e.target.value) : undefined)}
+            className="py-3 sm:py-2 px-3 rounded-lg border border-gray-300 text-base sm:text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            <option value="">Semua Kelompok</option>
+            {kelompokOptions.map((k) => <option key={k.id} value={k.id}>{k.kode} · {k.nama}</option>)}
+          </select>
+          {(wilayahId || kelompokId) && (
+            <button
+              onClick={() => { setWilayahId(undefined); setKelompokId(undefined) }}
+              className="text-xs text-brand-600 hover:underline py-2 text-left"
+            >
+              Reset filter
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className={cn(
@@ -136,6 +182,95 @@ export default function DashboardPage() {
             {card.highlight && <p className="text-xs text-orange-500 mt-1">Data status Draft</p>}
           </div>
         ))}
+      </div>
+
+      {/* ── Sebaran jemaat per wilayah & kelompok (kelompok kosong disembunyikan) ── */}
+      <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
+        <div className="mb-4">
+          <h2 className="font-semibold text-gray-800">Sebaran Jemaat per Wilayah &amp; Kelompok</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Hanya kelompok yang sudah memiliki warga</p>
+        </div>
+        {sebaranLoading ? (
+          <div className="flex items-center justify-center h-32 text-gray-400 gap-2">
+            <Loader2 size={18} className="animate-spin" /> Memuat data...
+          </div>
+        ) : sebaran.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">Belum ada data warga per kelompok</p>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {sebaran.map((w) => (
+              <div key={w.id} className="border rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between gap-3 bg-gray-50 px-4 py-2.5 border-b">
+                  <p className="font-medium text-gray-800 text-sm min-w-0 break-words">
+                    {w.kode} · {w.nama}
+                  </p>
+                  <p className="text-sm text-gray-600 shrink-0">
+                    <span className="font-bold text-gray-900">{w.jumlahWarga.toLocaleString('id-ID')}</span> warga
+                    <span className="text-gray-400"> · {w.jumlahKeluarga.toLocaleString('id-ID')} KK</span>
+                  </p>
+                </div>
+                {w.kelompok.length === 0 ? (
+                  <p className="text-xs text-gray-400 px-4 py-3">Belum ada kelompok dengan warga</p>
+                ) : (
+                  <ul className="divide-y">
+                    {w.kelompok.map((k) => (
+                      <li key={k.id}>
+                        <button
+                          onClick={() => router.push(`/warga?kelompokId=${k.id}`)}
+                          className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left text-sm hover:bg-gray-50"
+                        >
+                          <span className="text-gray-700 min-w-0 break-words">{k.kode} · {k.nama}</span>
+                          <span className="shrink-0 text-gray-600">
+                            <span className="font-semibold text-gray-900">{k.jumlahWarga.toLocaleString('id-ID')}</span> warga
+                            <span className="text-gray-400"> · {k.jumlahKeluarga.toLocaleString('id-ID')} KK</span>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── 5 warga terakhir dientry ── */}
+      <div className="bg-white rounded-xl border shadow-sm p-4 sm:p-6">
+        <div className="mb-4">
+          <h2 className="font-semibold text-gray-800">Jemaat Baru Dientry</h2>
+          <p className="text-xs text-gray-400 mt-0.5">5 data warga terakhir</p>
+        </div>
+        {terbaruLoading ? (
+          <div className="flex items-center justify-center h-24 text-gray-400 gap-2">
+            <Loader2 size={18} className="animate-spin" /> Memuat data...
+          </div>
+        ) : terbaru.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">Belum ada data warga</p>
+        ) : (
+          <ul className="divide-y">
+            {terbaru.map((w) => (
+              <li key={w.id}>
+                <button
+                  onClick={() => router.push(`/warga/${w.id}`)}
+                  className="w-full text-left py-3 hover:bg-gray-50 px-1 rounded"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium text-gray-900 text-sm min-w-0 break-words">{w.namaLengkap}</p>
+                    <p className="text-xs text-gray-400 shrink-0">
+                      {new Date(w.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 break-words">
+                    {w.kelompok ? `${w.kelompok.kode} · ${w.kelompok.nama}` : 'Belum ada kelompok'}
+                    {w.wilayah && ` · Wilayah ${w.wilayah.nama}`}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Majelis: {w.majelis ?? '—'}</p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* ── Chart distribusi komisi ──────────────────────────── */}

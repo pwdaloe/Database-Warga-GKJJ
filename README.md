@@ -32,7 +32,10 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 ### Beranda
 
 #### Dashboard
-- Statistik ringkasan: **Total Warga**, **Total Keluarga**, **Kelompok Aktif**, **Perlu Divalidasi** (status Draft)
+- Statistik ringkasan: **Total Warga**, **Total Keluarga**, **Kelompok Aktif** (dihitung dari data kelompok berstatus aktif), **Perlu Divalidasi** (status Draft)
+- **Filter Wilayah & Kelompok** — dropdown di atas dashboard; hasil filter berlaku untuk kartu statistik, sebaran, jemaat baru, chart komisi, dan peta (`?wilayahId=&kelompokId=` pada endpoint `/api/dashboard/*`). Disembunyikan untuk Penatua Kelompok
+- **Sebaran Jemaat per Wilayah & Kelompok** — jumlah warga dan KK per wilayah, dengan rincian kelompok yang sudah memiliki warga saja (kelompok kosong tidak ditampilkan). Klik kelompok membuka daftar Warga terfilter (`/warga?kelompokId=`)
+- **Jemaat Baru Dientry** — 5 warga terakhir yang dientry: nama, tanggal, kelompok, wilayah, dan majelis kelompok
 - Setiap kartu statistik bisa diklik untuk navigasi langsung ke halaman terkait
 - **Chart distribusi komisi** — bar chart warna-warni menampilkan jumlah anggota per komisi berdasarkan rentang usia (Recharts), rentang usia dapat dikonfigurasi di Pengaturan
 - **Peta lokasi warga** — pin interaktif berbasis OpenStreetMap (Leaflet) untuk warga yang memiliki koordinat rumah, dengan filter per kelurahan; popup pin menampilkan **No. Induk Warga** (cadangan: No. Anggota otomatis `WRG…` jika No. Induk belum diisi)
@@ -369,7 +372,7 @@ Database-Warga-GKJJ/
 │   │       │   ├── keluarga.ts
 │   │       │   ├── wilayah.ts
 │   │       │   ├── kelompok.ts
-│   │       │   ├── dashboard.ts    # Stats, komisi chart, peta
+│   │       │   ├── dashboard.ts    # Stats, sebaran, jemaat baru, komisi chart, peta
 │   │       │   ├── pengaturan.ts   # Master kelurahan & komisi config
 │   │       │   ├── import.ts       # Batch import Excel (warga & pengguna)
 │   │       │   ├── users.ts        # Manajemen pengguna + password acak + notifikasi WhatsApp
