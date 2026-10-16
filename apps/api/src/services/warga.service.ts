@@ -58,6 +58,10 @@ const wargaInclude = {
   validatedByUser: { select: { id: true, nama: true } },
 } satisfies Prisma.WargaInclude
 
+/** Baca ulang warga beserta relasi setelah transaksi commit (di luar transaksi agar koneksi cepat dilepas) */
+const muatWarga = (id: number) =>
+  prisma.warga.findUniqueOrThrow({ where: { id }, include: wargaInclude })
+
 const wargaDetailInclude = {
   catatanJemaat: { where: { jenis: 'CATATAN' as const }, take: 1 },
   keluarga: {
@@ -213,7 +217,7 @@ export async function createWarga(
     tanggalKonsen: konsenPDP ? new Date() : null,
   }
 
-  return prisma.$transaction(async (tx) => {
+  const wargaId = await prisma.$transaction(async (tx) => {
     let keluargaId = encryptedData.keluargaId as number | null | undefined
 
     // Jika ada newKeluarga dan belum punya KK → buat KK baru
@@ -241,14 +245,13 @@ export async function createWarga(
         createdBy: userId,
         updatedBy: userId,
       },
-      include: wargaInclude,
+      select: { id: true },
     })
 
     // Auto-generate nomorAnggota berbasis ID (dijamin unik)
     if (!encryptedData.nomorAnggota) {
       const nomorAnggota = `WRG${String(warga.id).padStart(5, '0')}`
       await tx.warga.update({ where: { id: warga.id }, data: { nomorAnggota } })
-      warga.nomorAnggota = nomorAnggota
     }
 
     // Tandai sebagai kepala keluarga di tabel Keluarga
@@ -259,8 +262,11 @@ export async function createWarga(
       })
     }
 
-    return warga
+    return warga.id
   })
+
+  // Baca ulang (dengan relasi) setelah commit agar koneksi transaksi lekas dilepas
+  return prisma.warga.findUniqueOrThrow({ where: { id: wargaId }, include: wargaInclude })
 }
 
 export async function updateWarga(
@@ -324,7 +330,7 @@ export async function updateWarga(
 
   // Warga diubah jadi Kepala KK baru (belum punya KK) → buat KK dalam transaksi
   if (buatKkBaru && newKeluarga) {
-    return prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       await lepasKepala(tx)
       const keluarga = await tx.keluarga.create({
         data: {
@@ -336,12 +342,12 @@ export async function updateWarga(
       const nomorKeluarga = `KLG${String(keluarga.id).padStart(5, '0')}`
       await tx.keluarga.update({ where: { id: keluarga.id }, data: { nomorKeluarga, kepalakeluargaId: id } })
 
-      return tx.warga.update({
+      await tx.warga.update({
         where: { id },
         data: { ...encryptedData, keluargaId: keluarga.id, updatedBy: userId },
-        include: wargaInclude,
       })
     })
+    return muatWarga(id)
   }
 
   // Kepala Keluarga yang sudah punya KK mengubah alamat rumah tangga dari form warga →
@@ -350,28 +356,28 @@ export async function updateWarga(
   const statusAkhir = (data.statusKeluarga as string | undefined) ?? (existing.statusKeluarga as string)
   const keluargaAkhir = (data.keluargaId as number | null | undefined) ?? (existing.keluargaId as number | null)
   if (alamatKeluarga && statusAkhir === 'KEPALA' && keluargaAkhir && keluargaAkhir === existing.keluargaId) {
-    return prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       await tx.keluarga.update({
         where: { id: keluargaAkhir },
         data: { ...alamatKeluarga, updatedBy: userId },
       })
-      return tx.warga.update({
+      await tx.warga.update({
         where: { id },
         data: { ...encryptedData, updatedBy: userId },
-        include: wargaInclude,
       })
     })
+    return muatWarga(id)
   }
 
   if (lepasKepalaDi) {
-    return prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       await lepasKepala(tx)
-      return tx.warga.update({
+      await tx.warga.update({
         where: { id },
         data: { ...encryptedData, updatedBy: userId },
-        include: wargaInclude,
       })
     })
+    return muatWarga(id)
   }
 
   return prisma.warga.update({
