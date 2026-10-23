@@ -332,7 +332,7 @@ Body snapshot pada `ActivityLog` secara otomatis:
 
 > 🧪 **Sprint 12 (23 Oktober 2026) — sudah di-commit, BELUM dideploy:** integritas data, chart demografi, revisi Keanggotaan. Sebelum deploy: migrasi `20261017000000_keanggotaan_sidi_menikah` hanya menambah kolom (backup otomatis oleh `deploy/2-deploy.sh`); setelah deploy jalankan `npm run db:integritas --workspace=apps/api` dan pastikan tidak ada temuan. `nomor_sidi` belum di-DROP.
 
-> 🛡️ **Keamanan dependensi (audit 23 Oktober 2026):** `npm audit --omit=dev` menemukan 2 critical (`next` 15.5.27, `proxy-addr`) dan 6 high yang perlu dipatch dengan `npm audit fix` (tanpa `--force`); lihat backlog Teknis di [`PANDUAN_PRODUK.md`](PANDUAN_PRODUK.md). Jangan pakai `npm audit fix --force` — itu menurunkan `exceljs` ke 3.4.0 dan memaksa Tailwind 4. Format Excel yang didukung hanya `.xlsx` (SheetJS `xlsx` sudah diganti `exceljs`).
+> 🛡️ **Keamanan dependensi (audit 23 Oktober 2026):** `npm audit --omit=dev` menemukan 2 critical dan 6 high; critical sudah dipatch lewat `npm audit fix` (tanpa `--force`: `next` 15.5.28, `proxy-addr` 2.0.8, `compression` 1.8.2, belum dideploy), sisa 7 temuan (4 high, 3 moderate) menunggu upgrade mayor Prisma 7/Next 16; lihat backlog Teknis di [`PANDUAN_PRODUK.md`](PANDUAN_PRODUK.md). Jangan pakai `npm audit fix --force` — itu menurunkan `exceljs` ke 3.4.0 dan memaksa Tailwind 4. Format Excel yang didukung hanya `.xlsx` (SheetJS `xlsx` sudah diganti `exceljs`).
 
 ---
 

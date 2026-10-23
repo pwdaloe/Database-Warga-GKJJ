@@ -725,9 +725,9 @@ Deploy ke production
 | Laporan rekap per kelompok/wilayah | 🗓️ Planned | Export PDF/Excel |
 | Notifikasi ulang tahun jemaat via WhatsApp | 🗓️ Planned | API daftar ulang tahun bulan ini sudah ada (`GET /warga/ulang-tahun`); belum ada tampilan maupun pengiriman |
 | Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
-| Patch keamanan dependensi (audit 23 Okt) | 🔧 Teknis, **prioritas tinggi** | `npm audit --omit=dev`: 2 critical (`next` 15.5.27 RCE image optimization SVG + DoS Server Actions; `proxy-addr` IP spoofing), 6 high (`compression`, `follow-redirects`, `postcss`, `prisma`/`deepmerge-ts`). `npm audit fix` (tanpa `--force`) menutup sebagian besar tanpa breaking change; `exceljs`/`uuid` jangan di-force (downgrade ke 3.4.0) |
+| Patch keamanan dependensi (audit 23 Okt) | ✅ Dipatch di repo, belum dideploy | Sisa 7 temuan (4 high, 3 moderate) butuh upgrade mayor. Temuan awal `npm audit --omit=dev`: 2 critical (`next` 15.5.27 RCE image optimization SVG + DoS Server Actions; `proxy-addr` IP spoofing), 6 high (`compression`, `follow-redirects`, `postcss`, `prisma`/`deepmerge-ts`). `npm audit fix` (tanpa `--force`) menutup sebagian besar tanpa breaking change; `exceljs`/`uuid` jangan di-force (downgrade ke 3.4.0) |
 | Upgrade mayor: multer 2, Next 16, Prisma 7, Express 5 | 🔧 Teknis | multer 1.x sudah tidak dirawat (dipakai upload import). Naikkan syarat Node ke `>=22` (Node 20 EOL; VPS memasang Node 22) |
-| Pengujian visual di browser | 🔧 Teknis | UI Sprint 10–12 baru diverifikasi lewat tes komponen; verifikasi desktop + 390px (dashboard demografi, form Keanggotaan) belum dilakukan |
+| Pengujian visual di browser | 🔧 Teknis | Sprint 12 sudah dicek di browser (kartu Demografi desktop + 390px, form Keanggotaan 390px). Belum: form Keanggotaan desktop, detail warga, `/m`, simpan ulang; UI Sprint 10–11 baru lewat tes komponen |
 
 ---
 
