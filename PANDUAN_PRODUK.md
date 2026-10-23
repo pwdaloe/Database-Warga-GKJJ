@@ -721,7 +721,7 @@ Deploy ke production
 
 | Fitur | Status | Keterangan |
 |---|---|---|
-| Status Keanggotaan: tambah "Pindah Gereja", "Pindah Keluar" menjadi "Pindah Agama" | ✅ Opsi A selesai (23 Okt), belum dideploy | Satu daftar bersama di API (`constants/statusKeanggotaan.ts`) dan web (`lib/statusKeanggotaan.ts`), dijaga tes agar selalu sama dengan enum database. Perpindahan KELUAR kini menghasilkan Pindah Gereja. Pindah Gereja dan Pindah Agama tidak dihitung aktif. **Opsi B (master yang bisa diubah di Pengaturan)** ditunda: perlu migrasi enum → tabel master di produksi, dikerjakan bila memang sering menambah status |
+| Status Keanggotaan: tambah "Pindah Gereja", "Pindah Keluar" menjadi "Pindah Agama" | ✅ Opsi A selesai dan dideploy (23 Okt, `111bc3e`) | Satu daftar bersama di API (`constants/statusKeanggotaan.ts`) dan web (`lib/statusKeanggotaan.ts`), dijaga tes agar selalu sama dengan enum database. Perpindahan KELUAR kini menghasilkan Pindah Gereja. Pindah Gereja dan Pindah Agama tidak dihitung aktif. **Opsi B (master yang bisa diubah di Pengaturan)** ditunda: perlu migrasi enum → tabel master di produksi, dikerjakan bila memang sering menambah status |
 | Pembuatan akun Jemaat massal | 🗓️ Usulan | Pilih banyak warga → akun + tautan WhatsApp berurutan (saat ini satu per satu) |
 | Survei & kebutuhan jemaat | 🗓️ Usulan | Struktur sudah siap (`CatatanJemaat.jenis`: CATATAN, KEBUTUHAN, SURVEI); belum ada antarmuka |
 | Pengingat akun belum login | 🗓️ Usulan | Template pengingat ditunda dari Sprint 10 |

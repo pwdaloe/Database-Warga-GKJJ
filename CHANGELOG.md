@@ -3,7 +3,7 @@
 
 ---
 
-## [2026-10-23 WIB] — Status Keanggotaan: Pindah Gereja & Pindah Agama | ✅ DONE (kode), belum dideploy
+## [2026-10-23 WIB] — Status Keanggotaan: Pindah Gereja & Pindah Agama | ✅ DONE, dideploy ke produksi (`111bc3e`)
 
 **Project**: Database Warga GKJJ
 
