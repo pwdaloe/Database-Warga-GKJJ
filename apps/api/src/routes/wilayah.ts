@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { authenticate, authorize } from '../middleware/auth.js'
+import { AppError } from '../middleware/errorHandler.js'
 import { prisma } from '../utils/prisma.js'
 import { ok, created } from '../utils/response.js'
 
@@ -69,10 +70,7 @@ wilayahRouter.delete(
     })
     const totalKK = kelompoks.reduce((s, k) => s + k._count.keluargas, 0)
     if (totalKK > 0) {
-      throw Object.assign(
-        new Error(`Wilayah tidak dapat dihapus karena masih memiliki ${totalKK} keluarga terdaftar`),
-        { status: 400 },
-      )
+      throw new AppError(400, `Wilayah tidak dapat dihapus karena masih memiliki ${totalKK} keluarga terdaftar`)
     }
 
     // Hapus kelompok terlebih dahulu (jika ada), lalu wilayah
