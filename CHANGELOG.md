@@ -11,6 +11,7 @@
 - Syarat Node `>=22`; `multer` dan `@types/multer` dihapus (tidak pernah dipakai)
 - `nomorSidi` dihapus dari API, import Excel, dan tipe; kolom `nomor_sidi` di-DROP di produksi (hanya 1 baris terisi, `001`, setelah backup `pg_dump`), lalu field dihapus dari `schema.prisma`
 - `QA_STATUS.md` disegarkan (API 313 tes, web 137 tes)
+- Dideploy ke produksi 23 Okt (`bf7aeca`): `/health` ok, `db:integritas` bersih, tanpa perubahan skema/dependensi
 - Tes route `logs`, `public`, `dashboard`, `perpindahan` (+69 tes, total API 464, coverage 85,0%): ditemukan dan diperbaiki celah `DELETE /api/logs?days=` (0/negatif menghapus SEMUA log, teks → tanggal tidak valid); kini `days` wajib bilangan bulat ≥ 1 (frontend tidak memakai parameter ini)
 - Tes route `wilayah`, `kelompok`, `keluarga` (+82 tes, total API 395): ditemukan dan diperbaiki bug hapus wilayah yang masih punya KK mengembalikan 500 "Terjadi kesalahan server", sekarang 400 dengan pesan jumlah KK (`Error` biasa dengan `status` tidak dikenali error handler; kini `AppError`)
 - **Prisma 6.19.3 → 7.10.1** (dideploy, versi `a94f2db`): driver adapter `pg`, generator `prisma-client` (output `apps/api/src/generated`, gitignored), `prisma.config.ts`; audit production 7 → 4. Prisma 7 tidak memuat `.env` otomatis, jadi `dotenv/config` ditambahkan di `index.ts`, seed, dan `cek-integritas`; tes import tidak lagi bergantung pada `.env`. Pasca-deploy: API online, `/health` 200, `db:integritas` bersih (8 KK kosong sudah dihapus admin)
