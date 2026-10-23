@@ -726,7 +726,7 @@ Deploy ke production
 | Notifikasi ulang tahun jemaat via WhatsApp | 🗓️ Planned | API daftar ulang tahun bulan ini sudah ada (`GET /warga/ulang-tahun`); belum ada tampilan maupun pengiriman |
 | Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
 | Patch keamanan dependensi (audit 23 Okt) | ✅ Dipatch dan dideploy 23 Okt | Sisa 7 temuan (4 high, 3 moderate) butuh upgrade mayor. Temuan awal `npm audit --omit=dev`: 2 critical (`next` 15.5.27 RCE image optimization SVG + DoS Server Actions; `proxy-addr` IP spoofing), 6 high (`compression`, `follow-redirects`, `postcss`, `prisma`/`deepmerge-ts`). `npm audit fix` (tanpa `--force`) menutup sebagian besar tanpa breaking change; `exceljs`/`uuid` jangan di-force (downgrade ke 3.4.0) |
-| Upgrade mayor: Next 16, Prisma 7, Express 5 | 🔧 Teknis | Menutup 7 temuan `npm audit` tersisa (Prisma 7 untuk `deepmerge-ts`, Next 16 untuk `postcss`). `multer` sudah dihapus (23 Okt): tidak pernah dipakai, import Excel di-parse di browser dan dikirim sebagai JSON. Syarat Node sudah `>=22` |
+| Upgrade mayor: Next 16, Express 5 | 🔧 Teknis | Next 16 menutup `postcss` (4 temuan `npm audit` tersisa: 1 high, 3 moderate; `exceljs`/`uuid` tanpa perbaikan aman). **Prisma 7 sudah dideploy 23 Okt** (driver adapter pg, `prisma.config.ts`, `.env` dimuat lewat `dotenv`). `multer` dihapus (tidak pernah dipakai); syarat Node `>=22` |
 | Pengujian visual di browser | 🔧 Teknis | Sprint 12 sudah dicek di browser (kartu Demografi desktop + 390px, form Keanggotaan 390px). Belum: form Keanggotaan desktop, detail warga, `/m`, simpan ulang; UI Sprint 10–11 baru lewat tes komponen |
 
 ---

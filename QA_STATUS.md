@@ -61,7 +61,7 @@ Service yang paling lemah: `surat.service.ts` (5%) dan `email.service.ts` (54%);
 - **Frontend 17,8%**: halaman dan hook belum diuji; yang teruji adalah payload, form kunci, dan komponen UI.
 - **Belum pernah diuji visual di browser**: form Keanggotaan desktop, detail warga, halaman `/m`. Kartu Demografi dan form Keanggotaan (390px) dicek 23 Okt.
 - **Constraint DB tidak ikut `prisma db push`**: CHECK `warga_menikah_konsisten_chk` harus dipasang manual (sudah diverifikasi di produksi).
-- **Dependensi**: 7 temuan `npm audit --omit=dev` tersisa (4 high, 3 moderate), butuh upgrade mayor Prisma 7 / Next 16.
+- **Dependensi**: 4 temuan `npm audit --omit=dev` tersisa (1 high, 3 moderate): `next`/`postcss` menunggu Next 16, `exceljs`/`uuid` tanpa perbaikan aman. Prisma 7 sudah dideploy (23 Okt); client Prisma digenerate ke `apps/api/src/generated/` dan wajib `npx prisma generate` setelah clone.
 
 ## Rekomendasi
 
