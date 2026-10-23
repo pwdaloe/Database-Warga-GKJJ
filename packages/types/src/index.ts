@@ -71,7 +71,6 @@ export interface Warga {
   tanggalBaptis: string | null
   tempatBaptis: string | null
   sudahSidi: boolean
-  nomorSidi: string | null
   tanggalSidi: string | null
   tempatSidi: string | null
   sudahMenikah: boolean

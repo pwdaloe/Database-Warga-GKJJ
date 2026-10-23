@@ -43,7 +43,6 @@ const bodySchema = z.object({
   tanggalBaptis:      z.string().date().optional().nullable(),
   tempatBaptis:       z.string().max(150).optional().nullable(),
   sudahSidi:          z.boolean().optional(),
-  nomorSidi:          z.string().max(30).optional().nullable(),
   tanggalSidi:        z.string().date().optional().nullable(),
   tempatSidi:         z.string().max(150).optional().nullable(),
   sudahMenikah:       z.boolean().optional(),
