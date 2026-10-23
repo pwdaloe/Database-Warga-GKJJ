@@ -16,7 +16,7 @@
 - Verifikasi: type-check API/web lulus; tes API 312, web 137 lulus
 
 ### ⚠️ Belum
-- Pasca-deploy `db:integritas`: 8 KK kosong perlu dicek dan dihapus manual oleh admin; CHECK constraint `warga_menikah_konsisten_chk` dipasang manual (`db push` tidak membawa CHECK), verifikasi keberadaannya via `pg_constraint`
+- Pasca-deploy `db:integritas`: 8 KK kosong perlu dicek dan dihapus manual oleh admin; CHECK constraint `warga_menikah_konsisten_chk` dipasang manual (`db push` tidak membawa CHECK), sudah diverifikasi terpasang di produksi via `pg_constraint` (23 Okt)
 - Verifikasi visual sebagian: kartu Demografi dan form Keanggotaan sudah dicek (23 Okt); belum form desktop, detail warga, `/m`
 - `nomor_sidi` belum di-DROP
 - Audit dependensi 23 Okt: critical production sudah dipatch (`next` 15.5.28, `proxy-addr` 2.0.8, `compression` 1.8.2); sisa 7 temuan production butuh upgrade mayor (Prisma 7, Next 16)
