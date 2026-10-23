@@ -34,6 +34,8 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 #### Dashboard
 - Statistik ringkasan: **Total Warga** (semua warga yang tercatat, apa pun statusnya) dengan baris keterangan **aktif & tervalidasi** (status dokumen AKTIF dan keanggotaan AKTIF), **Total Keluarga**, **Kelompok Aktif** (dihitung dari data kelompok berstatus aktif), **Perlu Divalidasi** (status Draft)
 - **Filter Wilayah & Kelompok** — dropdown di atas dashboard; hasil filter berlaku untuk kartu statistik, sebaran, jemaat baru, chart komisi, dan peta (`?wilayahId=&kelompokId=` pada endpoint `/api/dashboard/*`). Disembunyikan untuk Penatua Kelompok
+- **Status Keanggotaan** — rincian Aktif, Non-aktif, Katekumen, Pindah keluar, Meninggal untuk seluruh warga tercatat (`GET /api/dashboard/status-keanggotaan`)
+- **Kualitas & Progres Data** — corong status dokumen (Draft → Validasi → Aktif → Tidak Aktif) dan kelengkapan anggota aktif: belum ada NIK, telepon/WhatsApp, alamat, koordinat rumah, tanggal lahir, atau belum masuk KK (`GET /api/dashboard/kualitas-data`). Hanya jumlah, tidak menampilkan data pribadi; ikut filter dan pembatasan Penatua Kelompok
 - **Sebaran Jemaat per Wilayah & Kelompok** — jumlah warga dan KK per wilayah, dengan rincian kelompok yang sudah memiliki warga saja (kelompok kosong tidak ditampilkan). Klik kelompok membuka daftar Warga terfilter (`/warga?kelompokId=`)
 - **Komposisi Pria/Wanita** — jumlah dan persen warga berstatus AKTIF (`GET /api/dashboard/demografi`), ikut filter Wilayah/Kelompok dan cakupan pengguna
 - **Jemaat Baru Dientry** — 5 warga terakhir yang dientry: nama, tanggal, kelompok, wilayah, dan majelis kelompok

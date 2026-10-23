@@ -4,8 +4,10 @@ import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useDashboardStats, useDashboardSebaran, useDashboardTerbaru, useDashboardDemografi } from '@/hooks/useDashboard'
+import { useDashboardStats, useDashboardSebaran, useDashboardTerbaru, useDashboardDemografi, useDashboardKualitasData, useDashboardStatusKeanggotaan } from '@/hooks/useDashboard'
 import { DemografiCard } from './DemografiCard'
+import { KualitasDataCard } from './KualitasDataCard'
+import { StatusKeanggotaanCard } from './StatusKeanggotaanCard'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { useKomisiStats, useDashboardMap, useMasterKelurahan } from '@/hooks/usePengaturan'
 import { ROLE_LABELS } from '@/lib/auth'
@@ -48,6 +50,8 @@ export default function DashboardPage() {
   const { data: terbaru = [], isLoading: terbaruLoading } = useDashboardTerbaru(filter)
   const { data: komisiStats = [], isLoading: komisiLoading } = useKomisiStats(filter)
   const { data: demografi, isLoading: demografiLoading } = useDashboardDemografi(filter)
+  const { data: kualitasData, isLoading: kualitasLoading } = useDashboardKualitasData(filter)
+  const { data: statusKeanggotaan, isLoading: statusKeanggotaanLoading } = useDashboardStatusKeanggotaan(filter)
   const { data: kelurahanList = [] } = useMasterKelurahan()
   const [selectedKelurahan, setSelectedKelurahan] = useState('')
   const { data: mapData = [] } = useDashboardMap(selectedKelurahan || undefined, filter)
@@ -342,7 +346,12 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <DemografiCard data={demografi} isLoading={demografiLoading} />
+      <div className="grid gap-5 sm:gap-8 lg:grid-cols-2">
+        <StatusKeanggotaanCard data={statusKeanggotaan} isLoading={statusKeanggotaanLoading} />
+        <DemografiCard data={demografi} isLoading={demografiLoading} />
+      </div>
+
+      <KualitasDataCard data={kualitasData} isLoading={kualitasLoading} />
 
       {/* ── Peta warga (koordinat rumah disembunyikan untuk VIEWER — kebijakan PDP) ── */}
       {user?.role !== 'VIEWER' && (

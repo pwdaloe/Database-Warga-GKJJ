@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { authenticate } from '../middleware/auth.js'
 import { prisma } from '../utils/prisma.js'
 import { ok } from '../utils/response.js'
+import type { Prisma } from '../generated/prisma/client.js'
 import {
   isKelompokScoped, parseDashboardFilter, wargaWhere, keluargaWhere,
 } from '../services/dashboardScope.js'
@@ -183,6 +184,50 @@ dashboardRouter.get('/komisi-stats', async (req, res) => {
   )
 
   ok(res, stats)
+})
+
+// GET /api/dashboard/kualitas-data?wilayahId=&kelompokId= — progres validasi dan kelengkapan data.
+// Corong: jumlah warga per status dokumen (semua warga tercatat, sama dengan kartu "Perlu Divalidasi").
+// Kelengkapan: hanya anggota berstatus AKTIF; hanya jumlah, tidak pernah menampilkan isi data pribadi.
+const kosong = (field: string): Prisma.WargaWhereInput => ({ OR: [{ [field]: null }, { [field]: '' }] })
+
+dashboardRouter.get('/kualitas-data', async (req, res) => {
+  const user = req.user!
+  const base = wargaWhere(user, parseDashboardFilter(req.query))
+  const aktif: Prisma.WargaWhereInput = { AND: [base, { statusKeanggotaan: 'AKTIF' }] }
+  const hitungAktif = (kondisi: Prisma.WargaWhereInput) => prisma.warga.count({ where: { AND: [aktif, kondisi] } })
+
+  const [perStatus, totalAktif, tanpaNik, tanpaKontak, tanpaAlamat, tanpaKoordinat, tanpaTanggalLahir, tanpaKeluarga] = await Promise.all([
+    prisma.warga.groupBy({ by: ['dataStatus'], where: base, _count: { _all: true } }),
+    prisma.warga.count({ where: aktif }),
+    hitungAktif({ nik: null }),
+    hitungAktif({ AND: [kosong('telepon'), kosong('whatsapp')] }),
+    hitungAktif({ AND: [kosong('alamatKtp'), { OR: [{ keluargaId: null }, { keluarga: { OR: [{ alamat: null }, { alamat: '' }] } }] }] }),
+    hitungAktif({ OR: [{ latitude: null }, { longitude: null }] }),
+    hitungAktif({ tanggalLahir: null }),
+    hitungAktif({ keluargaId: null }),
+  ])
+
+  const jumlah = (st: string) => perStatus.find((r) => r.dataStatus === st)?._count._all ?? 0
+  ok(res, {
+    corong: { draft: jumlah('DRAFT'), validasi: jumlah('VALIDASI'), aktif: jumlah('AKTIF'), tidakAktif: jumlah('TIDAK_AKTIF') },
+    kelengkapan: { totalAktif, tanpaNik, tanpaKontak, tanpaAlamat, tanpaKoordinat, tanpaTanggalLahir, tanpaKeluarga },
+  })
+})
+
+// GET /api/dashboard/status-keanggotaan?wilayahId=&kelompokId= — rincian status keanggotaan semua warga tercatat
+const STATUS_KEANGGOTAAN = ['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_KELUAR', 'MENINGGAL'] as const
+dashboardRouter.get('/status-keanggotaan', async (req, res) => {
+  const rows = await prisma.warga.groupBy({
+    by: ['statusKeanggotaan'],
+    where: wargaWhere(req.user!, parseDashboardFilter(req.query)),
+    _count: { _all: true },
+  })
+  const data = STATUS_KEANGGOTAAN.map((status) => ({
+    status,
+    jumlah: rows.find((r) => r.statusKeanggotaan === status)?._count._all ?? 0,
+  }))
+  ok(res, { total: data.reduce((a, d) => a + d.jumlah, 0), data })
 })
 
 // GET /api/dashboard/map?kelurahan= — koordinat warga untuk peta

@@ -11,6 +11,7 @@
 - Syarat Node `>=22`; `multer` dan `@types/multer` dihapus (tidak pernah dipakai)
 - `nomorSidi` dihapus dari API, import Excel, dan tipe; kolom `nomor_sidi` di-DROP di produksi (hanya 1 baris terisi, `001`, setelah backup `pg_dump`), lalu field dihapus dari `schema.prisma`
 - `QA_STATUS.md` disegarkan (API 313 tes, web 137 tes)
+- Dashboard: kartu **Status Keanggotaan** dan **Kualitas & Progres Data** (corong validasi + kelengkapan data anggota aktif) beserta endpoint `/api/dashboard/status-keanggotaan` dan `/kualitas-data`; angka diverifikasi sama dengan hitungan SQL langsung di DB lokal; +12 tes API, +10 tes web. Belum dideploy
 - Dashboard: kartu Total Warga kini punya baris "N aktif & tervalidasi" (`wargaAktifValid` di `/api/dashboard/stats`: dataStatus AKTIF dan statusKeanggotaan AKTIF; total tetap semua yang tercatat). Belum dideploy
 - Dideploy ke produksi 23 Okt (`bf7aeca`): `/health` ok, `db:integritas` bersih, tanpa perubahan skema/dependensi
 - Tes route `logs`, `public`, `dashboard`, `perpindahan` (+69 tes, total API 464, coverage 85,0%): ditemukan dan diperbaiki celah `DELETE /api/logs?days=` (0/negatif menghapus SEMUA log, teks → tanggal tidak valid); kini `days` wajib bilangan bulat ≥ 1 (frontend tidak memakai parameter ini)

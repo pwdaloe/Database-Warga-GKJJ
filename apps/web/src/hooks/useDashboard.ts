@@ -96,3 +96,45 @@ export function useDashboardDemografi(f: DashboardFilter = {}) {
     },
   })
 }
+
+export interface KualitasData {
+  /** Jumlah warga per status dokumen (semua warga tercatat) */
+  corong: { draft: number; validasi: number; aktif: number; tidakAktif: number }
+  /** Hanya anggota berstatus AKTIF */
+  kelengkapan: {
+    totalAktif: number
+    tanpaNik: number
+    tanpaKontak: number
+    tanpaAlamat: number
+    tanpaKoordinat: number
+    tanpaTanggalLahir: number
+    tanpaKeluarga: number
+  }
+}
+
+export function useDashboardKualitasData(f: DashboardFilter = {}) {
+  return useQuery({
+    queryKey: ['dashboard', 'kualitas-data', f],
+    queryFn: async () => {
+      const res = await api.get('/dashboard/kualitas-data', { params: filterParams(f) })
+      return res.data.data as KualitasData
+    },
+  })
+}
+
+export type StatusKeanggotaanKey = 'AKTIF' | 'NON_AKTIF' | 'KATEKUMEN' | 'PINDAH_KELUAR' | 'MENINGGAL'
+
+export interface StatusKeanggotaanData {
+  total: number
+  data: Array<{ status: StatusKeanggotaanKey; jumlah: number }>
+}
+
+export function useDashboardStatusKeanggotaan(f: DashboardFilter = {}) {
+  return useQuery({
+    queryKey: ['dashboard', 'status-keanggotaan', f],
+    queryFn: async () => {
+      const res = await api.get('/dashboard/status-keanggotaan', { params: filterParams(f) })
+      return res.data.data as StatusKeanggotaanData
+    },
+  })
+}

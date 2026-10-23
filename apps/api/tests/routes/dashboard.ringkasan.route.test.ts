@@ -4,7 +4,7 @@ import request from 'supertest'
 import jwt from 'jsonwebtoken'
 
 const prisma: any = {
-  warga: { count: vi.fn(), findMany: vi.fn() },
+  warga: { count: vi.fn(), findMany: vi.fn(), groupBy: vi.fn() },
   keluarga: { count: vi.fn(), groupBy: vi.fn() },
   kelompok: { count: vi.fn(), findUnique: vi.fn() },
   wilayah: { findMany: vi.fn() },
@@ -25,6 +25,7 @@ beforeEach(() => {
   prisma.activityLog.create.mockResolvedValue({})
   prisma.warga.count.mockResolvedValue(0)
   prisma.warga.findMany.mockResolvedValue([])
+  prisma.warga.groupBy.mockResolvedValue([])
   prisma.keluarga.count.mockResolvedValue(0)
   prisma.keluarga.groupBy.mockResolvedValue([])
   prisma.kelompok.count.mockResolvedValue(0)
@@ -34,7 +35,7 @@ beforeEach(() => {
 })
 
 describe('GET /api/dashboard/* tanpa token', () => {
-  it.each(['stats', 'sebaran', 'terbaru', 'demografi', 'komisi-stats', 'map'])('%s → 401', async (ep) => {
+  it.each(['stats', 'sebaran', 'terbaru', 'demografi', 'komisi-stats', 'map', 'kualitas-data', 'status-keanggotaan'])('%s → 401', async (ep) => {
     expect((await request(app).get(`/api/dashboard/${ep}`)).status).toBe(401)
   })
 })
@@ -179,5 +180,87 @@ describe('GET /api/dashboard/komisi-stats', () => {
     prisma.komisiConfig.findMany.mockResolvedValue([{ id: 1, nama: 'Anak', warna: '#111', minUsia: 0, maxUsia: 11, urutan: 1 }])
     await get('/api/dashboard/komisi-stats', 'PENATUA_KELOMPOK', null)
     expect(prisma.warga.count.mock.calls[0]![0].where.id).toBe(-1)
+  })
+})
+
+
+describe('GET /api/dashboard/kualitas-data', () => {
+  it('corong per status dokumen (status tanpa warga = 0) dan kelengkapan anggota aktif', async () => {
+    prisma.warga.groupBy.mockResolvedValue([{ dataStatus: 'DRAFT', _count: { _all: 74 } }, { dataStatus: 'AKTIF', _count: { _all: 2 } }])
+    // urutan count: totalAktif, tanpaNik, tanpaKontak, tanpaAlamat, tanpaKoordinat, tanpaTanggalLahir, tanpaKeluarga
+    for (const n of [74, 74, 33, 5, 73, 70, 0]) prisma.warga.count.mockResolvedValueOnce(n)
+    const res = await get('/api/dashboard/kualitas-data')
+    expect(res.status).toBe(200)
+    expect(res.body.data).toEqual({
+      corong: { draft: 74, validasi: 0, aktif: 2, tidakAktif: 0 },
+      kelengkapan: { totalAktif: 74, tanpaNik: 74, tanpaKontak: 33, tanpaAlamat: 5, tanpaKoordinat: 73, tanpaTanggalLahir: 70, tanpaKeluarga: 0 },
+    })
+  })
+
+  it('kelengkapan hanya menghitung anggota AKTIF; corong tidak difilter keanggotaan', async () => {
+    await get('/api/dashboard/kualitas-data')
+    const corongWhere = JSON.stringify(prisma.warga.groupBy.mock.calls[0]![0].where)
+    expect(corongWhere).not.toContain('statusKeanggotaan')
+    for (const call of prisma.warga.count.mock.calls) {
+      expect(JSON.stringify(call[0].where)).toContain('"statusKeanggotaan":"AKTIF"')
+    }
+  })
+
+  it('"belum ada kontak/alamat" menghitung null DAN string kosong; NIK null; koordinat salah satu kosong', async () => {
+    await get('/api/dashboard/kualitas-data')
+    const where = prisma.warga.count.mock.calls.map((c: any) => JSON.stringify(c[0].where))
+    const [, nik, kontak, alamat, koordinat, lahir, kk] = where
+    expect(nik).toContain('"nik":null')
+    expect(kontak).toContain('"telepon":""')
+    expect(kontak).toContain('"whatsapp":""')
+    expect(alamat).toContain('"alamatKtp":""')
+    expect(alamat).toContain('"alamat":""')
+    expect(koordinat).toContain('"latitude":null')
+    expect(koordinat).toContain('"longitude":null')
+    expect(lahir).toContain('"tanggalLahir":null')
+    expect(kk).toContain('"keluargaId":null')
+  })
+
+  it('hanya jumlah yang dikembalikan, tidak ada data pribadi', async () => {
+    const res = await get('/api/dashboard/kualitas-data')
+    expect(JSON.stringify(res.body)).not.toMatch(/nik\"?:\s*"|namaLengkap|telepon\"?:\s*"/)
+    expect(prisma.warga.findMany).not.toHaveBeenCalled()
+  })
+
+  it('penatua: semua hitungan dibatasi kelompoknya; tanpa kelompok fail-closed', async () => {
+    await get('/api/dashboard/kualitas-data', 'PENATUA_KELOMPOK', 4)
+    expect(JSON.stringify(prisma.warga.groupBy.mock.calls[0]![0].where)).toContain('"kelompokId":4')
+    for (const c of prisma.warga.count.mock.calls) expect(JSON.stringify(c[0].where)).toContain('"kelompokId":4')
+    vi.clearAllMocks(); prisma.activityLog.create.mockResolvedValue({}); prisma.warga.groupBy.mockResolvedValue([]); prisma.warga.count.mockResolvedValue(0)
+    await get('/api/dashboard/kualitas-data', 'PENATUA_KELOMPOK', null)
+    for (const c of prisma.warga.count.mock.calls) expect(JSON.stringify(c[0].where)).toContain('"id":-1')
+  })
+
+  it('filter wilayah ikut diteruskan', async () => {
+    await get('/api/dashboard/kualitas-data?wilayahId=2')
+    expect(JSON.stringify(prisma.warga.groupBy.mock.calls[0]![0].where)).toContain('"wilayahId":2')
+  })
+})
+
+describe('GET /api/dashboard/status-keanggotaan', () => {
+  it('semua lima status selalu ada (0 bila kosong), total = jumlahnya, urutan tetap', async () => {
+    prisma.warga.groupBy.mockResolvedValue([{ statusKeanggotaan: 'MENINGGAL', _count: { _all: 2 } }, { statusKeanggotaan: 'AKTIF', _count: { _all: 74 } }])
+    const res = await get('/api/dashboard/status-keanggotaan')
+    expect(res.status).toBe(200)
+    expect(res.body.data).toEqual({
+      total: 76,
+      data: [
+        { status: 'AKTIF', jumlah: 74 }, { status: 'NON_AKTIF', jumlah: 0 }, { status: 'KATEKUMEN', jumlah: 0 },
+        { status: 'PINDAH_KELUAR', jumlah: 0 }, { status: 'MENINGGAL', jumlah: 2 },
+      ],
+    })
+  })
+
+  it('tidak memfilter status (semua warga tercatat) tetapi ikut cakupan penatua dan filter', async () => {
+    await get('/api/dashboard/status-keanggotaan?kelompokId=9', 'PENATUA_KELOMPOK', 9)
+    const w = JSON.stringify(prisma.warga.groupBy.mock.calls[0]![0].where)
+    expect(w).not.toContain('"statusKeanggotaan"')
+    expect(w).toContain('"kelompokId":9')
+    expect(prisma.warga.groupBy.mock.calls[0]![0].by).toEqual(['statusKeanggotaan'])
   })
 })
