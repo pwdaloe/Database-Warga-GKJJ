@@ -146,8 +146,6 @@ model Warga {
   tanggalBaptis            DateTime?           @map("tanggal_baptis") @db.Date
   tempatBaptis             String?             @map("tempat_baptis") @db.VarChar(150)
   sudahSidi                Boolean             @default(false) @map("sudah_sidi")
-  // DEPRECATED: nomorSidi tidak dipakai kode; kolom nomor_sidi di-DROP manual dulu di produksi, baru field ini dihapus
-  nomorSidi                String?             @map("nomor_sidi") @db.VarChar(30)
   tanggalSidi              DateTime?           @map("tanggal_sidi") @db.Date
   tempatSidi               String?             @map("tempat_sidi") @db.VarChar(150)
   sudahMenikah             Boolean             @default(false) @map("sudah_menikah") // pemberkatan nikah di gereja
