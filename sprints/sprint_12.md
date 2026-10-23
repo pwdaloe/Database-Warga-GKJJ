@@ -40,4 +40,4 @@ npm run build --workspace=apps/web
 
 ## Status (2026-10-23)
 
-Task 1–8 selesai dan di-commit (`14636ff`); type-check dan tes lulus (API 312, web 137). Task 9 selesai: dokumentasi dan verifikasi visual di browser (23 Okt: kartu Demografi desktop + 390px, form Keanggotaan 390px; yang belum dicek: form desktop, detail warga, `/m`, simpan ulang). Belum dideploy; migrasi belum diterapkan ke produksi.
+Task 1–8 selesai dan di-commit (`14636ff`); type-check dan tes lulus (API 312, web 137). Task 9 selesai: dokumentasi dan verifikasi visual di browser (23 Okt: kartu Demografi desktop + 390px, form Keanggotaan 390px; yang belum dicek: form desktop, detail warga, `/m`, simpan ulang). Dideploy ke produksi 23 Okt (`3d0e4aa`); `db:integritas` pasca-deploy menemukan 8 KK kosong (dibersihkan manual oleh admin).

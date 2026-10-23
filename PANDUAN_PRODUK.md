@@ -698,7 +698,7 @@ Deploy ke production
 
 ### 9.4 Backlog Fitur
 
-*Diperbarui 23 Oktober 2026 (setelah Sprint 12; Sprint 12 sudah di-commit, belum dideploy).*
+*Diperbarui 23 Oktober 2026 (setelah Sprint 12; dideploy 23 Oktober).*
 
 **Sudah selesai (di production per 7 Oktober 2026)**
 
@@ -709,8 +709,8 @@ Deploy ke production
 | Tautkan warga ke pengguna + notifikasi akun via WhatsApp | Sprint 10 | Password acak, wajib ganti saat login pertama, template pesan configurable, tautan `wa.me` |
 | Menu Hubungi (semua role) | Sprint 10 | WA Center, majelis kelompok, Kepala Kantor, Pendeta/Emeritus; dikelola di Pengaturan → Kontak Gereja |
 | Role Jemaat + Profil Saya | Sprint 11 | Jemaat melihat dan mengubah data dirinya; perubahan masuk antrean Validasi Data |
-| Revisi Keanggotaan (Sidi/Baptis Dewasa, Menikah) | Sprint 12 | Kolom `tempat_sidi`, `sudah_menikah`, `tanggal_menikah`, `tempat_menikah` + CHECK constraint; form web, import/export Excel. **Belum dideploy.** `nomor_sidi` disembunyikan, DROP menunggu cek jumlah terisi di produksi + backup |
-| Chart demografi Pria/Wanita di Dashboard | Sprint 12 | `GET /api/dashboard/demografi`, hanya AKTIF, jumlah + persen, ikut filter. **Belum dideploy.** Lanjutan: piramida usia L/P |
+| Revisi Keanggotaan (Sidi/Baptis Dewasa, Menikah) | Sprint 12 | Kolom `tempat_sidi`, `sudah_menikah`, `tanggal_menikah`, `tempat_menikah` + CHECK constraint; form web, import/export Excel. **Dideploy 23 Okt (`3d0e4aa`).** `nomor_sidi` disembunyikan, DROP menunggu cek jumlah terisi di produksi + backup |
+| Chart demografi Pria/Wanita di Dashboard | Sprint 12 | `GET /api/dashboard/demografi`, hanya AKTIF, jumlah + persen, ikut filter. **Dideploy 23 Okt (`3d0e4aa`).** Lanjutan: piramida usia L/P |
 | Pemeriksaan integritas data | Sprint 12 | `npm run db:integritas --workspace=apps/api` (read-only): KK kosong, penunjuk kepala basi, KEPALA tanpa KK, duplikat NIK. Jalankan setelah tiap deploy |
 | Perbaikan KK kosong / kepala KK pindah | Maintenance | Penunjuk kepala dibersihkan saat pindah KK; lencana "KK kosong"; tombol Hapus KK di detail |
 
@@ -725,7 +725,7 @@ Deploy ke production
 | Laporan rekap per kelompok/wilayah | 🗓️ Planned | Export PDF/Excel |
 | Notifikasi ulang tahun jemaat via WhatsApp | 🗓️ Planned | API daftar ulang tahun bulan ini sudah ada (`GET /warga/ulang-tahun`); belum ada tampilan maupun pengiriman |
 | Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
-| Patch keamanan dependensi (audit 23 Okt) | ✅ Dipatch di repo, belum dideploy | Sisa 7 temuan (4 high, 3 moderate) butuh upgrade mayor. Temuan awal `npm audit --omit=dev`: 2 critical (`next` 15.5.27 RCE image optimization SVG + DoS Server Actions; `proxy-addr` IP spoofing), 6 high (`compression`, `follow-redirects`, `postcss`, `prisma`/`deepmerge-ts`). `npm audit fix` (tanpa `--force`) menutup sebagian besar tanpa breaking change; `exceljs`/`uuid` jangan di-force (downgrade ke 3.4.0) |
+| Patch keamanan dependensi (audit 23 Okt) | ✅ Dipatch dan dideploy 23 Okt | Sisa 7 temuan (4 high, 3 moderate) butuh upgrade mayor. Temuan awal `npm audit --omit=dev`: 2 critical (`next` 15.5.27 RCE image optimization SVG + DoS Server Actions; `proxy-addr` IP spoofing), 6 high (`compression`, `follow-redirects`, `postcss`, `prisma`/`deepmerge-ts`). `npm audit fix` (tanpa `--force`) menutup sebagian besar tanpa breaking change; `exceljs`/`uuid` jangan di-force (downgrade ke 3.4.0) |
 | Upgrade mayor: multer 2, Next 16, Prisma 7, Express 5 | 🔧 Teknis | multer 1.x sudah tidak dirawat (dipakai upload import). Naikkan syarat Node ke `>=22` (Node 20 EOL; VPS memasang Node 22) |
 | Pengujian visual di browser | 🔧 Teknis | Sprint 12 sudah dicek di browser (kartu Demografi desktop + 390px, form Keanggotaan 390px). Belum: form Keanggotaan desktop, detail warga, `/m`, simpan ulang; UI Sprint 10–11 baru lewat tes komponen |
 
