@@ -60,7 +60,7 @@ function normUsername(v: unknown): string {
     .replace(/[^a-z0-9._-]/g, '')
 }
 
-// Kolom teks di Excel (mis. Telepon, NIK, No. Sidi) sering tersimpan bertipe Number
+// Kolom teks di Excel (mis. Telepon, NIK) sering tersimpan bertipe Number
 // kalau isinya cuma digit — terima string maupun number di sini, di-String()-kan saat dipakai.
 const textCell = z.union([z.string(), z.number()]).optional()
 
@@ -81,7 +81,6 @@ const rowSchema = z.object({
   tanggalBaptis:      z.union([z.string(), z.number()]).optional(),
   tempatBaptis:       textCell,
   sudahSidi:          z.union([z.string(), z.boolean(), z.number()]).optional(),
-  nomorSidi:          textCell,
   tanggalSidi:        z.union([z.string(), z.number()]).optional(),
   tempatSidi:         textCell,
   sudahMenikah:       z.union([z.string(), z.boolean(), z.number()]).optional(),
@@ -190,7 +189,6 @@ importRouter.post(
         const namaPanggilan      = raw.namaPanggilan      ? String(raw.namaPanggilan).trim()      || null : null
         const tempatLahir        = raw.tempatLahir        ? String(raw.tempatLahir).trim()        || null : null
         const tempatBaptis       = raw.tempatBaptis       ? String(raw.tempatBaptis).trim()        || null : null
-        const nomorSidi          = raw.nomorSidi          ? String(raw.nomorSidi).trim()           || null : null
         const tempatSidi         = raw.tempatSidi         ? String(raw.tempatSidi).trim()          || null : null
         const tempatMenikah      = raw.tempatMenikah      ? String(raw.tempatMenikah).trim()       || null : null
         const tanggalMenikah     = parseDate(raw.tanggalMenikah as any)
@@ -205,7 +203,6 @@ importRouter.post(
         checkLen(namaPanggilan, 50, 'Nama Panggilan')
         checkLen(tempatLahir, 100, 'Tempat Lahir')
         checkLen(tempatBaptis, 150, 'Tempat Baptis')
-        checkLen(nomorSidi, 30, 'No. Sidi')
         checkLen(tempatSidi, 150, 'Tempat Sidi/Baptis Dewasa')
         checkLen(tempatMenikah, 150, 'Gereja Tempat Pemberkatan')
         checkLen(telepon, 20, 'Telepon')
@@ -230,7 +227,6 @@ importRouter.post(
             tanggalBaptis:     parseDate(raw.tanggalBaptis as any),
             tempatBaptis,
             sudahSidi:         normBool(raw.sudahSidi),
-            nomorSidi,
             tanggalSidi:       parseDate(raw.tanggalSidi   as any),
             tempatSidi,
             sudahMenikah,

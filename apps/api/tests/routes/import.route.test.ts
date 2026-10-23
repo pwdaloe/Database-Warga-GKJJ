@@ -205,6 +205,14 @@ describe('POST /api/import/warga', () => {
     expect(data.tanggalMenikah).toBeInstanceOf(Date)
   })
 
+  it('kolom nomorSidi lama di file Excel diabaikan (tidak disimpan)', async () => {
+    mockedWargaCreate.mockResolvedValue({ id: 7 })
+    const res = await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`)
+      .send({ rows: [baseRow({ sudahSidi: 'Y', nomorSidi: 'SD-77' })] })
+    expect(res.status).toBe(200)
+    expect(mockedWargaCreate.mock.calls[0]![0].data).not.toHaveProperty('nomorSidi')
+  })
+
   it('tanggal/gereja nikah terisi tanpa kolom Menikah → dianggap sudah menikah (tidak melanggar CHECK DB)', async () => {
     mockedWargaCreate.mockResolvedValue({ id: 7 })
     await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`)

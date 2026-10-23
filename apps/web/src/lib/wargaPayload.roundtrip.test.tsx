@@ -93,8 +93,8 @@ describe('round-trip WargaForm — Kepala Keluarga dengan semua field terisi', (
     expect(payload.tempatMenikah).toBeNull()
   })
 
-  it('nomorSidi lama tidak ikut dikirim (disembunyikan, tidak ditimpa)', async () => {
-    const payload: any = await submitTanpaUbah({ ...WARGA_LENGKAP, nomorSidi: 'SD-77' })
+  it('nomorSidi lama tidak ikut dikirim (kolom dihapus dari kode)', async () => {
+    const payload: any = await submitTanpaUbah({ ...WARGA_LENGKAP, nomorSidi: 'SD-77' } as any)
     expect('nomorSidi' in payload).toBe(false)
   })
 
