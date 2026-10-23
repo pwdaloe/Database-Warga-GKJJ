@@ -709,7 +709,7 @@ Deploy ke production
 | Tautkan warga ke pengguna + notifikasi akun via WhatsApp | Sprint 10 | Password acak, wajib ganti saat login pertama, template pesan configurable, tautan `wa.me` |
 | Menu Hubungi (semua role) | Sprint 10 | WA Center, majelis kelompok, Kepala Kantor, Pendeta/Emeritus; dikelola di Pengaturan → Kontak Gereja |
 | Role Jemaat + Profil Saya | Sprint 11 | Jemaat melihat dan mengubah data dirinya; perubahan masuk antrean Validasi Data |
-| Revisi Keanggotaan (Sidi/Baptis Dewasa, Menikah) | Sprint 12 | Kolom `tempat_sidi`, `sudah_menikah`, `tanggal_menikah`, `tempat_menikah` + CHECK constraint; form web, import/export Excel. **Dideploy 23 Okt (`3d0e4aa`).** `nomor_sidi` disembunyikan, DROP menunggu cek jumlah terisi di produksi + backup |
+| Revisi Keanggotaan (Sidi/Baptis Dewasa, Menikah) | Sprint 12 | Kolom `tempat_sidi`, `sudah_menikah`, `tanggal_menikah`, `tempat_menikah` + CHECK constraint; form web, import/export Excel. **Dideploy 23 Okt (`3d0e4aa`).** `nomor_sidi` sudah di-DROP (23 Okt, hanya 1 baris terisi, setelah backup) |
 | Chart demografi Pria/Wanita di Dashboard | Sprint 12 | `GET /api/dashboard/demografi`, hanya AKTIF, jumlah + persen, ikut filter. **Dideploy 23 Okt (`3d0e4aa`).** Lanjutan: piramida usia L/P |
 | Pemeriksaan integritas data | Sprint 12 | `npm run db:integritas --workspace=apps/api` (read-only): KK kosong, penunjuk kepala basi, KEPALA tanpa KK, duplikat NIK. Jalankan setelah tiap deploy |
 | Perbaikan KK kosong / kepala KK pindah | Maintenance | Penunjuk kepala dibersihkan saat pindah KK; lencana "KK kosong"; tombol Hapus KK di detail |

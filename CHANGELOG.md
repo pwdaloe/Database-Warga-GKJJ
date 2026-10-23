@@ -3,6 +3,17 @@
 
 ---
 
+## [2026-10-23 WIB] — Maintenance (pasca Sprint 12) | ✅ DONE
+
+**Project**: Database Warga GKJJ
+
+- Patch keamanan: `next` 15.5.28, `proxy-addr` 2.0.8, `compression` 1.8.2; critical production 2 → 0
+- Syarat Node `>=22`; `multer` dan `@types/multer` dihapus (tidak pernah dipakai)
+- `nomorSidi` dihapus dari API, import Excel, dan tipe; kolom `nomor_sidi` di-DROP di produksi (hanya 1 baris terisi, `001`, setelah backup `pg_dump`), lalu field dihapus dari `schema.prisma`
+- `QA_STATUS.md` disegarkan (API 313 tes, web 137 tes)
+
+---
+
 ## [2026-10-23 WIB] — Sprint 12 | ✅ DONE, dideploy ke produksi (`3d0e4aa`)
 
 **Project**: Database Warga GKJJ
