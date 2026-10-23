@@ -37,3 +37,7 @@ npm run build --workspace=apps/web
 - Query integritas dijalankan terhadap DB lokal dan mengembalikan hasil sesuai.
 - UI dilihat langsung di browser (bukan hanya tes komponen).
 - Migrasi belum diterapkan ke produksi tanpa konfirmasi user; `nomor_sidi` belum di-DROP.
+
+## Status (2026-10-23)
+
+Task 1–8 selesai dan di-commit (`14636ff`); type-check dan tes lulus (API 312, web 137). Task 9 sebagian: dokumentasi selesai, **verifikasi visual di browser belum**. Belum dideploy; migrasi belum diterapkan ke produksi.

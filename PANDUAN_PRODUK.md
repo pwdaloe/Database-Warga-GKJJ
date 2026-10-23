@@ -698,7 +698,7 @@ Deploy ke production
 
 ### 9.4 Backlog Fitur
 
-*Diperbarui 7 Oktober 2026 (setelah Sprint 11).*
+*Diperbarui 23 Oktober 2026 (setelah Sprint 12; Sprint 12 sudah di-commit, belum dideploy).*
 
 **Sudah selesai (di production per 7 Oktober 2026)**
 
@@ -709,14 +709,15 @@ Deploy ke production
 | Tautkan warga ke pengguna + notifikasi akun via WhatsApp | Sprint 10 | Password acak, wajib ganti saat login pertama, template pesan configurable, tautan `wa.me` |
 | Menu Hubungi (semua role) | Sprint 10 | WA Center, majelis kelompok, Kepala Kantor, Pendeta/Emeritus; dikelola di Pengaturan → Kontak Gereja |
 | Role Jemaat + Profil Saya | Sprint 11 | Jemaat melihat dan mengubah data dirinya; perubahan masuk antrean Validasi Data |
+| Revisi Keanggotaan (Sidi/Baptis Dewasa, Menikah) | Sprint 12 | Kolom `tempat_sidi`, `sudah_menikah`, `tanggal_menikah`, `tempat_menikah` + CHECK constraint; form web, import/export Excel. **Belum dideploy.** `nomor_sidi` disembunyikan, DROP menunggu cek jumlah terisi di produksi + backup |
+| Chart demografi Pria/Wanita di Dashboard | Sprint 12 | `GET /api/dashboard/demografi`, hanya AKTIF, jumlah + persen, ikut filter. **Belum dideploy.** Lanjutan: piramida usia L/P |
+| Pemeriksaan integritas data | Sprint 12 | `npm run db:integritas --workspace=apps/api` (read-only): KK kosong, penunjuk kepala basi, KEPALA tanpa KK, duplikat NIK. Jalankan setelah tiap deploy |
 | Perbaikan KK kosong / kepala KK pindah | Maintenance | Penunjuk kepala dibersihkan saat pindah KK; lencana "KK kosong"; tombol Hapus KK di detail |
 
 **Direncanakan / ide**
 
 | Fitur | Status | Keterangan |
 |---|---|---|
-| Revisi bagian Keanggotaan (form Warga) | 📌 Sprint berikutnya | Urutan: Sudah Baptis → Tanggal Baptis, Tempat Baptis (tetap). Sudah Sidi diganti **Sudah Sidi/Baptis Dewasa** → Tanggal Sidi/Baptis Dewasa, **Tempat Sidi dan Baptis Dewasa** (menggantikan Nomor Dokumen Sidi). Tambah **Menikah** → Tanggal Menikah, Tempat Menikah. Butuh migrasi DB (kolom tempat sidi, status+tanggal+tempat menikah; nasib data `nomor_sidi` lama perlu diputuskan), update form web & `/m`, validasi Zod, import/export Excel, kartu/detail warga **Keputusan (2026-10-12):** Menikah = pemberkatan nikah di gereja, pola sama dengan Baptis/Sidi. Kolom baru nullable: `tempat_sidi` (VarChar 150), `sudah_menikah` (Boolean), `tanggal_menikah` (Date), `tempat_menikah` (VarChar 150, nama gereja). Label form: checkbox **Menikah (Pemberkatan Gereja)** → **Tanggal Pemberkatan Nikah**, **Gereja Tempat Pemberkatan**. Tanggal/tempat hanya boleh diisi bila `sudah_menikah` = true (Zod; constraint DB). `nomor_sidi` tetap di DB tapi disembunyikan dulu (cek jumlah terisi di produksi, backup, baru DROP sprint setelahnya). Status perkawinan umum (janda/duda/cerai) TIDAK masuk sprint ini; ide terpisah bila dibutuhkan; riwayat/pasangan_id juga ide nanti. |
-| Chart demografi komposisi Pria/Wanita di Dashboard | 📌 Sprint berikutnya | Endpoint baru `GET /api/dashboard/demografi` (hitung `jenis_kelamin` L/P) memakai `dashboardScope` (cakupan pengguna + filter wilayah/kelompok). Keputusan: hitung hanya status AKTIF (MENINGGAL/PINDAH_KELUAR menggeser komposisi); tampilkan jumlah + persen; sertakan tes endpoint. Lanjutan: piramida usia L/P |
 | Pembuatan akun Jemaat massal | 🗓️ Usulan | Pilih banyak warga → akun + tautan WhatsApp berurutan (saat ini satu per satu) |
 | Survei & kebutuhan jemaat | 🗓️ Usulan | Struktur sudah siap (`CatatanJemaat.jenis`: CATATAN, KEBUTUHAN, SURVEI); belum ada antarmuka |
 | Pengingat akun belum login | 🗓️ Usulan | Template pengingat ditunda dari Sprint 10 |
@@ -724,8 +725,9 @@ Deploy ke production
 | Laporan rekap per kelompok/wilayah | 🗓️ Planned | Export PDF/Excel |
 | Notifikasi ulang tahun jemaat via WhatsApp | 🗓️ Planned | API daftar ulang tahun bulan ini sudah ada (`GET /warga/ulang-tahun`); belum ada tampilan maupun pengiriman |
 | Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
-| Upgrade Next 16 + Prisma 8 | 🔧 Teknis | Menutup sisa 6 temuan `npm audit`; jangan pakai `npm audit fix --force` |
-| Penguatan bar pembaruan & pengujian visual | 🔧 Teknis | UI Sprint 10–11 baru diverifikasi lewat tes komponen, belum uji visual di browser |
+| Patch keamanan dependensi (audit 23 Okt) | 🔧 Teknis, **prioritas tinggi** | `npm audit --omit=dev`: 2 critical (`next` 15.5.27 RCE image optimization SVG + DoS Server Actions; `proxy-addr` IP spoofing), 6 high (`compression`, `follow-redirects`, `postcss`, `prisma`/`deepmerge-ts`). `npm audit fix` (tanpa `--force`) menutup sebagian besar tanpa breaking change; `exceljs`/`uuid` jangan di-force (downgrade ke 3.4.0) |
+| Upgrade mayor: multer 2, Next 16, Prisma 7, Express 5 | 🔧 Teknis | multer 1.x sudah tidak dirawat (dipakai upload import). Naikkan syarat Node ke `>=22` (Node 20 EOL; VPS memasang Node 22) |
+| Pengujian visual di browser | 🔧 Teknis | UI Sprint 10–12 baru diverifikasi lewat tes komponen; verifikasi desktop + 390px (dashboard demografi, form Keanggotaan) belum dilakukan |
 
 ---
 

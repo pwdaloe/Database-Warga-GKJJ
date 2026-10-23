@@ -3,6 +3,40 @@
 
 ---
 
+## [2026-10-23 WIB] — Sprint 12 | ✅ DONE (kode), belum dideploy
+
+**Project**: Database Warga GKJJ
+**Commit**: `14636ff`
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Selesai
+- **Integritas data**: `integritas.service.ts` + `npm run db:integritas` (read-only; exit code 1 bila ada temuan)
+- **Dashboard**: `GET /api/dashboard/demografi` + kartu Komposisi Pria/Wanita (hanya AKTIF, jumlah + persen, ikut filter)
+- **Keanggotaan**: `tempat_sidi`, `sudah_menikah`, `tanggal_menikah`, `tempat_menikah` + CHECK constraint; Zod, service, profil, import/export Excel, form web
+- Verifikasi: type-check API/web lulus; tes API 312, web 137 lulus
+
+### ⚠️ Belum
+- Deploy dan penerapan migrasi ke produksi (menunggu jadwal sepi dan konfirmasi)
+- Verifikasi visual di browser (desktop + 390px)
+- `nomor_sidi` belum di-DROP
+- Audit dependensi 23 Okt: 2 critical production (`next`, `proxy-addr`) menunggu patch
+
+---
+
+## [2026-10-09 WIB] — Maintenance (backfill retroaktif) | ✅ DONE
+
+**Project**: Database Warga GKJJ
+**Reviewed**: Sabtu, 17 Oktober 2026
+**Reviewed by**: Claude Code Sprint Agent
+
+### ✅ Dashboard: filter, sebaran, jemaat baru (commit `f0473d2`, dideploy 9 Okt)
+- Filter **Wilayah & Kelompok** (`?wilayahId=&kelompokId=`) untuk `/api/dashboard/*` lewat `dashboardScope.ts`; disembunyikan untuk Penatua Kelompok
+- Endpoint **sebaran** jemaat per wilayah dan kelompok (kelompok kosong tidak tampil), klik kelompok membuka `/warga?kelompokId=`
+- Kartu **Jemaat Baru Dientry** (5 terakhir) dan **Kelompok Aktif** dihitung dinamis dari data kelompok aktif
+- Catatan: entry ini ditulis retroaktif; commit asli tidak memuat entry CHANGELOG
+
+---
+
 ## [2026-10-07 WIB] — Maintenance | ✅ DONE
 
 **Project**: Database Warga GKJJ

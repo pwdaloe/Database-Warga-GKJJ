@@ -3,7 +3,7 @@
 Aplikasi manajemen data jemaat **Gereja Kristen Jawa Jakarta (GKJJ)** berbasis web.  
 Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelompok, wilayah, dan aktivitas gereja secara terpusat.
 
-**Versi:** `v1.5` · **Terakhir diperbarui:** 5 Oktober 2026
+**Versi:** `v1.6` · **Terakhir diperbarui:** 23 Oktober 2026
 
 ---
 
@@ -35,6 +35,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 - Statistik ringkasan: **Total Warga**, **Total Keluarga**, **Kelompok Aktif** (dihitung dari data kelompok berstatus aktif), **Perlu Divalidasi** (status Draft)
 - **Filter Wilayah & Kelompok** — dropdown di atas dashboard; hasil filter berlaku untuk kartu statistik, sebaran, jemaat baru, chart komisi, dan peta (`?wilayahId=&kelompokId=` pada endpoint `/api/dashboard/*`). Disembunyikan untuk Penatua Kelompok
 - **Sebaran Jemaat per Wilayah & Kelompok** — jumlah warga dan KK per wilayah, dengan rincian kelompok yang sudah memiliki warga saja (kelompok kosong tidak ditampilkan). Klik kelompok membuka daftar Warga terfilter (`/warga?kelompokId=`)
+- **Komposisi Pria/Wanita** — jumlah dan persen warga berstatus AKTIF (`GET /api/dashboard/demografi`), ikut filter Wilayah/Kelompok dan cakupan pengguna
 - **Jemaat Baru Dientry** — 5 warga terakhir yang dientry: nama, tanggal, kelompok, wilayah, dan majelis kelompok
 - Setiap kartu statistik bisa diklik untuk navigasi langsung ke halaman terkait
 - **Chart distribusi komisi** — bar chart warna-warni menampilkan jumlah anggota per komisi berdasarkan rentang usia (Recharts), rentang usia dapat dikonfigurasi di Pengaturan
@@ -48,7 +49,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 #### Data Warga
 - Tambah, edit, hapus data warga dengan form multi-tab:
   - **Tab Identitas** — nama, foto, NIK, tempat/tanggal lahir, golongan darah
-  - **Tab Keanggotaan** — status keluarga (Kepala KK, Istri, Anak, dll.), status keanggotaan, sakramen baptis & sidi
+  - **Tab Keanggotaan** — status keluarga (Kepala KK, Istri, Anak, dll.), status keanggotaan, sakramen **Baptis**, **Sidi/Baptis Dewasa** (tanggal + tempat), dan **Menikah (Pemberkatan Gereja)** (tanggal + gereja; hanya bisa diisi bila Menikah dicentang, dijaga Zod dan CHECK constraint DB). Kolom lama `nomor_sidi` disembunyikan, belum dihapus dari DB
   - **Tab Kontak** — telepon, WhatsApp (dengan centang **boleh ditampilkan ke jemaat**, dipakai menu Hubungi untuk majelis kelompok), email, pendidikan, pekerjaan
   - **Tab Keluarga** — pilih/cari keluarga, atau buat keluarga baru otomatis saat warga sebagai Kepala KK (dengan validasi wajib pilih kelompok). Untuk Kepala yang sudah punya KK, tab ini menampilkan ringkasan keluarga dan anggotanya
   - **Tab Alamat** — blok **Alamat Rumah Tangga (KK)** untuk Kepala Keluarga (dimuat dari data KK; perubahan disimpan ke KK dan data warga dalam satu transaksi), Alamat KTP, Alamat Domisili (jika berbeda), koordinat GPS (latitude/longitude). Kolom koordinat menerima desimal koma (`-6,2088`), dan menempel `-6.2088, 106.8456` dari Google Maps mengisi kedua kolom sekaligus; input tidak valid ditolak dengan pesan (rentang −90..90 / −180..180). Koordinat tampil di **Detail Warga** (tautan Google Maps) dan di peta Dashboard
@@ -266,8 +267,8 @@ Test otomatis berbasis **Vitest** di kedua workspace:
 
 | Layer | Test Files | Tests |
 |---|---|---|
-| Backend (`apps/api`) | 19 | 287 (role Jemaat: pagar global, Profil Saya, whitelist, NIK, alamat KK kepala keluarga, catatan, audit, akun & WhatsApp: password acak, notifikasi, template, kontak gereja, Hubungi per role, normalisasi nomor, crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem, penomoran KK) |
-| Frontend (`apps/web`) | 20 | 127 (Profil Saya, payload profil, pembatasan Jemaat di ProtectedRoute, halaman Hubungi, modal Info Akun, Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner, round-trip form Keluarga) |
+| Backend (`apps/api`) | 21 | 312 (integritas relasional, demografi dashboard, round-trip Keanggotaan, role Jemaat: pagar global, Profil Saya, whitelist, NIK, alamat KK kepala keluarga, catatan, audit, akun & WhatsApp: password acak, notifikasi, template, kontak gereja, Hubungi per role, normalisasi nomor, crypto, error handler, auth middleware/service/route, reset & ganti password, import, perpindahan service/route, cakupan dashboard per kelompok, scoping & batas tulis penatua, round-trip edit warga per peran, route dashboard, status sistem, penomoran KK) |
+| Frontend (`apps/web`) | 22 | 137 (kartu Demografi, round-trip Keanggotaan, Profil Saya, payload profil, pembatasan Jemaat di ProtectedRoute, halaman Hubungi, modal Info Akun, Badge, Pagination, ResetPasswordForm, PerpindahanForm, WhatsApp perpindahan, helper Excel, helper & form koordinat, payload & alamat KK, round-trip form ↔ payload, logika versi & UpdateBanner, round-trip form Keluarga) |
 
 ```bash
 npm run test --workspace=apps/api
@@ -329,7 +330,9 @@ Body snapshot pada `ActivityLog` secara otomatis:
 
 > ✅ **Rilis ke produksi (9 Oktober 2026, versi `f0473d2`):** Sprint 10 (akun dari warga, notifikasi WhatsApp, Kontak Gereja, Hubungi), Sprint 11 (role Jemaat, Profil Saya), dan pembaruan Dashboard (filter Wilayah/Kelompok, sebaran jemaat, jemaat baru dientry) sudah dideploy lewat `deploy/2-deploy.sh prod` pada saat aplikasi tidak dipakai. Perubahan skema hanya menambah (kolom/tabel baru, nilai enum `JEMAAT`); backup otomatis dibuat sebelum `prisma db push`. Pastikan: setelah deploy: isi **Pengaturan → Kontak Gereja** dan **Template Pesan** (template bawaan dibuat otomatis saat pertama dibuka), lalu centang "boleh ditampilkan ke jemaat" pada penatua yang bersedia. Alamat portal di pesan WhatsApp memakai env opsional `PORTAL_URL` (default `https://jemaat.gkjjakarta.org`).
 
-> 🛡️ **Keamanan dependensi:** `npm audit --omit=dev` menyisakan temuan yang menunggu upgrade besar (Next 16 untuk `postcss`, Prisma 8 untuk `deepmerge-ts`) serta `uuid` moderate bawaan `exceljs` (fungsi yang rentan tidak dipakai). Hindari `npm audit fix --force` — itu menurunkan `eslint-config-next` dan memaksa Tailwind 4. Format Excel yang didukung hanya `.xlsx` (SheetJS `xlsx` sudah diganti `exceljs`).
+> 🧪 **Sprint 12 (23 Oktober 2026) — sudah di-commit, BELUM dideploy:** integritas data, chart demografi, revisi Keanggotaan. Sebelum deploy: migrasi `20261017000000_keanggotaan_sidi_menikah` hanya menambah kolom (backup otomatis oleh `deploy/2-deploy.sh`); setelah deploy jalankan `npm run db:integritas --workspace=apps/api` dan pastikan tidak ada temuan. `nomor_sidi` belum di-DROP.
+
+> 🛡️ **Keamanan dependensi (audit 23 Oktober 2026):** `npm audit --omit=dev` menemukan 2 critical (`next` 15.5.27, `proxy-addr`) dan 6 high yang perlu dipatch dengan `npm audit fix` (tanpa `--force`); lihat backlog Teknis di [`PANDUAN_PRODUK.md`](PANDUAN_PRODUK.md). Jangan pakai `npm audit fix --force` — itu menurunkan `exceljs` ke 3.4.0 dan memaksa Tailwind 4. Format Excel yang didukung hanya `.xlsx` (SheetJS `xlsx` sudah diganti `exceljs`).
 
 ---
 
