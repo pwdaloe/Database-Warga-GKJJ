@@ -19,7 +19,7 @@ import { cn, nomorWarga } from '@/lib/utils'
 const JENIS_OPTIONS = [
   { value: '', label: 'Semua Jenis' },
   { value: 'MASUK', label: 'Pindah Masuk' },
-  { value: 'KELUAR', label: 'Pindah Keluar' },
+  { value: 'KELUAR', label: 'Pindah Gereja (Atestasi)' },
   { value: 'MENINGGAL', label: 'Keterangan Kematian' },
 ]
 
@@ -31,7 +31,7 @@ const JENIS_BADGE: Record<string, string> = {
 
 const JENIS_LABEL: Record<string, string> = {
   MASUK: 'Pindah Masuk',
-  KELUAR: 'Pindah Keluar',
+  KELUAR: 'Pindah Gereja',
   MENINGGAL: 'Keterangan Kematian',
 }
 

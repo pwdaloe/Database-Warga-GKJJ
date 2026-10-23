@@ -213,6 +213,20 @@ describe('POST /api/import/warga', () => {
     expect(mockedWargaCreate.mock.calls[0]![0].data).not.toHaveProperty('nomorSidi')
   })
 
+  it.each(['PINDAH_GEREJA', 'PINDAH_KELUAR', 'MENINGGAL', 'KATEKUMEN'])('kolom status keanggotaan %s dari Excel tersimpan apa adanya', async (status) => {
+    mockedWargaCreate.mockResolvedValue({ id: 7 })
+    await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`)
+      .send({ rows: [baseRow({ statusKeanggotaan: status })] })
+    expect(mockedWargaCreate.mock.calls[0]![0].data.statusKeanggotaan).toBe(status)
+  })
+
+  it('status keanggotaan tidak dikenal (mis. PINDAH_AGAMA) jatuh ke AKTIF seperti nilai tak dikenal lain', async () => {
+    mockedWargaCreate.mockResolvedValue({ id: 7 })
+    await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`)
+      .send({ rows: [baseRow({ statusKeanggotaan: 'PINDAH_AGAMA' })] })
+    expect(mockedWargaCreate.mock.calls[0]![0].data.statusKeanggotaan).toBe('AKTIF')
+  })
+
   it('tanggal/gereja nikah terisi tanpa kolom Menikah → dianggap sudah menikah (tidak melanggar CHECK DB)', async () => {
     mockedWargaCreate.mockResolvedValue({ id: 7 })
     await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`)

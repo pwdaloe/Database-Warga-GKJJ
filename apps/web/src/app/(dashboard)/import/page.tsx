@@ -102,7 +102,7 @@ const FORMAT_HINTS: Record<string, string> = {
   tanggalLahir:        'Format: dd/mm/yyyy  — contoh: 15/05/1980',
   golonganDarah:       'A, B, AB, atau O',
   statusKeluarga:      'KEPALA / ISTRI / ANAK / MENANTU / CUCU / LAINNYA',
-  statusKeanggotaan:   'AKTIF / NON_AKTIF / KATEKUMEN / PINDAH_KELUAR / MENINGGAL',
+  statusKeanggotaan:   'AKTIF / NON_AKTIF / KATEKUMEN / PINDAH_GEREJA / PINDAH_KELUAR (Pindah Agama) / MENINGGAL',
   sudahBaptis:         'Y = Sudah  /  N = Belum',
   tanggalBaptis:       'Format: dd/mm/yyyy  (isi jika sudah baptis)',
   tempatBaptis:        'Nama gereja/tempat baptis dilaksanakan',

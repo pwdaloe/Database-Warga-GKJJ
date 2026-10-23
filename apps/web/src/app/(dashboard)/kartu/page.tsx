@@ -10,13 +10,11 @@ import QRCode from 'qrcode'
 import { useWargaList } from '@/hooks/useWarga'
 import { cn, nomorWarga } from '@/lib/utils'
 import { STATUS_KEANGGOTAAN_LABEL, kirimWhatsApp } from '@/lib/kartuWhatsapp'
+import { STATUS_KEANGGOTAAN_HEX, STATUS_KEANGGOTAAN_SOFT } from '@/lib/statusKeanggotaan'
 
 // ── Helpers ──────────────────────────────────────────────────
 
-const STATUS_KEANGGOTAAN_COLOR: Record<string, string> = {
-  AKTIF: '#16a34a', NON_AKTIF: '#6b7280', KATEKUMEN: '#2563eb',
-  PINDAH_KELUAR: '#ea580c', MENINGGAL: '#dc2626',
-}
+const STATUS_KEANGGOTAAN_COLOR = STATUS_KEANGGOTAAN_HEX
 const STATUS_KK_LABEL: Record<string, string> = {
   KEPALA: 'Kepala KK', ISTRI: 'Istri', ANAK: 'Anak',
   MENANTU: 'Menantu', CUCU: 'Cucu', LAINNYA: 'Lainnya',
@@ -144,13 +142,7 @@ function IdCardPreview({ warga }: { warga: any }) {
   const validasiDate = (warga.dataStatus === 'AKTIF' || warga.dataStatus === 'VALIDASI') && warga.updatedAt
     ? formatTanggal(warga.updatedAt) : null
   const nomorTampil = warga.nomorInduk || warga.nomorAnggota || '—'
-  const statusColor: Record<string, string> = {
-    AKTIF: 'text-green-600 bg-green-50',
-    NON_AKTIF: 'text-gray-500 bg-gray-100',
-    KATEKUMEN: 'text-blue-600 bg-blue-50',
-    PINDAH_KELUAR: 'text-orange-600 bg-orange-50',
-    MENINGGAL: 'text-red-600 bg-red-50',
-  }
+  const statusColor = STATUS_KEANGGOTAAN_SOFT
   const avatarBg = warga.jenisKelamin === 'L' ? 'bg-blue-500' : 'bg-pink-500'
 
   // QR code state

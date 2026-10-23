@@ -3,6 +3,20 @@
 
 ---
 
+## [2026-10-23 WIB] — Status Keanggotaan: Pindah Gereja & Pindah Agama | ✅ DONE (kode), belum dideploy
+
+**Project**: Database Warga GKJJ
+
+- Status baru **Pindah Gereja** (`PINDAH_GEREJA`, ada surat atestasi). **Pindah Keluar** kini berlabel **Pindah Agama**; kode DB `PINDAH_KELUAR` dipertahankan agar tidak ada migrasi data. Keduanya tidak dihitung sebagai anggota aktif (hanya `AKTIF`).
+- Perpindahan jenis KELUAR (tervalidasi) kini mengubah status warga menjadi **Pindah Gereja** (sebelumnya Pindah Keluar). Label jenis di modul Perpindahan: "Pindah Gereja (Atestasi)". Teks surat resmi ("Keterangan Pindah Keluar") **belum diubah**, menunggu keputusan gereja.
+- **Opsi A**: satu daftar status per aplikasi (`apps/api/src/constants/statusKeanggotaan.ts`, `apps/web/src/lib/statusKeanggotaan.ts`) menggantikan ±12 salinan (form, filter, impor, lencana, peta, kartu, mobile, dashboard). Tes `statusKeanggotaan.sinkron.test.ts` menjaga enum Prisma, daftar API, dan daftar web tetap identik.
+- Migrasi: `ALTER TYPE ... ADD VALUE 'PINDAH_GEREJA'` (hanya menambah nilai enum). Data lama **tidak** diubah otomatis; lihat langkah perapihan data di bawah.
+- Tes: API 496, web 155; mutation check di 4 titik tertangkap.
+- Belum dicek: form Warga (dropdown) dan halaman mobile `/m` di browser; teks surat; data produksi yang berstatus Pindah Keluar (perlu ditinjau, lihat catatan).
+- **Catatan data produksi**: warga yang dulu berstatus `PINDAH_KELUAR` lewat alur Perpindahan sebenarnya pindah gereja dengan surat. Setelah deploy, tinjau dan ubah yang bersangkutan ke Pindah Gereja (query peninjauan ada di balasan/serah terima sprint), dengan backup lebih dulu.
+
+---
+
 ## [2026-10-23 WIB] — Maintenance (pasca Sprint 12) | ✅ DONE
 
 **Project**: Database Warga GKJJ

@@ -8,6 +8,15 @@ describe('Badge', () => {
     expect(screen.getByText('Aktif')).toBeInTheDocument()
   })
 
+  it.each([
+    ['PINDAH_GEREJA', 'Pindah Gereja'],
+    ['PINDAH_KELUAR', 'Pindah Agama'],
+    ['MENINGGAL', 'Meninggal'],
+  ])('status keanggotaan %s berlabel "%s"', (value, label) => {
+    render(<Badge value={value} type="keanggotaan" />)
+    expect(screen.getByText(label)).toBeInTheDocument()
+  })
+
   it('menampilkan label yang benar untuk status data', () => {
     render(<Badge value="VALIDASI" type="dataStatus" />)
     expect(screen.getByText('Validasi')).toBeInTheDocument()

@@ -68,3 +68,17 @@ describe('Keanggotaan: Sidi/Baptis Dewasa + Menikah (pemberkatan gereja)', () =>
     expect((await put({ tempatSidi: 'x'.repeat(151) })).status).toBe(400)
   })
 })
+
+describe('Status Keanggotaan: Pindah Gereja & Pindah Agama', () => {
+  it.each(['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_GEREJA', 'PINDAH_KELUAR', 'MENINGGAL'])('%s diterima dan diteruskan ke service', async (status) => {
+    const res = await put({ statusKeanggotaan: status })
+    expect(res.status).toBe(200)
+    expect(dataDiService().statusKeanggotaan).toBe(status)
+  })
+
+  it.each(['PINDAH_AGAMA', 'pindah_gereja', 'LAINNYA', ''])('nilai di luar daftar (%s) ditolak 400 dan tidak disimpan', async (status) => {
+    const res = await put({ statusKeanggotaan: status })
+    expect(res.status).toBe(400)
+    expect(svc.updateWarga).not.toHaveBeenCalled()
+  })
+})

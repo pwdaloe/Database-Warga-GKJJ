@@ -5,11 +5,9 @@ import { useParams } from 'next/navigation'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
+import { STATUS_KEANGGOTAAN_LABEL } from '@/lib/statusKeanggotaan'
 
-const STATUS_LABEL: Record<string, string> = {
-  AKTIF: 'Aktif', NON_AKTIF: 'Non Aktif', KATEKUMEN: 'Katekumen',
-  PINDAH_KELUAR: 'Pindah Keluar', MENINGGAL: 'Meninggal',
-}
+const STATUS_LABEL = STATUS_KEANGGOTAAN_LABEL
 const STATUS_KK_LABEL: Record<string, string> = {
   KEPALA: 'Kepala KK', ISTRI: 'Istri', ANAK: 'Anak',
   MENANTU: 'Menantu', CUCU: 'Cucu', LAINNYA: 'Lainnya',

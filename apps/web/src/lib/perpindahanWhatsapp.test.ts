@@ -17,7 +17,7 @@ describe('buildPerpindahanWhatsAppMessage', () => {
 
     expect(msg).toContain('Budi')
     expect(msg).toContain('Budi Santoso')
-    expect(msg).toContain('Pindah Keluar')
+    expect(msg).toContain('Pindah Gereja')
     expect(msg).toContain('SK-001')
   })
 

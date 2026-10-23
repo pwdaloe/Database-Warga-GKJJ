@@ -122,7 +122,7 @@ export function useDashboardKualitasData(f: DashboardFilter = {}) {
   })
 }
 
-export type StatusKeanggotaanKey = 'AKTIF' | 'NON_AKTIF' | 'KATEKUMEN' | 'PINDAH_KELUAR' | 'MENINGGAL'
+export type StatusKeanggotaanKey = import('@/lib/statusKeanggotaan').StatusKeanggotaanKode
 
 export interface StatusKeanggotaanData {
   total: number

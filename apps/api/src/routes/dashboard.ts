@@ -6,6 +6,7 @@ import type { Prisma } from '../generated/prisma/client.js'
 import {
   isKelompokScoped, parseDashboardFilter, wargaWhere, keluargaWhere,
 } from '../services/dashboardScope.js'
+import { STATUS_KEANGGOTAAN_VALUES } from '../constants/statusKeanggotaan.js'
 
 export const dashboardRouter = Router()
 dashboardRouter.use(authenticate)
@@ -138,7 +139,7 @@ dashboardRouter.get('/terbaru', async (req, res) => {
 })
 
 // GET /api/dashboard/demografi?wilayahId=&kelompokId= — komposisi Pria/Wanita.
-// Hanya warga berstatus keanggotaan AKTIF (MENINGGAL/PINDAH_KELUAR dkk. menggeser komposisi).
+// Hanya warga berstatus keanggotaan AKTIF (Meninggal, Pindah Gereja, Pindah Agama dkk. menggeser komposisi).
 dashboardRouter.get('/demografi', async (req, res) => {
   const user = req.user!
   const rows = await prisma.warga.groupBy({
@@ -216,14 +217,13 @@ dashboardRouter.get('/kualitas-data', async (req, res) => {
 })
 
 // GET /api/dashboard/status-keanggotaan?wilayahId=&kelompokId= — rincian status keanggotaan semua warga tercatat
-const STATUS_KEANGGOTAAN = ['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_KELUAR', 'MENINGGAL'] as const
 dashboardRouter.get('/status-keanggotaan', async (req, res) => {
   const rows = await prisma.warga.groupBy({
     by: ['statusKeanggotaan'],
     where: wargaWhere(req.user!, parseDashboardFilter(req.query)),
     _count: { _all: true },
   })
-  const data = STATUS_KEANGGOTAAN.map((status) => ({
+  const data = STATUS_KEANGGOTAAN_VALUES.map((status) => ({
     status,
     jumlah: rows.find((r) => r.statusKeanggotaan === status)?._count._all ?? 0,
   }))

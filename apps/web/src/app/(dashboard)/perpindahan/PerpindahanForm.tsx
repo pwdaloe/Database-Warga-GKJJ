@@ -26,7 +26,7 @@ export type PerpindahanFormData = z.infer<typeof schema>
 
 const JENIS_OPTIONS = [
   { value: 'MASUK', label: 'Pindah Masuk' },
-  { value: 'KELUAR', label: 'Pindah Keluar' },
+  { value: 'KELUAR', label: 'Pindah Gereja (Atestasi)' },
   { value: 'MENINGGAL', label: 'Keterangan Kematian' },
 ]
 

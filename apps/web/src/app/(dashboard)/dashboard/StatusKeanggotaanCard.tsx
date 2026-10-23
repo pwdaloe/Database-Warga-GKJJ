@@ -1,15 +1,12 @@
 import { Loader2 } from 'lucide-react'
 import type { StatusKeanggotaanData, StatusKeanggotaanKey } from '@/hooks/useDashboard'
+import { STATUS_KEANGGOTAAN_META } from '@/lib/statusKeanggotaan'
 
 const fmt = (n: number) => n.toLocaleString('id-ID')
 
-const LABEL: Record<StatusKeanggotaanKey, { label: string; warna: string }> = {
-  AKTIF: { label: 'Aktif', warna: 'bg-green-500' },
-  NON_AKTIF: { label: 'Non-aktif', warna: 'bg-gray-400' },
-  KATEKUMEN: { label: 'Katekumen', warna: 'bg-blue-400' },
-  PINDAH_KELUAR: { label: 'Pindah keluar', warna: 'bg-orange-400' },
-  MENINGGAL: { label: 'Meninggal', warna: 'bg-slate-600' },
-}
+const LABEL = Object.fromEntries(
+  STATUS_KEANGGOTAAN_META.map((s) => [s.value, { label: s.label, warna: s.bar }]),
+) as Record<StatusKeanggotaanKey, { label: string; warna: string }>
 
 export function StatusKeanggotaanCard({ data, isLoading }: { data?: StatusKeanggotaanData; isLoading: boolean }) {
   return (

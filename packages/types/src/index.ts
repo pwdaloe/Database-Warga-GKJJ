@@ -5,7 +5,7 @@
 export type JenisKelamin = 'L' | 'P'
 export type GolonganDarah = 'A' | 'B' | 'AB' | 'O'
 export type StatusDalamKeluarga = 'KEPALA' | 'ISTRI' | 'ANAK' | 'MENANTU' | 'CUCU' | 'LAINNYA'
-export type StatusKeanggotaan = 'AKTIF' | 'NON_AKTIF' | 'KATEKUMEN' | 'PINDAH_KELUAR' | 'MENINGGAL'
+export type StatusKeanggotaan = 'AKTIF' | 'NON_AKTIF' | 'KATEKUMEN' | 'PINDAH_GEREJA' | 'PINDAH_KELUAR' | 'MENINGGAL'
 export type StatusKeluarga = 'AKTIF' | 'NON_AKTIF'
 export type DataStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'VALIDATED'
 export type UserRole = 'SUPERADMIN' | 'KEPALA_KANTOR' | 'MAJELIS' | 'STAF_ADMIN' | 'PENATUA_KELOMPOK' | 'VIEWER' | 'JEMAAT'

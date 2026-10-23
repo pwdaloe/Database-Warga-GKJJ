@@ -34,7 +34,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 #### Dashboard
 - Statistik ringkasan: **Total Warga** (semua warga yang tercatat, apa pun statusnya) dengan baris keterangan **aktif & tervalidasi** (status dokumen AKTIF dan keanggotaan AKTIF), **Total Keluarga**, **Kelompok Aktif** (dihitung dari data kelompok berstatus aktif), **Perlu Divalidasi** (status Draft)
 - **Filter Wilayah & Kelompok** — dropdown di atas dashboard; hasil filter berlaku untuk kartu statistik, sebaran, jemaat baru, chart komisi, dan peta (`?wilayahId=&kelompokId=` pada endpoint `/api/dashboard/*`). Disembunyikan untuk Penatua Kelompok
-- **Status Keanggotaan** — rincian Aktif, Non-aktif, Katekumen, Pindah keluar, Meninggal untuk seluruh warga tercatat (`GET /api/dashboard/status-keanggotaan`)
+- **Status Keanggotaan** — rincian Aktif, Non-aktif, Katekumen, Pindah Gereja, Pindah Agama, Meninggal untuk seluruh warga tercatat (`GET /api/dashboard/status-keanggotaan`)
 - **Kualitas & Progres Data** — corong status dokumen (Draft → Validasi → Aktif → Tidak Aktif) dan kelengkapan anggota aktif: belum ada NIK, telepon/WhatsApp, alamat, koordinat rumah, tanggal lahir, atau belum masuk KK (`GET /api/dashboard/kualitas-data`). Hanya jumlah, tidak menampilkan data pribadi; ikut filter dan pembatasan Penatua Kelompok
 - **Sebaran Jemaat per Wilayah & Kelompok** — jumlah warga dan KK per wilayah, dengan rincian kelompok yang sudah memiliki warga saja (kelompok kosong tidak ditampilkan). Klik kelompok membuka daftar Warga terfilter (`/warga?kelompokId=`)
 - **Komposisi Pria/Wanita** — jumlah dan persen warga berstatus AKTIF (`GET /api/dashboard/demografi`), ikut filter Wilayah/Kelompok dan cakupan pengguna
@@ -129,7 +129,7 @@ Modal upload Excel di halaman **Pengguna** (pola sama seperti import warga, maks
 #### Perpindahan Jemaat
 Pencatatan pindah masuk, pindah keluar, dan meninggal, dengan **2 tahap sign-off** sebelum resmi:
 - **Approve** — persetujuan awal oleh `MAJELIS`/`KEPALA_KANTOR`/`SUPERADMIN`, belum mengubah status keanggotaan warga
-- **Validate** — finalisasi administratif oleh `KEPALA_KANTOR`/`SUPERADMIN`, baru di tahap ini `warga.statusKeanggotaan` disinkronkan otomatis (MASUK→Aktif, KELUAR→Pindah Keluar, MENINGGAL→Meninggal)
+- **Validate** — finalisasi administratif oleh `KEPALA_KANTOR`/`SUPERADMIN`, baru di tahap ini `warga.statusKeanggotaan` disinkronkan otomatis (MASUK→Aktif, KELUAR→Pindah Gereja, MENINGGAL→Meninggal)
 - **Cetak Surat** — generate PDF "Surat Keterangan Pindah/Meninggal Jemaat" (bisa preview draft kapan saja), mencantumkan nama, jabatan, dan tanggal approver serta validator
 - **Kirim Email** — lampirkan PDF surat ke email warga (hanya setelah divalidasi)
 - **Kirim WhatsApp** — ringkasan teks via `wa.me` (tersedia di semua status)

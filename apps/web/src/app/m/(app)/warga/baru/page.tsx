@@ -7,6 +7,7 @@ import { useWargaMutations } from '@/hooks/useWarga'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
+import { STATUS_KEANGGOTAAN_OPTIONS } from '@/lib/statusKeanggotaan'
 
 const STATUS_KELUARGA = [
   { value: 'LAINNYA',  label: 'Lainnya' },
@@ -16,13 +17,7 @@ const STATUS_KELUARGA = [
   { value: 'MENANTU',  label: 'Menantu' },
   { value: 'CUCU',     label: 'Cucu' },
 ]
-const STATUS_KEANGGOTAAN = [
-  { value: 'NON_AKTIF',     label: 'Non Aktif' },
-  { value: 'AKTIF',         label: 'Aktif' },
-  { value: 'KATEKUMEN',     label: 'Katekumen' },
-  { value: 'PINDAH_KELUAR', label: 'Pindah Keluar' },
-  { value: 'MENINGGAL',     label: 'Meninggal' },
-]
+const STATUS_KEANGGOTAAN = STATUS_KEANGGOTAAN_OPTIONS
 
 function Field({ label, required, children }: {
   label: string; required?: boolean; children: React.ReactNode

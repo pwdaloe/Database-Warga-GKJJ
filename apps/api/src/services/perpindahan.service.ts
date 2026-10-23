@@ -10,9 +10,10 @@ const PERPINDAHAN_INCLUDE = {
 
 export type PerpindahanWithRelations = Prisma.PerpindahanGetPayload<{ include: typeof PERPINDAHAN_INCLUDE }>
 
-const STATUS_KEANGGOTAAN_MAP: Record<string, 'AKTIF' | 'PINDAH_KELUAR' | 'MENINGGAL'> = {
+// KELUAR = pindah gereja dengan surat atestasi. Pindah Agama (PINDAH_KELUAR) diisi manual, bukan lewat Perpindahan.
+const STATUS_KEANGGOTAAN_MAP: Record<string, 'AKTIF' | 'PINDAH_GEREJA' | 'MENINGGAL'> = {
   MASUK: 'AKTIF',
-  KELUAR: 'PINDAH_KELUAR',
+  KELUAR: 'PINDAH_GEREJA',
   MENINGGAL: 'MENINGGAL',
 }
 

@@ -8,20 +8,14 @@ import { differenceInYears, format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { kirimWhatsApp } from '@/lib/kartuWhatsapp'
+import { STATUS_KEANGGOTAAN_LABEL, STATUS_KEANGGOTAAN_OPTIONS } from '@/lib/statusKeanggotaan'
 
-const STATUS_LABEL: Record<string, string> = {
-  AKTIF: 'Aktif', NON_AKTIF: 'Non Aktif', KATEKUMEN: 'Katekumen',
-  PINDAH_KELUAR: 'Pindah Keluar', MENINGGAL: 'Meninggal',
-}
+const STATUS_LABEL = STATUS_KEANGGOTAAN_LABEL
 const STATUS_KK: Record<string, string> = {
   KEPALA: 'Kepala KK', ISTRI: 'Istri', ANAK: 'Anak',
   MENANTU: 'Menantu', CUCU: 'Cucu', LAINNYA: 'Lainnya',
 }
-const STATUS_KEANGGOTAAN_OPT = [
-  { value: 'AKTIF', label: 'Aktif' }, { value: 'NON_AKTIF', label: 'Non Aktif' },
-  { value: 'KATEKUMEN', label: 'Katekumen' }, { value: 'PINDAH_KELUAR', label: 'Pindah Keluar' },
-  { value: 'MENINGGAL', label: 'Meninggal' },
-]
+const STATUS_KEANGGOTAAN_OPT = STATUS_KEANGGOTAAN_OPTIONS
 
 const inputCls = "w-full h-14 px-4 text-base rounded-2xl border border-gray-200 bg-gray-50 outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/20 transition"
 

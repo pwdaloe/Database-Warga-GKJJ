@@ -6,18 +6,10 @@ import { Search, Plus, Loader2, Users, ChevronRight } from 'lucide-react'
 import { useWargaList } from '@/hooks/useWarga'
 import { differenceInYears } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { STATUS_KEANGGOTAAN_BADGE, STATUS_KEANGGOTAAN_LABEL } from '@/lib/statusKeanggotaan'
 
-const STATUS_COLOR: Record<string, string> = {
-  AKTIF:         'bg-green-100 text-green-700',
-  NON_AKTIF:     'bg-gray-100 text-gray-500',
-  KATEKUMEN:     'bg-blue-100 text-blue-700',
-  PINDAH_KELUAR: 'bg-orange-100 text-orange-700',
-  MENINGGAL:     'bg-red-100 text-red-600',
-}
-const STATUS_LABEL: Record<string, string> = {
-  AKTIF: 'Aktif', NON_AKTIF: 'Non Aktif', KATEKUMEN: 'Katekumen',
-  PINDAH_KELUAR: 'Pindah', MENINGGAL: 'Meninggal',
-}
+const STATUS_COLOR = STATUS_KEANGGOTAAN_BADGE
+const STATUS_LABEL = STATUS_KEANGGOTAAN_LABEL
 
 export default function MobileWargaPage() {
   const router = useRouter()
