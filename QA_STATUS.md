@@ -68,4 +68,4 @@ Service yang paling lemah: `surat.service.ts` (5%) dan `email.service.ts` (54%);
 1. Tes route `keluarga.ts` dan `wilayah.ts`/`kelompok.ts` (CRUD + batas peran), karena data master ini dipakai semua dropdown.
 2. Tes `surat.service.ts` (PDF surat perpindahan) dengan memeriksa isi teks yang dihasilkan.
 3. Tes halaman web yang paling sering dipakai penatua: daftar Warga dan Validasi Data.
-4. Setelah upgrade `multer`, jalankan upload import dengan file Excel nyata di lokal (tes import saat ini me-mock Prisma).
+4. Tes import saat ini me-mock Prisma; coba import Excel nyata di lokal sebelum perubahan besar pada `import.ts`.
