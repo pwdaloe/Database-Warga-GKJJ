@@ -4,8 +4,10 @@ import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useDashboardStats, useDashboardSebaran, useDashboardTerbaru, useDashboardDemografi } from '@/hooks/useDashboard'
+import { useDashboardStats, useDashboardSebaran, useDashboardTerbaru, useDashboardDemografi, useDashboardKualitasData, useDashboardStatusKeanggotaan } from '@/hooks/useDashboard'
 import { DemografiCard } from './DemografiCard'
+import { KualitasDataCard } from './KualitasDataCard'
+import { StatusKeanggotaanCard } from './StatusKeanggotaanCard'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { useKomisiStats, useDashboardMap, useMasterKelurahan } from '@/hooks/usePengaturan'
 import { ROLE_LABELS } from '@/lib/auth'
@@ -48,6 +50,8 @@ export default function DashboardPage() {
   const { data: terbaru = [], isLoading: terbaruLoading } = useDashboardTerbaru(filter)
   const { data: komisiStats = [], isLoading: komisiLoading } = useKomisiStats(filter)
   const { data: demografi, isLoading: demografiLoading } = useDashboardDemografi(filter)
+  const { data: kualitasData, isLoading: kualitasLoading } = useDashboardKualitasData(filter)
+  const { data: statusKeanggotaan, isLoading: statusKeanggotaanLoading } = useDashboardStatusKeanggotaan(filter)
   const { data: kelurahanList = [] } = useMasterKelurahan()
   const [selectedKelurahan, setSelectedKelurahan] = useState('')
   const { data: mapData = [] } = useDashboardMap(selectedKelurahan || undefined, filter)
@@ -64,6 +68,8 @@ export default function DashboardPage() {
   const statCards: Array<{
     label: string
     value: number | undefined
+    /** Baris keterangan di bawah angka */
+    sub?: string
     icon: React.ElementType
     color: string
     onClick?: () => void
@@ -73,6 +79,9 @@ export default function DashboardPage() {
     {
       label: 'Total Warga',
       value: stats?.totalWarga,
+      sub: stats?.wargaAktifValid !== undefined
+        ? `${stats.wargaAktifValid.toLocaleString('id-ID')} aktif & tervalidasi`
+        : undefined,
       icon: Users,
       color: 'bg-blue-500',
       onClick: () => router.push('/warga'),
@@ -182,6 +191,7 @@ export default function DashboardPage() {
               </p>
             )}
             {card.highlight && <p className="text-xs text-orange-500 mt-1">Data status Draft</p>}
+            {card.sub && <p className="text-xs text-gray-500 mt-1">{card.sub}</p>}
           </div>
         ))}
       </div>
@@ -336,7 +346,12 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <DemografiCard data={demografi} isLoading={demografiLoading} />
+      <div className="grid gap-5 sm:gap-8 lg:grid-cols-2">
+        <StatusKeanggotaanCard data={statusKeanggotaan} isLoading={statusKeanggotaanLoading} />
+        <DemografiCard data={demografi} isLoading={demografiLoading} />
+      </div>
+
+      <KualitasDataCard data={kualitasData} isLoading={kualitasLoading} />
 
       {/* ── Peta warga (koordinat rumah disembunyikan untuk VIEWER — kebijakan PDP) ── */}
       {user?.role !== 'VIEWER' && (
