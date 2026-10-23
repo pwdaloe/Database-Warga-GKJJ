@@ -1,5 +1,5 @@
 const JENIS_LABEL: Record<string, string> = {
-  MASUK: 'Pindah Masuk', KELUAR: 'Pindah Keluar', MENINGGAL: 'Keterangan Kematian',
+  MASUK: 'Pindah Masuk', KELUAR: 'Pindah Gereja', MENINGGAL: 'Keterangan Kematian',
 }
 
 export function buildPerpindahanWhatsAppMessage(perpindahan: any): string {

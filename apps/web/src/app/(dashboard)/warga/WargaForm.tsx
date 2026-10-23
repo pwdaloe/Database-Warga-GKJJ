@@ -9,6 +9,7 @@ import { InputField, SelectField, TextareaField } from '@/components/ui/FormFiel
 import { useWilayahKelompok, useKeluargaList, useKeluargaDetail } from '@/hooks/useKeluarga'
 import { cn } from '@/lib/utils'
 import { parseCoordinateInput, parseCoordinatePair } from '@/lib/koordinat'
+import { STATUS_KEANGGOTAAN_BADGE, STATUS_KEANGGOTAAN_LABEL, STATUS_KEANGGOTAAN_OPTIONS, STATUS_KEANGGOTAAN_VALUES } from '@/lib/statusKeanggotaan'
 
 // ── Status Dokumen ─────────────────────────────────────────────
 const STATUS_DOKUMEN = [
@@ -29,13 +30,7 @@ const STATUS_KELUARGA_LABEL: Record<string, string> = {
   LAINNYA: 'Lainnya',
 }
 
-const STATUS_KEANGGOTAAN_COLOR: Record<string, string> = {
-  AKTIF: 'bg-green-100 text-green-700',
-  NON_AKTIF: 'bg-gray-100 text-gray-500',
-  KATEKUMEN: 'bg-blue-100 text-blue-700',
-  PINDAH_KELUAR: 'bg-orange-100 text-orange-700',
-  MENINGGAL: 'bg-red-100 text-red-600',
-}
+const STATUS_KEANGGOTAAN_COLOR = STATUS_KEANGGOTAAN_BADGE
 
 // ── Schema ─────────────────────────────────────────────────────
 const schema = z.object({
@@ -60,7 +55,7 @@ const schema = z.object({
   nik:                z.string().optional().nullable(),
   golonganDarah:      z.preprocess(v => v === '' ? null : v, z.enum(['A', 'B', 'AB', 'O']).optional().nullable()),
   statusKeluarga:     z.enum(['KEPALA', 'ISTRI', 'ANAK', 'MENANTU', 'CUCU', 'LAINNYA']),
-  statusKeanggotaan:  z.enum(['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_KELUAR', 'MENINGGAL']),
+  statusKeanggotaan:  z.enum(STATUS_KEANGGOTAAN_VALUES),
   sudahBaptis:        z.boolean().default(false),
   tanggalBaptis:      z.string().optional().nullable(),
   tempatBaptis:       z.string().max(150).optional().nullable(),
@@ -408,13 +403,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
             />
             <SelectField
               label="Status Keanggotaan" required
-              options={[
-                { value: 'AKTIF', label: 'Aktif' },
-                { value: 'NON_AKTIF', label: 'Non Aktif' },
-                { value: 'KATEKUMEN', label: 'Katekumen' },
-                { value: 'PINDAH_KELUAR', label: 'Pindah Keluar' },
-                { value: 'MENINGGAL', label: 'Meninggal' },
-              ]}
+              options={[...STATUS_KEANGGOTAAN_OPTIONS]}
               {...register('statusKeanggotaan')}
               error={errors.statusKeanggotaan}
             />
@@ -1001,12 +990,7 @@ function AnggotaTable({ anggota }: { anggota: any[] }) {
                     'px-2 py-0.5 rounded-full text-xs font-medium',
                     STATUS_KEANGGOTAAN_COLOR[w.statusKeanggotaan] ?? 'bg-gray-100 text-gray-500',
                   )}>
-                    {w.statusKeanggotaan === 'AKTIF' ? 'Aktif'
-                      : w.statusKeanggotaan === 'NON_AKTIF' ? 'Non Aktif'
-                      : w.statusKeanggotaan === 'KATEKUMEN' ? 'Katekumen'
-                      : w.statusKeanggotaan === 'PINDAH_KELUAR' ? 'Pindah'
-                      : w.statusKeanggotaan === 'MENINGGAL' ? 'Meninggal'
-                      : w.statusKeanggotaan}
+                    {STATUS_KEANGGOTAAN_LABEL[w.statusKeanggotaan] ?? w.statusKeanggotaan}
                   </span>
                 </td>
               </tr>

@@ -6,6 +6,7 @@ import { prisma } from '../utils/prisma.js'
 import { ok } from '../utils/response.js'
 import { ROLES } from './users.js'
 import { encryptField } from '../utils/crypto.js'
+import { STATUS_KEANGGOTAAN_VALUES } from '../constants/statusKeanggotaan.js'
 
 export const importRouter = Router()
 importRouter.use(authenticate)
@@ -180,7 +181,7 @@ importRouter.post(
         const statusKK = normEnum(raw.statusKeluarga,
           ['KEPALA','ISTRI','ANAK','MENANTU','CUCU','LAINNYA'], 'LAINNYA')
         const statusAnggota = normEnum(raw.statusKeanggotaan,
-          ['AKTIF','NON_AKTIF','KATEKUMEN','PINDAH_KELUAR','MENINGGAL'], 'AKTIF')
+          [...STATUS_KEANGGOTAAN_VALUES], 'AKTIF')
         const golDarah = ['A','B','AB','O'].includes(
           String(raw.golonganDarah ?? '').trim().toUpperCase())
           ? String(raw.golonganDarah).trim().toUpperCase() as any

@@ -115,7 +115,7 @@ describe('validatePerpindahan', () => {
 
   it.each([
     ['MASUK', 'AKTIF'],
-    ['KELUAR', 'PINDAH_KELUAR'],
+    ['KELUAR', 'PINDAH_GEREJA'],   // pindah gereja = ada surat atestasi; Pindah Agama (PINDAH_KELUAR) diisi manual
     ['MENINGGAL', 'MENINGGAL'],
   ])('sukses divalidasi untuk jenis %s dan meng-update statusKeanggotaan warga ke %s', async (jenis, statusExpected) => {
     mockedPerpindahanFindUnique.mockResolvedValue(basePerpindahan({ jenis, approvedBy: 5 }))

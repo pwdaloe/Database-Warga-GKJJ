@@ -243,7 +243,7 @@ describe('GET /api/dashboard/kualitas-data', () => {
 })
 
 describe('GET /api/dashboard/status-keanggotaan', () => {
-  it('semua lima status selalu ada (0 bila kosong), total = jumlahnya, urutan tetap', async () => {
+  it('semua status selalu ada (0 bila kosong), total = jumlahnya, urutan tetap', async () => {
     prisma.warga.groupBy.mockResolvedValue([{ statusKeanggotaan: 'MENINGGAL', _count: { _all: 2 } }, { statusKeanggotaan: 'AKTIF', _count: { _all: 74 } }])
     const res = await get('/api/dashboard/status-keanggotaan')
     expect(res.status).toBe(200)
@@ -251,7 +251,7 @@ describe('GET /api/dashboard/status-keanggotaan', () => {
       total: 76,
       data: [
         { status: 'AKTIF', jumlah: 74 }, { status: 'NON_AKTIF', jumlah: 0 }, { status: 'KATEKUMEN', jumlah: 0 },
-        { status: 'PINDAH_KELUAR', jumlah: 0 }, { status: 'MENINGGAL', jumlah: 2 },
+        { status: 'PINDAH_GEREJA', jumlah: 0 }, { status: 'PINDAH_KELUAR', jumlah: 0 }, { status: 'MENINGGAL', jumlah: 2 },
       ],
     })
   })

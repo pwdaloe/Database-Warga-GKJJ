@@ -72,7 +72,7 @@ DRAFT  →  VALIDASI  →  AKTIF  →  TIDAK AKTIF
 | Aktif | Sudah valid dan resmi |
 | Tidak Aktif | Dinonaktifkan (pindah, meninggal, dll.) |
 
-**Status keanggotaan** menunjukkan kondisi jemaat: Aktif, Non Aktif, Katekumen, Pindah Keluar, Meninggal.
+**Status keanggotaan** menunjukkan kondisi jemaat: Aktif, Non Aktif, Katekumen, Pindah Gereja (dengan surat atestasi), Pindah Agama, Meninggal. Hanya **Aktif** yang dihitung sebagai anggota aktif.
 
 ### 1.6 Perlindungan data pribadi (UU PDP No. 27/2022)
 
@@ -262,7 +262,8 @@ Sama dengan [3.1](#31-dashboard). Perhatikan kartu **Data Perlu Validasi**: klik
 | NIK | Tepat 16 digit, tanpa spasi atau tanda hubung |
 | WhatsApp/Telepon | `08XXXXXXXXXX` atau `628XXXXXXXXXX` |
 | Baptis/Sidi | Centang hanya jika sudah dijalani. Isi tanggal dan tempat jika tahu |
-| Pindah Keluar | Lampirkan nomor surat |
+| Pindah Gereja | Lampirkan nomor surat atestasi |
+| Pindah Agama | Tanpa surat atestasi; isi keterangan bila ada |
 | Meninggal | Isi tanggal jika diketahui |
 
 ### 4.3 Data Keluarga
@@ -414,7 +415,7 @@ Lihat [8.3](#83-menu-hubungi).
 3. **Ada di daftar:** ketuk kartunya untuk melihat detail.
 4. **Tidak ditemukan:** orang tersebut belum terdaftar. Lanjut ke [6.3](#63-menambah-warga-baru).
 
-Label status: Aktif, Non Aktif, Katekumen, Pindah, Meninggal.
+Label status: Aktif, Non Aktif, Katekumen, Pindah Gereja, Pindah Agama, Meninggal.
 
 ### 6.3 Menambah warga baru
 

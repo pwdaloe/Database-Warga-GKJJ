@@ -1,7 +1,5 @@
-export const STATUS_KEANGGOTAAN_LABEL: Record<string, string> = {
-  AKTIF: 'Aktif', NON_AKTIF: 'Non Aktif', KATEKUMEN: 'Katekumen',
-  PINDAH_KELUAR: 'Pindah Keluar', MENINGGAL: 'Meninggal',
-}
+export { STATUS_KEANGGOTAAN_LABEL } from './statusKeanggotaan'
+import { STATUS_KEANGGOTAAN_LABEL } from './statusKeanggotaan'
 
 export function buildWhatsAppMessage(warga: any): string {
   const kelompok = warga.keluarga?.kelompok

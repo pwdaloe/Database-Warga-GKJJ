@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { nomorWarga } from '@/lib/utils'
+import { STATUS_KEANGGOTAAN_HEX } from '@/lib/statusKeanggotaan'
 import 'leaflet/dist/leaflet.css'
 
 // Fix Leaflet default marker icons (Next.js webpack issue)
@@ -14,10 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-const STATUS_COLOR: Record<string, string> = {
-  AKTIF: '#16a34a', NON_AKTIF: '#6b7280', KATEKUMEN: '#2563eb',
-  PINDAH_KELUAR: '#ea580c', MENINGGAL: '#dc2626',
-}
+const STATUS_COLOR = STATUS_KEANGGOTAAN_HEX
 
 function makeIcon(status: string) {
   const color = STATUS_COLOR[status] ?? '#6b7280'

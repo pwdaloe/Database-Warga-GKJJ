@@ -4,6 +4,7 @@ import { authenticate, authorize } from '../middleware/auth.js'
 import * as svc from '../services/warga.service.js'
 import { ok, created, paginated } from '../utils/response.js'
 import { prisma } from '../utils/prisma.js'
+import { STATUS_KEANGGOTAAN_VALUES } from '../constants/statusKeanggotaan.js'
 
 export const wargaRouter = Router()
 
@@ -37,7 +38,7 @@ const bodySchema = z.object({
   nik:                z.string().length(16).optional().nullable(),
   golonganDarah:      z.enum(['A', 'B', 'AB', 'O']).optional().nullable(),
   statusKeluarga:     z.enum(['KEPALA', 'ISTRI', 'ANAK', 'MENANTU', 'CUCU', 'LAINNYA']).optional(),
-  statusKeanggotaan:  z.enum(['AKTIF', 'NON_AKTIF', 'KATEKUMEN', 'PINDAH_KELUAR', 'MENINGGAL']).optional(),
+  statusKeanggotaan:  z.enum(STATUS_KEANGGOTAAN_VALUES).optional(),
   dataStatus:         z.enum(['DRAFT', 'VALIDASI', 'AKTIF', 'TIDAK_AKTIF']).optional(),
   sudahBaptis:        z.boolean().optional(),
   tanggalBaptis:      z.string().date().optional().nullable(),

@@ -21,6 +21,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { InputField, SelectField } from '@/components/ui/FormField'
+import { STATUS_KEANGGOTAAN_OPTIONS } from '@/lib/statusKeanggotaan'
 
 // ── Wizard state ──────────────────────────────────────────────
 type WizardStep =
@@ -331,11 +332,7 @@ export default function WargaPage() {
               className="w-full lg:w-auto px-3 py-3 sm:py-2 rounded-lg border border-gray-300 text-base sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none"
             >
               <option value="">Semua Status</option>
-              <option value="AKTIF">Aktif</option>
-              <option value="NON_AKTIF">Non Aktif</option>
-              <option value="KATEKUMEN">Katekumen</option>
-              <option value="PINDAH_KELUAR">Pindah Keluar</option>
-              <option value="MENINGGAL">Meninggal</option>
+              {STATUS_KEANGGOTAAN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <select
               value={jenisKelamin}

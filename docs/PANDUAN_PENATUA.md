@@ -49,7 +49,7 @@ Setelah login, Anda otomatis berada di halaman **Data Warga** — daftar ini **h
    - **Ada dalam daftar** → data sudah tercatat. Ketuk kartu warga tersebut untuk melihat detail (status keanggotaan, apakah sudah baptis/sidi, dll). Lanjut ke **Bagian 3** kalau ingin mengirim kartu anggota.
    - **Tidak ditemukan / "Tidak ada data warga"** → orang ini belum terdaftar di sistem. Lanjut ke **Bagian 4** untuk mendaftarkannya.
 
-> **Catatan:** Setiap warga punya label status (Aktif / Non Aktif / Katekumen / Pindah / Meninggal). Data yang baru Anda tambahkan sendiri akan berstatus **Non Aktif/Draft** sampai staf kantor melengkapi dan memvalidasinya — ini normal, bukan error.
+> **Catatan:** Setiap warga punya label status (Aktif / Non Aktif / Katekumen / Pindah Gereja / Pindah Agama / Meninggal). Data yang baru Anda tambahkan sendiri akan berstatus **Non Aktif/Draft** sampai staf kantor melengkapi dan memvalidasinya — ini normal, bukan error.
 
 ---
 

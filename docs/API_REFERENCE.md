@@ -114,7 +114,7 @@ Setiap akses dicatat ke `AuditLog` dengan action `ACCESS` (UU PDP Pasal 16 & 49)
   "newKeluarga": { "kelompokId": "number", "alamat": "string", "...": "..." },
   "nik": "string (16 digit, opsional)",
   "statusKeluarga": "KEPALA | ISTRI | ANAK | MENANTU | CUCU | LAINNYA",
-  "statusKeanggotaan": "AKTIF | NON_AKTIF | KATEKUMEN | PINDAH_KELUAR | MENINGGAL",
+  "statusKeanggotaan": "AKTIF | NON_AKTIF | KATEKUMEN | PINDAH_GEREJA | PINDAH_KELUAR | MENINGGAL",
   "konsenPDP": "boolean",
   "...": "field kontak, sakramen, alamat, foto — lihat bodySchema di warga.ts"
 }
@@ -197,7 +197,7 @@ Mengisi `approvedBy` (dari token) dan `approvedAt`. **Tidak** mengubah `warga.st
 ### `POST /perpindahan/:id/validate`
 **Role:** SUPERADMIN, KEPALA_KANTOR
 
-Mensyaratkan sudah `approved`. Mengisi `validatedBy`/`validatedAt` DAN mengupdate `warga.statusKeanggotaan` dalam satu transaksi sesuai mapping: `MASUK`→`AKTIF`, `KELUAR`→`PINDAH_KELUAR`, `MENINGGAL`→`MENINGGAL`.
+Mensyaratkan sudah `approved`. Mengisi `validatedBy`/`validatedAt` DAN mengupdate `warga.statusKeanggotaan` dalam satu transaksi sesuai mapping: `MASUK`→`AKTIF`, `KELUAR`→`PINDAH_GEREJA` (surat atestasi), `MENINGGAL`→`MENINGGAL`. `PINDAH_KELUAR` (tampil sebagai "Pindah Agama") hanya diisi manual.
 
 **Error:** 400 jika belum di-approve.
 

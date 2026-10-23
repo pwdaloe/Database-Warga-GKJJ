@@ -1,12 +1,9 @@
 import { cn } from '@/lib/utils'
+import { STATUS_KEANGGOTAAN_META } from '@/lib/statusKeanggotaan'
 
-const STATUS_KEANGGOTAAN: Record<string, { label: string; className: string }> = {
-  AKTIF:        { label: 'Aktif',         className: 'bg-green-100 text-green-700' },
-  NON_AKTIF:    { label: 'Non Aktif',     className: 'bg-gray-100 text-gray-600' },
-  KATEKUMEN:    { label: 'Katekumen',     className: 'bg-blue-100 text-blue-700' },
-  PINDAH_KELUAR:{ label: 'Pindah Keluar', className: 'bg-orange-100 text-orange-700' },
-  MENINGGAL:    { label: 'Meninggal',     className: 'bg-red-100 text-red-700' },
-}
+const STATUS_KEANGGOTAAN: Record<string, { label: string; className: string }> = Object.fromEntries(
+  STATUS_KEANGGOTAAN_META.map((s) => [s.value, { label: s.label, className: s.badge }]),
+)
 
 const DATA_STATUS: Record<string, { label: string; className: string }> = {
   DRAFT:       { label: 'Draft',       className: 'bg-gray-100 text-gray-500' },

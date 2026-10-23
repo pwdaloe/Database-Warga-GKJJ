@@ -359,7 +359,10 @@ Setiap warga memiliki **Status Dokumen** yang mencerminkan kualitas datanya:
 - `AKTIF` — jemaat aktif mengikuti kegiatan gereja
 - `KATEKUMEN` — sedang mengikuti katekisasi
 - `NON_AKTIF` — tidak aktif, masih terdaftar
-- `PINDAH_KELUAR` — resmi pindah ke gereja lain (lampirkan nomor surat)
+- `PINDAH_GEREJA` — pindah ke gereja lain dengan surat atestasi (lampirkan nomor surat); terisi otomatis saat Perpindahan jenis "Pindah Gereja" divalidasi
+- `PINDAH_KELUAR` — tampil sebagai **Pindah Agama** (tanpa surat atestasi); diisi manual. Kode `PINDAH_KELUAR` dipertahankan di database demi keamanan data
+
+Hanya **Aktif** yang dihitung sebagai anggota aktif; Non Aktif, Katekumen, Pindah Gereja, Pindah Agama, dan Meninggal tidak.
 - `MENINGGAL` — sudah meninggal dunia (isi tanggal jika diketahui)
 
 **Status Baptis & Sidi:**
@@ -718,6 +721,7 @@ Deploy ke production
 
 | Fitur | Status | Keterangan |
 |---|---|---|
+| Status Keanggotaan: tambah "Pindah Gereja", "Pindah Keluar" menjadi "Pindah Agama" | ✅ Opsi A selesai (23 Okt), belum dideploy | Satu daftar bersama di API (`constants/statusKeanggotaan.ts`) dan web (`lib/statusKeanggotaan.ts`), dijaga tes agar selalu sama dengan enum database. Perpindahan KELUAR kini menghasilkan Pindah Gereja. Pindah Gereja dan Pindah Agama tidak dihitung aktif. **Opsi B (master yang bisa diubah di Pengaturan)** ditunda: perlu migrasi enum → tabel master di produksi, dikerjakan bila memang sering menambah status |
 | Pembuatan akun Jemaat massal | 🗓️ Usulan | Pilih banyak warga → akun + tautan WhatsApp berurutan (saat ini satu per satu) |
 | Survei & kebutuhan jemaat | 🗓️ Usulan | Struktur sudah siap (`CatatanJemaat.jenis`: CATATAN, KEBUTUHAN, SURVEI); belum ada antarmuka |
 | Pengingat akun belum login | 🗓️ Usulan | Template pengingat ditunda dari Sprint 10 |
