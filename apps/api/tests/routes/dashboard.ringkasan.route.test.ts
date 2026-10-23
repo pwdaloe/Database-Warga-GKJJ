@@ -41,12 +41,12 @@ describe('GET /api/dashboard/* tanpa token', () => {
 
 describe('GET /api/dashboard/stats', () => {
   it('mengembalikan empat angka ringkasan; kelompok null untuk non-penatua', async () => {
-    prisma.warga.count.mockResolvedValueOnce(76).mockResolvedValueOnce(74)   // total, lalu draft
+    prisma.warga.count.mockResolvedValueOnce(76).mockResolvedValueOnce(74).mockResolvedValueOnce(2)   // total, draft, aktif & tervalidasi
     prisma.keluarga.count.mockResolvedValue(7)
     prisma.kelompok.count.mockResolvedValue(23)
     const res = await get('/api/dashboard/stats')
     expect(res.status).toBe(200)
-    expect(res.body.data).toEqual({ totalWarga: 76, totalKeluarga: 7, wargaDraft: 74, kelompokAktif: 23, kelompok: null })
+    expect(res.body.data).toEqual({ totalWarga: 76, totalKeluarga: 7, wargaDraft: 74, wargaAktifValid: 2, kelompokAktif: 23, kelompok: null })
     expect(prisma.kelompok.findUnique).not.toHaveBeenCalled()
   })
 
@@ -55,6 +55,21 @@ describe('GET /api/dashboard/stats', () => {
     const draftWhere = prisma.warga.count.mock.calls[1]![0].where
     expect(JSON.stringify(draftWhere)).toContain('"dataStatus":"DRAFT"')
     expect(JSON.stringify(draftWhere)).toContain('"kelompokId":3')
+  })
+
+  it('"aktif & tervalidasi" = status dokumen AKTIF DAN keanggotaan AKTIF; total tidak difilter status', async () => {
+    await get('/api/dashboard/stats')
+    const [total, , aktifValid] = prisma.warga.count.mock.calls.map((c: any) => c[0].where)
+    expect(total).toEqual({})                                            // semua warga yang tercatat
+    expect(JSON.stringify(aktifValid)).toContain('"dataStatus":"AKTIF"')
+    expect(JSON.stringify(aktifValid)).toContain('"statusKeanggotaan":"AKTIF"')
+  })
+
+  it('"aktif & tervalidasi" ikut cakupan penatua dan filter wilayah/kelompok', async () => {
+    await get('/api/dashboard/stats?wilayahId=2', 'PENATUA_KELOMPOK', 3)
+    const aktifValid = JSON.stringify(prisma.warga.count.mock.calls[2]![0].where)
+    expect(aktifValid).toContain('"kelompokId":3')
+    expect(aktifValid).toContain('"wilayahId":2')
   })
 
   it('filter wilayah/kelompok membatasi hitungan kelompok aktif; filter tidak valid diabaikan', async () => {

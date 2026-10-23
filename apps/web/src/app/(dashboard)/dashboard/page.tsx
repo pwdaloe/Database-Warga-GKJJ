@@ -64,6 +64,8 @@ export default function DashboardPage() {
   const statCards: Array<{
     label: string
     value: number | undefined
+    /** Baris keterangan di bawah angka */
+    sub?: string
     icon: React.ElementType
     color: string
     onClick?: () => void
@@ -73,6 +75,9 @@ export default function DashboardPage() {
     {
       label: 'Total Warga',
       value: stats?.totalWarga,
+      sub: stats?.wargaAktifValid !== undefined
+        ? `${stats.wargaAktifValid.toLocaleString('id-ID')} aktif & tervalidasi`
+        : undefined,
       icon: Users,
       color: 'bg-blue-500',
       onClick: () => router.push('/warga'),
@@ -182,6 +187,7 @@ export default function DashboardPage() {
               </p>
             )}
             {card.highlight && <p className="text-xs text-orange-500 mt-1">Data status Draft</p>}
+            {card.sub && <p className="text-xs text-gray-500 mt-1">{card.sub}</p>}
           </div>
         ))}
       </div>

@@ -9,14 +9,16 @@ import {
 export const dashboardRouter = Router()
 dashboardRouter.use(authenticate)
 
-// GET /api/dashboard/stats?wilayahId=&kelompokId= — total warga, keluarga, draft, kelompok aktif
+// GET /api/dashboard/stats?wilayahId=&kelompokId= — total warga (semua yang tercatat), keluarga, draft, aktif & tervalidasi, kelompok aktif
 dashboardRouter.get('/stats', async (req, res) => {
   const user = req.user!
   const f = parseDashboardFilter(req.query)
-  const [totalWarga, totalKeluarga, wargaDraft, kelompokAktif, kelompok] = await Promise.all([
+  const [totalWarga, totalKeluarga, wargaDraft, wargaAktifValid, kelompokAktif, kelompok] = await Promise.all([
     prisma.warga.count({ where: wargaWhere(user, f) }),
     prisma.keluarga.count({ where: keluargaWhere(user, f) }),
     prisma.warga.count({ where: { AND: [wargaWhere(user, f), { dataStatus: 'DRAFT' }] } }),
+    // Warga yang datanya sudah final (status dokumen AKTIF) dan masih berstatus anggota aktif
+    prisma.warga.count({ where: { AND: [wargaWhere(user, f), { dataStatus: 'AKTIF', statusKeanggotaan: 'AKTIF' }] } }),
     prisma.kelompok.count({
       where: { aktif: true, ...(f.wilayahId ? { wilayahId: f.wilayahId } : {}), ...(f.kelompokId ? { id: f.kelompokId } : {}) },
     }),
@@ -28,7 +30,7 @@ dashboardRouter.get('/stats', async (req, res) => {
       : null,
   ])
   // `kelompok` terisi hanya untuk pengguna yang dibatasi ke satu kelompok
-  ok(res, { totalWarga, totalKeluarga, wargaDraft, kelompokAktif, kelompok })
+  ok(res, { totalWarga, totalKeluarga, wargaDraft, wargaAktifValid, kelompokAktif, kelompok })
 })
 
 // GET /api/dashboard/sebaran?wilayahId=&kelompokId= — jumlah warga & keluarga per wilayah dan per kelompok.

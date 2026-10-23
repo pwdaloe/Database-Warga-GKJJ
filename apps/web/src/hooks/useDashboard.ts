@@ -5,6 +5,8 @@ export interface DashboardStats {
   totalWarga: number
   totalKeluarga: number
   wargaDraft: number
+  /** Status dokumen AKTIF dan status keanggotaan AKTIF */
+  wargaAktifValid: number
   kelompokAktif: number
   /** Terisi hanya untuk pengguna yang dibatasi ke satu kelompok (Penatua Kelompok) */
   kelompok: { id: number; kode: string; nama: string } | null
