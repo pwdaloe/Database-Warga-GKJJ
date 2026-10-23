@@ -3,6 +3,7 @@
  *   npm run db:integritas --workspace=apps/api
  * Exit code 1 bila ada temuan.
  */
+import 'dotenv/config'
 import { cekIntegritas } from '../src/services/integritas.service.js'
 import { prisma } from '../src/utils/prisma.js'
 

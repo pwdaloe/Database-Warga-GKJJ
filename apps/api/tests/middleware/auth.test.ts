@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest'
 import jwt from 'jsonwebtoken'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '../../src/generated/prisma/client.js'
 import { authenticate, authorize } from '../../src/middleware/auth.js'
 import { AppError } from '../../src/middleware/errorHandler.js'
 

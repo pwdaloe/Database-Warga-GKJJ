@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '../generated/prisma/client.js'
 import { AppError } from './errorHandler.js'
 
 export interface JwtPayload {

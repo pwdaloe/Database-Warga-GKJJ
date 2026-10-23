@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createHash } from 'crypto'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '../../src/generated/prisma/client.js'
 
 vi.mock('../../src/utils/prisma.js', () => ({
   prisma: {

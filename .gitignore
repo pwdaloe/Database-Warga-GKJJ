@@ -18,3 +18,6 @@ coverage
 
 # File impor pengguna lokal (berisi data & kredensial awal) — jangan ter-commit tidak sengaja
 docs/final-import-*.xlsx
+
+# Prisma Client hasil generate (Prisma 7)
+apps/api/src/generated/
