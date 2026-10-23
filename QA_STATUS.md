@@ -6,7 +6,7 @@
 
 | Layer | Test Files | Test Runner | Tests | Coverage (statement) |
 |-------|-----------|-------------|-------|----------------------|
-| Backend API (`apps/api`) | 24 | ✅ Vitest + Supertest | 395 passed | 78,5% |
+| Backend API (`apps/api`) | 28 | ✅ Vitest + Supertest | 464 passed | 85,0% |
 | Frontend (`apps/web`) | 22 | ✅ Vitest + React Testing Library | 137 passed | 17,8% |
 
 Type-check (`tsc --noEmit`) API dan web lulus; `next build` berhasil (23 Okt 2026, setelah patch dependensi).
@@ -31,6 +31,9 @@ Jalankan test: `npm run test --workspace=apps/api` / `npm run test --workspace=a
 | Akun & WhatsApp | `routes/akun-wa.route.test.ts` | password acak, notifikasi, template, kontak gereja |
 | Jemaat | `routes/jemaat.route.test.ts` | role Jemaat, Profil Saya |
 | Sistem | `routes/system.route.test.ts` | status sistem dan versi |
+| Log & publik | `routes/logs.route.test.ts`, `public.route.test.ts` | hanya SUPERADMIN/KEPALA_KANTOR, filter + paginasi, validasi `days` hapus massal, serialisasi BigInt; endpoint QR publik hanya memilih kolom terbatas (tes menjaga batas privasi) |
+| Ringkasan dashboard | `routes/dashboard.ringkasan.route.test.ts` | stats, sebaran, terbaru, komisi-stats: cakupan penatua (fail-closed), filter, urutan majelis |
+| Perpindahan (akses) | `routes/perpindahan.akses.route.test.ts` | otorisasi per aksi, kirim email, surat PDF |
 | Data master | `routes/wilayah.route.test.ts`, `kelompok.route.test.ts`, `keluarga.route.test.ts` | matriks otorisasi tulis (403 tanpa menyentuh DB), validasi Zod, filter aktif/wilayah, urutan hapus wilayah, toggle aktif, 404/409 dari Prisma |
 
 ### Frontend (`apps/web/src/`)
@@ -40,16 +43,13 @@ Form dan payload Warga (round-trip, alamat KK, koordinat), Keluarga (payload, mo
 
 | Route | Coverage | Catatan |
 |---|---|---|
-| `hubungi.ts`, `system.ts`, `keluarga.ts`, `kelompok.ts`, `wilayah.ts` | 100% | tiga terakhir ditambah 24 Okt (otorisasi per peran, validasi, filter, urutan hapus); `keluarga.ts` meng-mock service, cakupan cakupan-kelompok ada di `keluarga.service.test.ts` |
+| `hubungi.ts`, `system.ts`, `keluarga.ts`, `kelompok.ts`, `wilayah.ts`, `logs.ts`, `public.ts`, `dashboard.ts` | 100% | `keluarga`, `kelompok`, `wilayah`, `logs`, `public`, `dashboard` ditambah 24 Okt (otorisasi per peran, validasi, filter, urutan hapus); `keluarga.ts` meng-mock service, cakupan cakupan-kelompok ada di `keluarga.service.test.ts` |
+| `perpindahan.ts` | 95% | matriks otorisasi per aksi, surat PDF, kirim email |
 | `import.ts` | 94% | |
 | `auth.ts` | 78% | |
 | `users.ts` | 75% | |
 | `warga.ts` | 71% | |
 | `pengaturan.ts` | 61% | |
-| `perpindahan.ts` | 50% | |
-| `dashboard.ts` | 38% | endpoint demografi dan filter diuji, sisanya belum |
-| `logs.ts` | 22% | |
-| `public.ts` | 18% | |
 
 Service yang paling lemah: `surat.service.ts` (5%) dan `email.service.ts` (54%); ada dua service lain di bawah 70% dan satu di 0% (nama terpotong di laporan coverage, perlu dicek). Fondasi (`auth.service`, `warga.service`, middleware, util) di atas 90%.
 
@@ -65,5 +65,5 @@ Service yang paling lemah: `surat.service.ts` (5%) dan `email.service.ts` (54%);
 
 1. Tes `surat.service.ts` (PDF surat perpindahan) dengan memeriksa isi teks yang dihasilkan.
 2. Tes halaman web yang paling sering dipakai penatua: daftar Warga dan Validasi Data.
-3. Tes route `dashboard.ts`, `logs.ts`, `public.ts`, `perpindahan.ts` (coverage 18–50%).
+3. Tes route `pengaturan.ts` (61%), `users.ts` (75%), `warga.ts` (71%, cabang 34%), `auth.ts` (78%).
 4. Tes import saat ini me-mock Prisma; coba import Excel nyata di lokal sebelum perubahan besar pada `import.ts`.

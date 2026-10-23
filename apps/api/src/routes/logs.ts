@@ -50,7 +50,8 @@ logsRouter.get('/', async (req, res) => {
 
 // DELETE /api/logs — hapus log lebih tua dari N hari (default 90)
 logsRouter.delete('/', async (req, res) => {
-  const days = Number(req.query['days'] ?? 90)
+  // days wajib bilangan bulat >= 1: 0/negatif akan menghapus SEMUA log, teks menghasilkan tanggal tidak valid
+  const { days } = z.object({ days: z.coerce.number().int().min(1).default(90) }).parse(req.query)
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
   const { count } = await prisma.activityLog.deleteMany({
     where: { createdAt: { lt: cutoff } },
