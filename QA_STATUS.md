@@ -1,53 +1,71 @@
 # QA Status
-**Last Check**: 2026-07-04
+**Last Check**: 2026-10-23
 **Project**: Database Warga GKJJ
 
 ## Ringkasan
 
-| Layer | Test Files | Test Runner | Tests |
-|-------|-----------|-------------|-------|
-| Backend API (`apps/api`) | 5 | ✅ Vitest + Supertest | 35 passed |
-| Frontend (`apps/web`) | 2 | ✅ Vitest + React Testing Library | 11 passed |
+| Layer | Test Files | Test Runner | Tests | Coverage (statement) |
+|-------|-----------|-------------|-------|----------------------|
+| Backend API (`apps/api`) | 21 | ✅ Vitest + Supertest | 312 passed | 74,9% |
+| Frontend (`apps/web`) | 22 | ✅ Vitest + React Testing Library | 137 passed | 17,8% |
 
-**Catatan stack**: Project ini pakai **Express + TypeScript + Prisma** di backend dan **Next.js 15** di frontend (bukan Python/FastAPI) — Vitest dipilih untuk kedua workspace agar konsisten satu tool di seluruh monorepo.
+Type-check (`tsc --noEmit`) API dan web lulus; `next build` berhasil (23 Okt 2026, setelah patch dependensi).
+
+**Catatan stack**: Express + TypeScript + Prisma di backend, Next.js 15 di frontend. Vitest dipakai di kedua workspace.
 
 Jalankan test: `npm run test --workspace=apps/api` / `npm run test --workspace=apps/web` (atau `test:watch`, `test:coverage`).
 
 ## Test yang sudah ditulis
 
 ### Backend (`apps/api/tests/`)
-| File | Area | Cakupan |
+| Area | File | Cakupan |
 |---|---|---|
-| `utils/crypto.test.ts` | Enkripsi field (NIK, dll) | roundtrip, determinisme, null handling, backward-compat, error jika key tidak ada |
-| `middleware/errorHandler.test.ts` | Error handler global | ZodError, AppError, Prisma P2002/P2025/P2003, prod vs dev message |
-| `middleware/auth.test.ts` | JWT authenticate/authorize | token hilang/invalid, role guard |
-| `services/auth.service.test.ts` | login/getMe/changePassword (prisma di-mock) | happy path + semua error path |
-| `routes/auth.route.test.ts` | Route `/api/auth/*` end-to-end via supertest | validasi 400, 401, 201 |
+| Util | `utils/crypto.test.ts`, `utils/waNumber.test.ts` | enkripsi NIK (roundtrip, determinisme, null), normalisasi nomor WhatsApp |
+| Middleware | `middleware/auth.test.ts`, `middleware/errorHandler.test.ts` | JWT dan role guard, ZodError/AppError/Prisma P2002/P2025/P2003 |
+| Auth | `services/auth.service*.test.ts`, `routes/auth*.test.ts` | login, ganti password, reset password mandiri |
+| Warga | `services/warga.service.test.ts`, `warga.kepala-kk.test.ts`, `warga.roundtrip.test.ts`, `routes/warga.keanggotaan.route.test.ts` | validasi, kepala KK, round-trip edit per peran, Keanggotaan (Sidi, Menikah) |
+| Keluarga | `services/keluarga.service.test.ts` | pindah KK, KK kosong, penunjuk kepala |
+| Import | `routes/import.route.test.ts` | bulk import Excel |
+| Dashboard | `routes/dashboard.route.test.ts`, `services/dashboardScope.test.ts` | cakupan per kelompok, filter wilayah/kelompok, demografi |
+| Perpindahan | `services/perpindahan.service.test.ts`, `routes/perpindahan.route.test.ts` | alur 2 tahap, surat |
+| Akun & WhatsApp | `routes/akun-wa.route.test.ts` | password acak, notifikasi, template, kontak gereja |
+| Jemaat | `routes/jemaat.route.test.ts` | role Jemaat, Profil Saya |
+| Sistem | `routes/system.route.test.ts` | status sistem dan versi |
 
-### Frontend (`apps/web/src/components/ui/`)
-| File | Area |
-|---|---|
-| `Badge.test.tsx` | Mapping label per tipe status, fallback nilai tak dikenal |
-| `Pagination.test.tsx` | Rentang data, tombol prev/next disabled, klik nomor halaman |
+### Frontend (`apps/web/src/`)
+Form dan payload Warga (round-trip, alamat KK, koordinat), Keluarga (payload, modal hapus KK), Profil Saya, Hubungi, Info Akun, Perpindahan, Reset Password, kartu Demografi, ProtectedRoute, UpdateBanner, versi aplikasi, helper Excel, Badge, Pagination.
 
-## Endpoint Coverage Matrix (`apps/api/src/routes`)
+## Coverage route backend (`apps/api/src/routes`, statement)
 
-| Route file | Test Ada? |
-|---|---|
-| `auth.ts` | ✅ |
-| `dashboard.ts` | ❌ |
-| `import.ts` | ❌ (bulk import Excel — 313 baris, perlu effort tersendiri) |
-| `kelompok.ts` | ❌ |
-| `keluarga.ts` | ❌ |
-| `logs.ts` | ❌ |
-| `pengaturan.ts` | ❌ |
-| `public.ts` | ❌ |
-| `users.ts` | ❌ |
-| `warga.ts` | ❌ (bulk validate/revert — 349 baris service, perlu effort tersendiri) |
-| `wilayah.ts` | ❌ |
+| Route | Coverage | Catatan |
+|---|---|---|
+| `hubungi.ts`, `system.ts` | 100% | |
+| `import.ts` | 94% | |
+| `auth.ts` | 78% | |
+| `users.ts` | 75% | |
+| `warga.ts` | 71% | |
+| `pengaturan.ts` | 61% | |
+| `perpindahan.ts` | 50% | |
+| `dashboard.ts` | 38% | endpoint demografi dan filter diuji, sisanya belum |
+| `keluarga.ts` | 38% | logika di service teruji, route belum |
+| `kelompok.ts` | 33% | |
+| `wilayah.ts` | 26% | |
+| `logs.ts` | 22% | |
+| `public.ts` | 18% | |
+
+Service yang paling lemah: `surat.service.ts` (5%) dan `email.service.ts` (54%); ada dua service lain di bawah 70% dan satu di 0% (nama terpotong di laporan coverage, perlu dicek). Fondasi (`auth.service`, `warga.service`, middleware, util) di atas 90%.
+
+## Celah dan risiko
+
+- **Data nyata lolos dari test**: sudah 9x terjadi; varian relasional dijawab oleh `integritas.service` + `npm run db:integritas` (dijalankan setelah tiap deploy). Pasca-deploy 23 Okt: 8 KK kosong ditemukan, sedang dibersihkan manual oleh admin lewat aplikasi.
+- **Frontend 17,8%**: halaman dan hook belum diuji; yang teruji adalah payload, form kunci, dan komponen UI.
+- **Belum pernah diuji visual di browser**: form Keanggotaan desktop, detail warga, halaman `/m`. Kartu Demografi dan form Keanggotaan (390px) dicek 23 Okt.
+- **Constraint DB tidak ikut `prisma db push`**: CHECK `warga_menikah_konsisten_chk` harus dipasang manual (sudah diverifikasi di produksi).
+- **Dependensi**: 7 temuan `npm audit --omit=dev` tersisa (4 high, 3 moderate), butuh upgrade mayor Prisma 7 / Next 16.
 
 ## Rekomendasi
 
-1. **Prioritas berikutnya**: `warga.service.ts` (bulk validate/revert) dan `import.ts` (bulk import Excel) — ini area paling berisiko karena langsung menyentuh ~2000 data warga produksi, tapi juga paling besar (300+ baris), jadi butuh sesi `/qa write` terpisah dengan fixture data Excel contoh.
-2. Untuk `import.ts`/`warga.ts`, pertimbangkan test dengan Prisma di-mock (unit-style, seperti `auth.service.test.ts`) dulu sebelum investasi ke integration test dengan Postgres test database sungguhan.
-3. Jalankan `/qa write` lagi untuk melanjutkan ke `keluarga.ts`, `users.ts`, dan komponen frontend yang lebih kompleks (form, tabel data warga).
+1. Tes route `keluarga.ts` dan `wilayah.ts`/`kelompok.ts` (CRUD + batas peran), karena data master ini dipakai semua dropdown.
+2. Tes `surat.service.ts` (PDF surat perpindahan) dengan memeriksa isi teks yang dihasilkan.
+3. Tes halaman web yang paling sering dipakai penatua: daftar Warga dan Validasi Data.
+4. Setelah upgrade `multer`, jalankan upload import dengan file Excel nyata di lokal (tes import saat ini me-mock Prisma).
