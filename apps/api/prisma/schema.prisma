@@ -148,6 +148,10 @@ model Warga {
   sudahSidi                Boolean             @default(false) @map("sudah_sidi")
   nomorSidi                String?             @map("nomor_sidi") @db.VarChar(30)
   tanggalSidi              DateTime?           @map("tanggal_sidi") @db.Date
+  tempatSidi               String?             @map("tempat_sidi") @db.VarChar(150)
+  sudahMenikah             Boolean             @default(false) @map("sudah_menikah") // pemberkatan nikah di gereja
+  tanggalMenikah           DateTime?           @map("tanggal_menikah") @db.Date
+  tempatMenikah            String?             @map("tempat_menikah") @db.VarChar(150)
   telepon                  String?             @db.VarChar(20)
   whatsapp                 String?             @db.VarChar(20)
   whatsappBolehDitampilkan Boolean             @default(false) @map("whatsapp_boleh_ditampilkan")

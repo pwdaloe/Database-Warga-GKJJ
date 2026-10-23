@@ -76,3 +76,21 @@ export function useDashboardTerbaru(f: DashboardFilter = {}) {
     },
   })
 }
+
+export interface Demografi {
+  total: number
+  pria: number
+  wanita: number
+  persenPria: number
+  persenWanita: number
+}
+
+export function useDashboardDemografi(f: DashboardFilter = {}) {
+  return useQuery({
+    queryKey: ['dashboard', 'demografi', f],
+    queryFn: async () => {
+      const res = await api.get('/dashboard/demografi', { params: filterParams(f) })
+      return res.data.data as Demografi
+    },
+  })
+}

@@ -34,8 +34,11 @@ const WARGA_LENGKAP = {
   tanggalBaptis: '1961-01-01T00:00:00.000Z',
   tempatBaptis: 'GKJ Semarang',
   sudahSidi: true,
-  nomorSidi: 'SD-77',
   tanggalSidi: '1975-06-01T00:00:00.000Z',
+  tempatSidi: 'GKJ Jakarta',
+  sudahMenikah: true,
+  tanggalMenikah: '1985-08-17T00:00:00.000Z',
+  tempatMenikah: 'GKJ Pondok Gede',
   telepon: '0211234567',
   whatsapp: '0812000111',
   whatsappBolehDitampilkan: true,
@@ -74,12 +77,25 @@ describe('round-trip WargaForm — Kepala Keluarga dengan semua field terisi', (
       tanggalLahir: tglDatang(WARGA_LENGKAP.tanggalLahir), nik: '3171234567890001', golonganDarah: 'O',
       statusKeluarga: 'KEPALA', statusKeanggotaan: 'AKTIF',
       sudahBaptis: true, tanggalBaptis: tglDatang(WARGA_LENGKAP.tanggalBaptis), tempatBaptis: 'GKJ Semarang',
-      sudahSidi: true, nomorSidi: 'SD-77', tanggalSidi: tglDatang(WARGA_LENGKAP.tanggalSidi),
+      sudahSidi: true, tanggalSidi: tglDatang(WARGA_LENGKAP.tanggalSidi), tempatSidi: 'GKJ Jakarta',
+      sudahMenikah: true, tanggalMenikah: tglDatang(WARGA_LENGKAP.tanggalMenikah), tempatMenikah: 'GKJ Pondok Gede',
       telepon: '0211234567', whatsapp: '0812000111', whatsappBolehDitampilkan: true, email: 'soenarto@example.com',
       pendidikanTerakhir: 'S1', pekerjaan: 'Pensiunan', fotoUrl: 'data:image/jpeg;base64,AAAA',
       alamatKtp: 'Jl. KTP No. 1', alamatDomisili: 'Jl. Domisili No. 2',
       latitude: -6.2088, longitude: 106.8456, catatan: 'Catatan uji', konsenPDP: true,
     })
+  })
+
+  it('Menikah tidak dicentang → tanggal & gereja pemberkatan dikosongkan di payload (CHECK DB)', async () => {
+    const payload: any = await submitTanpaUbah({ ...WARGA_LENGKAP, sudahMenikah: false })
+    expect(payload.sudahMenikah).toBe(false)
+    expect(payload.tanggalMenikah).toBeNull()
+    expect(payload.tempatMenikah).toBeNull()
+  })
+
+  it('nomorSidi lama tidak ikut dikirim (disembunyikan, tidak ditimpa)', async () => {
+    const payload: any = await submitTanpaUbah({ ...WARGA_LENGKAP, nomorSidi: 'SD-77' })
+    expect('nomorSidi' in payload).toBe(false)
   })
 
   it('alamat KK dimuat dan dikirim sebagai alamatKeluarga (bukan newKeluarga)', async () => {

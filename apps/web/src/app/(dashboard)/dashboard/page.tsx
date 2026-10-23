@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useDashboardStats, useDashboardSebaran, useDashboardTerbaru } from '@/hooks/useDashboard'
+import { useDashboardStats, useDashboardSebaran, useDashboardTerbaru, useDashboardDemografi } from '@/hooks/useDashboard'
+import { DemografiCard } from './DemografiCard'
 import { useWilayahKelompok } from '@/hooks/useKeluarga'
 import { useKomisiStats, useDashboardMap, useMasterKelurahan } from '@/hooks/usePengaturan'
 import { ROLE_LABELS } from '@/lib/auth'
@@ -46,6 +47,7 @@ export default function DashboardPage() {
   const { data: sebaran = [], isLoading: sebaranLoading } = useDashboardSebaran(filter)
   const { data: terbaru = [], isLoading: terbaruLoading } = useDashboardTerbaru(filter)
   const { data: komisiStats = [], isLoading: komisiLoading } = useKomisiStats(filter)
+  const { data: demografi, isLoading: demografiLoading } = useDashboardDemografi(filter)
   const { data: kelurahanList = [] } = useMasterKelurahan()
   const [selectedKelurahan, setSelectedKelurahan] = useState('')
   const { data: mapData = [] } = useDashboardMap(selectedKelurahan || undefined, filter)
@@ -333,6 +335,8 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <DemografiCard data={demografi} isLoading={demografiLoading} />
 
       {/* ── Peta warga (koordinat rumah disembunyikan untuk VIEWER — kebijakan PDP) ── */}
       {user?.role !== 'VIEWER' && (

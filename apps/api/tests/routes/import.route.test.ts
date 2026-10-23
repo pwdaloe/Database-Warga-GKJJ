@@ -195,6 +195,29 @@ describe('POST /api/import/warga', () => {
     )
   })
 
+  it('kolom Keanggotaan baru: tempat sidi + data pemberkatan nikah tersimpan', async () => {
+    mockedWargaCreate.mockResolvedValue({ id: 7 })
+    await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`)
+      .send({ rows: [baseRow({ sudahSidi: 'Y', tanggalSidi: '01/06/1975', tempatSidi: 'GKJ Jakarta',
+        sudahMenikah: 'Y', tanggalMenikah: '17/08/1985', tempatMenikah: 'GKJ Pondok Gede' })] })
+    const data = mockedWargaCreate.mock.calls[0]![0].data
+    expect(data).toMatchObject({ tempatSidi: 'GKJ Jakarta', sudahMenikah: true, tempatMenikah: 'GKJ Pondok Gede' })
+    expect(data.tanggalMenikah).toBeInstanceOf(Date)
+  })
+
+  it('tanggal/gereja nikah terisi tanpa kolom Menikah → dianggap sudah menikah (tidak melanggar CHECK DB)', async () => {
+    mockedWargaCreate.mockResolvedValue({ id: 7 })
+    await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`)
+      .send({ rows: [baseRow({ tempatMenikah: 'GKJ Pondok Gede' })] })
+    expect(mockedWargaCreate.mock.calls[0]![0].data).toMatchObject({ sudahMenikah: true, tempatMenikah: 'GKJ Pondok Gede' })
+  })
+
+  it('tanpa data nikah → sudahMenikah false dan tanggal/gereja null', async () => {
+    mockedWargaCreate.mockResolvedValue({ id: 7 })
+    await request(app).post('/api/import/warga').set('Authorization', `Bearer ${staffToken}`).send({ rows: [baseRow()] })
+    expect(mockedWargaCreate.mock.calls[0]![0].data).toMatchObject({ sudahMenikah: false, tanggalMenikah: null, tempatMenikah: null })
+  })
+
   it('1 baris gagal + 1 baris sukses dalam 1 request → log mencerminkan keduanya', async () => {
     mockedWargaCreate.mockResolvedValue({ id: 1 })
 

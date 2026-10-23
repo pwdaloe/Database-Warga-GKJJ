@@ -222,20 +222,38 @@ export default function WargaDetailPage() {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-gray-400 mb-0.5">Sidi</dt>
+                <dt className="text-xs text-gray-400 mb-0.5">Sidi/Baptis Dewasa</dt>
                 <dd className="text-sm text-gray-800">
                   {warga.sudahSidi ? (
                     <span>
-                      Sudah sidi
-                      {warga.nomorSidi && <span className="text-gray-500"> · No. {warga.nomorSidi}</span>}
+                      Sudah sidi/baptis dewasa
                       {warga.tanggalSidi && (
                         <span className="text-gray-500">
                           {' '}· {format(new Date(warga.tanggalSidi), 'd MMM yyyy', { locale: localeId })}
                         </span>
                       )}
+                      {warga.tempatSidi && <span className="text-gray-500">{` di ${warga.tempatSidi}`}</span>}
                     </span>
                   ) : (
-                    <span className="text-gray-400">Belum sidi</span>
+                    <span className="text-gray-400">Belum sidi/baptis dewasa</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-gray-400 mb-0.5">Menikah (Pemberkatan Gereja)</dt>
+                <dd className="text-sm text-gray-800">
+                  {warga.sudahMenikah ? (
+                    <span>
+                      Sudah menikah
+                      {warga.tanggalMenikah && (
+                        <span className="text-gray-500">
+                          {' '}· {format(new Date(warga.tanggalMenikah), 'd MMM yyyy', { locale: localeId })}
+                        </span>
+                      )}
+                      {warga.tempatMenikah && <span className="text-gray-500">{` di ${warga.tempatMenikah}`}</span>}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">Belum tercatat</span>
                   )}
                 </dd>
               </div>

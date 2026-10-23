@@ -45,6 +45,12 @@ export function buildWargaPayload(formData: Record<string, any>): Record<string,
     teleponRumah: newTeleponRumah || null,
   }
 
+  // Tanggal/gereja pemberkatan hanya berlaku bila Menikah dicentang (server menolak sisa nilai lama)
+  if (!sanitized.sudahMenikah) {
+    sanitized.tanggalMenikah = null
+    sanitized.tempatMenikah = null
+  }
+
   const isKepala = sanitized.statusKeluarga === 'KEPALA'
   const punyaKeluarga = !!sanitized.keluargaId
 
@@ -80,8 +86,11 @@ export function wargaToFormDefaults(w: Record<string, any>) {
     tanggalBaptis: tgl(w.tanggalBaptis),
     tempatBaptis: w.tempatBaptis,
     sudahSidi: w.sudahSidi,
-    nomorSidi: w.nomorSidi,
     tanggalSidi: tgl(w.tanggalSidi),
+    tempatSidi: w.tempatSidi,
+    sudahMenikah: w.sudahMenikah ?? false,
+    tanggalMenikah: tgl(w.tanggalMenikah),
+    tempatMenikah: w.tempatMenikah,
     telepon: w.telepon,
     whatsapp: w.whatsapp,
     whatsappBolehDitampilkan: w.whatsappBolehDitampilkan ?? false,

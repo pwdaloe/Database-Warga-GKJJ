@@ -369,13 +369,22 @@ export async function updateWarga(
     return muatWarga(id)
   }
 
-  if (lepasKepalaDi) {
+  // Warga menjadi KEPALA di KK yang sudah ada (naik status atau pindah sebagai kepala) → penunjuk kepala KK itu ikut diperbarui
+  const jadiKepalaDi: number | null =
+    statusSetelah === 'KEPALA' && keluargaAkhir && (existing.statusKeluarga !== 'KEPALA' || pindahKk)
+      ? keluargaAkhir
+      : null
+
+  if (lepasKepalaDi || jadiKepalaDi) {
     await prisma.$transaction(async (tx) => {
       await lepasKepala(tx)
       await tx.warga.update({
         where: { id },
         data: { ...encryptedData, updatedBy: userId },
       })
+      if (jadiKepalaDi) {
+        await tx.keluarga.update({ where: { id: jadiKepalaDi }, data: { kepalakeluargaId: id } })
+      }
     })
     return muatWarga(id)
   }

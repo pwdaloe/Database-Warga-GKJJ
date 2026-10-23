@@ -45,6 +45,10 @@ const bodySchema = z.object({
   sudahSidi:          z.boolean().optional(),
   nomorSidi:          z.string().max(30).optional().nullable(),
   tanggalSidi:        z.string().date().optional().nullable(),
+  tempatSidi:         z.string().max(150).optional().nullable(),
+  sudahMenikah:       z.boolean().optional(),
+  tanggalMenikah:     z.string().date().optional().nullable(),
+  tempatMenikah:      z.string().max(150).optional().nullable(),
   telepon:            z.string().max(20).optional().nullable(),
   whatsapp:           z.string().max(20).optional().nullable(),
   whatsappBolehDitampilkan: z.boolean().optional(),
@@ -59,6 +63,30 @@ const bodySchema = z.object({
   catatan:            z.string().optional().nullable(),
   konsenPDP:          z.boolean().optional(),
 })
+  .refine((b) => b.sudahMenikah === true || (!b.tanggalMenikah && !b.tempatMenikah), {
+    message: 'Tanggal dan gereja pemberkatan nikah hanya boleh diisi bila Menikah dicentang',
+    path: ['sudahMenikah'],
+  })
+
+const toDate = (v: string | null | undefined) => (v === undefined ? undefined : v ? new Date(v) : null)
+
+/**
+ * Kolom tanggal hanya disentuh bila dikirim (edit cepat `/m` mengirim sebagian field; dulu tanggal yang tidak
+ * dikirim ikut dihapus). Menikah dicabut (false) → tanggal & gereja pemberkatan ikut dikosongkan (CHECK DB).
+ */
+function tanggalFields(b: {
+  tanggalLahir?: string | null; tanggalBaptis?: string | null; tanggalSidi?: string | null
+  tanggalMenikah?: string | null; sudahMenikah?: boolean
+}) {
+  const f: Record<string, Date | null | undefined> = {
+    tanggalLahir: toDate(b.tanggalLahir),
+    tanggalBaptis: toDate(b.tanggalBaptis),
+    tanggalSidi: toDate(b.tanggalSidi),
+    tanggalMenikah: toDate(b.tanggalMenikah),
+  }
+  if (b.sudahMenikah === false) f['tanggalMenikah'] = null
+  return Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined))
+}
 
 // GET /api/warga
 wargaRouter.get('/', async (req, res) => {
@@ -132,9 +160,8 @@ wargaRouter.post(
     const warga = await svc.createWarga(
       {
         ...rest,
-        tanggalLahir: rest.tanggalLahir ? new Date(rest.tanggalLahir) : null,
-        tanggalBaptis: rest.tanggalBaptis ? new Date(rest.tanggalBaptis) : null,
-        tanggalSidi: rest.tanggalSidi ? new Date(rest.tanggalSidi) : null,
+        ...tanggalFields(rest),
+        ...(rest.sudahMenikah === false ? { tempatMenikah: null } : {}),
       } as any,
       req.user!.userId,
       newKeluarga,
@@ -154,9 +181,8 @@ wargaRouter.put(
       Number(req.params['id']),
       {
         ...rest,
-        tanggalLahir: rest.tanggalLahir ? new Date(rest.tanggalLahir) : null,
-        tanggalBaptis: rest.tanggalBaptis ? new Date(rest.tanggalBaptis) : null,
-        tanggalSidi: rest.tanggalSidi ? new Date(rest.tanggalSidi) : null,
+        ...tanggalFields(rest),
+        ...(rest.sudahMenikah === false ? { tempatMenikah: null } : {}),
       } as any,
       req.user!.userId,
       req.user!,

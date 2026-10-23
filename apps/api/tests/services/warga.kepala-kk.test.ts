@@ -16,6 +16,7 @@ const tx: any = {
 const prisma: any = {
   warga: {
     findUnique: vi.fn(async () => ({ ...warga })),
+    findUniqueOrThrow: vi.fn(async () => ({ ...warga })),
     update: vi.fn(async ({ data }: any) => ({ ...warga, ...data })),
   },
   keluarga: { updateMany: vi.fn(), findUnique: vi.fn(async () => ({ kelompokId: 12 })) },
@@ -71,5 +72,21 @@ describe('Kepala KK yang meninggalkan KK-nya tidak boleh tetap tercatat sebagai 
   it('hanya mengosongkan bila warga ini memang kepalanya (where memuat kepalakeluargaId = id warga)', async () => {
     await updateWarga(145, { statusKeluarga: 'LAINNYA', keluargaId: 70 } as any, 1, admin)
     expect(lepasDipanggil()[0].where.kepalakeluargaId).toBe(145)
+  })
+})
+
+describe('Warga dijadikan KEPALA di KK yang sudah ada → penunjuk kepala KK mengikuti', () => {
+  it('anggota (ANAK) di KK 87 diubah jadi KEPALA tanpa pindah KK → kepala_keluarga_id KK 87 menunjuk dia', async () => {
+    warga.statusKeluarga = 'ANAK'
+    await updateWarga(145, { statusKeluarga: 'KEPALA' } as any, 1, admin)
+    const calls = [...tx.keluarga.update.mock.calls, ...tx.keluarga.updateMany.mock.calls].map((c: any[]) => c[0])
+    expect(calls).toContainEqual(expect.objectContaining({ where: expect.objectContaining({ id: 87 }), data: { kepalakeluargaId: 145 } }))
+  })
+
+  it('anggota pindah ke KK 70 sekaligus jadi KEPALA → KK 70 menunjuk dia', async () => {
+    warga.statusKeluarga = 'ANAK'
+    await updateWarga(145, { statusKeluarga: 'KEPALA', keluargaId: 70 } as any, 1, admin)
+    const calls = [...tx.keluarga.update.mock.calls, ...tx.keluarga.updateMany.mock.calls].map((c: any[]) => c[0])
+    expect(calls).toContainEqual(expect.objectContaining({ where: expect.objectContaining({ id: 70 }), data: { kepalakeluargaId: 145 } }))
   })
 })

@@ -73,6 +73,10 @@ export interface Warga {
   sudahSidi: boolean
   nomorSidi: string | null
   tanggalSidi: string | null
+  tempatSidi: string | null
+  sudahMenikah: boolean
+  tanggalMenikah: string | null
+  tempatMenikah: string | null
   telepon: string | null
   whatsapp: string | null
   email: string | null

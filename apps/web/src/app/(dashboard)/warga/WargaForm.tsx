@@ -65,8 +65,11 @@ const schema = z.object({
   tanggalBaptis:      z.string().optional().nullable(),
   tempatBaptis:       z.string().max(150).optional().nullable(),
   sudahSidi:          z.boolean().default(false),
-  nomorSidi:          z.string().max(30).optional().nullable(),
   tanggalSidi:        z.string().optional().nullable(),
+  tempatSidi:         z.string().max(150).optional().nullable(),
+  sudahMenikah:       z.boolean().default(false),
+  tanggalMenikah:     z.string().optional().nullable(),
+  tempatMenikah:      z.string().max(150).optional().nullable(),
   telepon:            z.string().max(20).optional().nullable(),
   whatsapp:           z.string().max(20).optional().nullable(),
   whatsappBolehDitampilkan: z.boolean().default(false),
@@ -154,6 +157,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
       statusKeluarga: 'LAINNYA',
       sudahBaptis: false,
       sudahSidi: false,
+      sudahMenikah: false,
       konsenPDP: false,
       jenisKelamin: undefined,
       ...defaultValues,
@@ -175,6 +179,7 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
     prevStatusRef.current = statusKeluarga
   }, [statusKeluarga, setValue])
   const sudahSidi = watch('sudahSidi')
+  const sudahMenikah = watch('sudahMenikah')
   const konsenPDP = watch('konsenPDP')
   const selectedKeluargaId = watch('keluargaId')
   const fotoUrl = watch('fotoUrl')
@@ -429,16 +434,30 @@ export function WargaForm({ defaultValues, keluargaIdFixed, onTambahAnak, onSubm
             )}
           </div>
 
-          {/* Sidi */}
+          {/* Sidi / Baptis Dewasa */}
           <div className="space-y-3 p-4 bg-gray-50 rounded-xl border">
             <div className="flex items-center gap-3">
               <input type="checkbox" id="sudahSidi" {...register('sudahSidi')} className="w-5 h-5 sm:w-4 sm:h-4 rounded text-brand-600" />
-              <label htmlFor="sudahSidi" className="text-sm font-medium text-gray-700">Sudah Sidi</label>
+              <label htmlFor="sudahSidi" className="text-sm font-medium text-gray-700">Sudah Sidi/Baptis Dewasa</label>
             </div>
             {sudahSidi && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:pl-7">
-                <InputField label="Nomor Sidi" {...register('nomorSidi')} error={errors.nomorSidi} />
-                <InputField label="Tanggal Sidi" type="date" {...register('tanggalSidi')} error={errors.tanggalSidi as any} />
+                <InputField label="Tanggal Sidi/Baptis Dewasa" type="date" {...register('tanggalSidi')} error={errors.tanggalSidi as any} />
+                <InputField label="Tempat Sidi dan Baptis Dewasa" {...register('tempatSidi')} error={errors.tempatSidi} />
+              </div>
+            )}
+          </div>
+
+          {/* Menikah (pemberkatan di gereja) */}
+          <div className="space-y-3 p-4 bg-gray-50 rounded-xl border">
+            <div className="flex items-center gap-3">
+              <input type="checkbox" id="sudahMenikah" {...register('sudahMenikah')} className="w-5 h-5 sm:w-4 sm:h-4 rounded text-brand-600" />
+              <label htmlFor="sudahMenikah" className="text-sm font-medium text-gray-700">Menikah (Pemberkatan Gereja)</label>
+            </div>
+            {sudahMenikah && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:pl-7">
+                <InputField label="Tanggal Pemberkatan Nikah" type="date" {...register('tanggalMenikah')} error={errors.tanggalMenikah as any} />
+                <InputField label="Gereja Tempat Pemberkatan" {...register('tempatMenikah')} error={errors.tempatMenikah} />
               </div>
             )}
           </div>

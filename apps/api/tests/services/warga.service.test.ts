@@ -4,6 +4,7 @@ vi.mock('../../src/utils/prisma.js', () => ({
   prisma: {
     warga: {
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(async ({ where }: any) => ({ id: where.id })),
       findMany: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
@@ -392,7 +393,9 @@ describe('createWarga', () => {
     expect(wargaUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 7 }, data: { nomorAnggota: 'WRG00007' } }),
     )
-    expect(result.nomorAnggota).toBe('WRG00007')
+    // Hasil dibaca ulang dari DB setelah commit, bukan dari objek di dalam transaksi
+    expect(prisma.warga.findUniqueOrThrow).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 7 } }))
+    expect(result.id).toBe(7)
   })
 })
 

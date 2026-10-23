@@ -134,6 +134,23 @@ dashboardRouter.get('/terbaru', async (req, res) => {
   }))
 })
 
+// GET /api/dashboard/demografi?wilayahId=&kelompokId= — komposisi Pria/Wanita.
+// Hanya warga berstatus keanggotaan AKTIF (MENINGGAL/PINDAH_KELUAR dkk. menggeser komposisi).
+dashboardRouter.get('/demografi', async (req, res) => {
+  const user = req.user!
+  const rows = await prisma.warga.groupBy({
+    by: ['jenisKelamin'],
+    where: { AND: [wargaWhere(user, parseDashboardFilter(req.query)), { statusKeanggotaan: 'AKTIF' }] },
+    _count: { _all: true },
+  })
+  const hitung = (jk: 'L' | 'P') => rows.find((r) => r.jenisKelamin === jk)?._count._all ?? 0
+  const pria = hitung('L')
+  const wanita = hitung('P')
+  const total = pria + wanita
+  const persen = (n: number) => (total === 0 ? 0 : Math.round((n / total) * 1000) / 10)
+  ok(res, { total, pria, wanita, persenPria: persen(pria), persenWanita: persen(wanita) })
+})
+
 // GET /api/dashboard/komisi-stats — distribusi umur per komisi
 dashboardRouter.get('/komisi-stats', async (req, res) => {
   const user = req.user!

@@ -83,6 +83,10 @@ const rowSchema = z.object({
   sudahSidi:          z.union([z.string(), z.boolean(), z.number()]).optional(),
   nomorSidi:          textCell,
   tanggalSidi:        z.union([z.string(), z.number()]).optional(),
+  tempatSidi:         textCell,
+  sudahMenikah:       z.union([z.string(), z.boolean(), z.number()]).optional(),
+  tanggalMenikah:     z.union([z.string(), z.number()]).optional(),
+  tempatMenikah:      textCell,
   telepon:            textCell,
   whatsapp:           textCell,
   email:              textCell,
@@ -187,6 +191,11 @@ importRouter.post(
         const tempatLahir        = raw.tempatLahir        ? String(raw.tempatLahir).trim()        || null : null
         const tempatBaptis       = raw.tempatBaptis       ? String(raw.tempatBaptis).trim()        || null : null
         const nomorSidi          = raw.nomorSidi          ? String(raw.nomorSidi).trim()           || null : null
+        const tempatSidi         = raw.tempatSidi         ? String(raw.tempatSidi).trim()          || null : null
+        const tempatMenikah      = raw.tempatMenikah      ? String(raw.tempatMenikah).trim()       || null : null
+        const tanggalMenikah     = parseDate(raw.tanggalMenikah as any)
+        // Tanggal/gereja pemberkatan terisi tanpa kolom Menikah → dianggap sudah menikah (CHECK DB: hanya boleh terisi bila sudah_menikah)
+        const sudahMenikah       = normBool(raw.sudahMenikah) || !!tanggalMenikah || !!tempatMenikah
         const telepon            = raw.telepon            ? String(raw.telepon).trim()             || null : null
         const whatsapp           = raw.whatsapp           ? String(raw.whatsapp).trim()            || null : null
         const email              = raw.email              ? String(raw.email).trim().toLowerCase() || null : null
@@ -197,6 +206,8 @@ importRouter.post(
         checkLen(tempatLahir, 100, 'Tempat Lahir')
         checkLen(tempatBaptis, 150, 'Tempat Baptis')
         checkLen(nomorSidi, 30, 'No. Sidi')
+        checkLen(tempatSidi, 150, 'Tempat Sidi/Baptis Dewasa')
+        checkLen(tempatMenikah, 150, 'Gereja Tempat Pemberkatan')
         checkLen(telepon, 20, 'Telepon')
         checkLen(whatsapp, 20, 'WhatsApp')
         checkLen(email, 100, 'Email')
@@ -221,6 +232,10 @@ importRouter.post(
             sudahSidi:         normBool(raw.sudahSidi),
             nomorSidi,
             tanggalSidi:       parseDate(raw.tanggalSidi   as any),
+            tempatSidi,
+            sudahMenikah,
+            tanggalMenikah:    sudahMenikah ? tanggalMenikah : null,
+            tempatMenikah:     sudahMenikah ? tempatMenikah : null,
             telepon, whatsapp, email, pendidikanTerakhir, pekerjaan,
             catatan:           raw.catatan       ? String(raw.catatan).trim()       || null : null,
             dataStatus:        'DRAFT',
