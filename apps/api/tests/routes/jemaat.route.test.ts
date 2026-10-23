@@ -2,7 +2,7 @@ import 'express-async-errors'
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import request from 'supertest'
 import jwt from 'jsonwebtoken'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '../../src/generated/prisma/client.js'
 
 // ── Store in-memory: kode service/route asli yang diuji, bukan prisma ──────────
 let warga: Record<string, any>

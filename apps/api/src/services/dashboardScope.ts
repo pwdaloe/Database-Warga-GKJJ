@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client'
+import type { Prisma } from '../generated/prisma/client.js'
 import type { JwtPayload } from '../middleware/auth.js'
 import { AppError } from '../middleware/errorHandler.js'
 

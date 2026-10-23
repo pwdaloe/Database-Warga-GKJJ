@@ -2,7 +2,7 @@ import 'express-async-errors'
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import request from 'supertest'
 import jwt from 'jsonwebtoken'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '../../src/generated/prisma/client.js'
 
 const prisma = {
   user: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },

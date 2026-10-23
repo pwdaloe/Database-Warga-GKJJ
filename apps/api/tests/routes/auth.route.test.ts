@@ -2,7 +2,7 @@ import 'express-async-errors'
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import request from 'supertest'
 import bcrypt from 'bcryptjs'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '../../src/generated/prisma/client.js'
 
 vi.mock('../../src/utils/prisma.js', () => ({
   prisma: {

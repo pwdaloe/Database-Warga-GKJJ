@@ -571,7 +571,7 @@ NEXT_PUBLIC_API_URL="http://localhost:4000/api"
 ```bash
 npx prisma db push          # Sync schema ke database
 npx prisma db studio        # Buka Prisma Studio GUI (port 5555)
-npx prisma generate         # Regenerate Prisma Client
+npx prisma generate         # Regenerate Prisma Client (Prisma 7: ke apps/api/src/generated/, tidak di-commit; wajib setelah clone/npm install sebelum test/type-check)
 npx tsx prisma/seed-master.ts  # Seed data master
 ```
 

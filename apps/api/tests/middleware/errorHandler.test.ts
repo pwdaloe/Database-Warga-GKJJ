@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { ZodError, z } from 'zod'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../../src/generated/prisma/client.js'
 import { errorHandler, AppError } from '../../src/middleware/errorHandler.js'
 
 function mockRes() {

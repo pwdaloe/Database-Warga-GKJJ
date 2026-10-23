@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import bcrypt from 'bcryptjs'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '../../src/generated/prisma/client.js'
 
 vi.mock('../../src/utils/prisma.js', () => ({
   prisma: {
