@@ -1,6 +1,7 @@
 # Sprint 13 — Perbaikan QR Kartu Anggota: token acak menggantikan id berurutan
 
-> **Status (24 Okt 2026): DITAHAN.** QR kartu anggota akan dipakai juga sebagai alat absensi kegiatan (platform `kegiatan.gkjjakarta.org`), sehingga desain token dan siapa yang memindai perlu diputuskan lebih dulu (`docs/PLATFORM.md` P7). Isi di bawah adalah rancangan perbaikan celah enumerasi dan akan ditulis ulang sesuai hasil diskusi.
+> **Status (24 Okt 2026): SIAP DIKERJAKAN, direvisi setelah diskusi QR absensi.** Token QR ini juga menjadi kunci absensi kegiatan (`sprints/sprint_13b.md`, `docs/PLATFORM.md` P7 diputuskan). Hasil diskusi: kartu fisik **belum dicetak**, jadi tidak perlu masa transisi panjang; kehadiran hanya rekap; uji coba ±100 orang.
+> Perubahan terhadap rancangan awal: `QR_ALLOW_LEGACY_ID` **default `false`** (jika env tidak ada, id numerik ditolak). Tautan WhatsApp lama `/m/{id}` yang pernah terkirim (skala uji coba) **diabaikan** atas keputusan user 24 Okt 2026: tidak ada masa transisi, id numerik langsung ditolak. Token **tidak menampilkan data lebih dari sekarang** dan tidak dipakai di luar kartu, QR, dan absensi.
 
 ## Konteks
 
@@ -18,7 +19,7 @@ Bukan celah isi (field yang keluar memang sengaja terbatas, dikunci tes `public.
 
 - **Token acak** per warga: 128 bit dari `crypto.randomBytes(16)`, dikodekan base64url (22 karakter), kolom `qr_token` (unik, nullable saat migrasi, lalu diisi untuk semua warga dan otomatis saat warga baru dibuat). Tidak diturunkan dari id atau NIK.
 - **Endpoint baru** `GET /api/public/member/:token`. Token tidak valid dan tidak ditemukan **sama-sama** `404` dengan pesan identik (tanpa "oracle").
-- **Transisi dua tahap** dengan sakelar env `QR_ALLOW_LEGACY_ID` (default `true` selama transisi):
+- **Transisi dengan sakelar env `QR_ALLOW_LEGACY_ID`** (default `false`; `true` hanya bila tautan lama sudah terlanjur dikirim, lihat status di atas):
   - Tahap A (deploy sprint ini): token berfungsi; tautan lama `/m/{id}` masih berfungsi **terbatas** (laju diperketat) supaya kartu yang sudah tercetak/terkirim tidak langsung mati.
   - Tahap B (setelah kartu dicetak ulang / tautan dikirim ulang): `QR_ALLOW_LEGACY_ID=false`, id numerik ditolak dengan `404`. Tanggal Tahap B diputuskan user.
 - **Batas laju khusus** `/api/public/member/*` (mis. 30 permintaan/menit/IP) agar penelusuran massal tidak praktis, di samping limiter global.
@@ -75,6 +76,6 @@ npm run build --workspace=apps/web
 
 ## Pertanyaan untuk user (menentukan detail sprint)
 
-1. **Apakah kartu anggota fisik atau tautan QR sudah dibagikan ke jemaat?** Jika belum (atau hanya segelintir), Tahap A bisa dilewati: langsung `QR_ALLOW_LEGACY_ID=false` saat deploy.
-2. **Apakah foto perlu tetap tampil di halaman QR publik?** Tanpa token (jika bocor/difoto), foto adalah data paling sensitif di halaman itu. Usulan: tetap tampil sekarang, dinilai ulang setelah token berjalan.
+1. ~~Kartu fisik / tautan WhatsApp sudah dibagikan?~~ **Dijawab 24 Okt: kartu belum dicetak; tautan WhatsApp lama hanya skala uji coba dan boleh diabaikan.** `QR_ALLOW_LEGACY_ID` tetap ada sebagai pengaman, default `false`.
+2. **Apakah foto perlu tetap tampil di halaman QR publik?** Usulan: tetap tampil sekarang, dinilai ulang setelah token berjalan.
 3. **Siapa yang boleh membuat ulang QR?** Usulan: Superadmin, Kepala Kantor, Staf Admin.

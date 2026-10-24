@@ -88,7 +88,7 @@ Landing statis di Nginx tidak memakai memori Node, jadi pemasangannya aman sekar
 | P4 | **Database** | Satu PostgreSQL | Database logis terpisah per produk di server yang sama; tidak ada FK antarproduk |
 | P5 | **Kapasitas VPS** | Bagian 5 | Putuskan sebelum `kegiatan` atau `majelis` dibangun |
 | P6 | **Data sensitif `majelis`** (notula, keputusan) | — | Dokumen keamanan tersendiri: siapa yang boleh baca, log akses, cadangan, retensi. Sebelum kode apa pun |
-| P7 | **QR kartu anggota sebagai absensi** | Sprint 13 (token QR) ditahan menunggu diskusi | Putuskan sebelum Sprint 13: QR yang sama bisa dipakai absensi kegiatan di `kegiatan`, jadi desain tokennya memengaruhi platform |
+| P7 | **QR kartu anggota sebagai absensi** | **Diputuskan 24 Okt 2026**: token acak (Sprint 13); petugas login memindai kartu di `/m` (Sprint 13B), cari manual sebagai cadangan, tamu dihitung; online dengan antrean kirim ulang; hanya rekap; ±100 orang | Warga memindai sendiri, kios, offline penuh, dan kehadiran sebagai syarat ditunda. Data kehadiran ada di aplikasi jemaat; produk `kegiatan` kelak membacanya lewat API |
 
 Sampai P1 diputuskan, `my` tetap **tanpa form password**: tombol "Masuk Warga" membuka `jemaat.../login`.
 

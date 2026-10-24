@@ -44,7 +44,8 @@ Ukuran: S ≈ 1–3 hari kerja, M ≈ 3–5, L ≈ 1–2 minggu (perkiraan kasar
 | Sprint | Isi | Ukuran | Menyentuh produksi? |
 |---|---|---|---|
 | *Landing `my` / `kegiatan` / `majelis`* | Halaman "sedang disiapkan", Nginx, SSL (`deploy/landing/`, `deploy/LANDING_CERTBOT.md`). Bukan sprint; dipasang di VPS oleh user | S | Ya (Nginx, tanpa aplikasi) |
-| **13 — Perbaikan QR kartu anggota** (prasyarat) | Token acak di QR menggantikan id berurutan, transisi aman, rotasi token. **Ditahan**: QR akan dipakai juga untuk absensi kegiatan, desain token perlu diputuskan dulu | M | Ya (kolom baru + deploy) |
+| **13 — Perbaikan QR kartu anggota** (prasyarat) | Token acak di QR menggantikan id berurutan, rotasi token. Diputuskan 24 Okt: token juga menjadi kunci absensi (13B); kartu fisik belum dicetak | M | Ya (kolom baru + deploy) |
+| *13B — Absensi kegiatan (paralel)* | Sesi absensi, petugas memindai kartu di `/m`, antrean kirim ulang, rekap. Tidak menghalangi Sprint 14 (hanya butuh Sprint 13). `sprints/sprint_13b.md` | M–L | Ya (tabel baru, aditif) |
 | **14 — Fondasi & Beranda statis** | `apps/portal`, desain sistem, layout HP/desktop, menu samping, Beranda dengan konten contoh dari berkas konfigurasi, tautan login, noindex. Tanpa `basePath` | M | Tidak (hanya lokal) |
 | **15 — Konten dinamis** | Tabel & migrasi aditif, API publik, menu admin "Konten Portal" (Ibadah, Kegiatan, Renungan, Pengaturan portal), portal membaca API dengan cache. Gambar dari `api.gkjjakarta.org` perlu izin di CSP portal (`img-src`) atau diproksikan lewat portal | L | Ya (migrasi aditif, deploy API/web) |
 | **16 — Pendeta & halaman konten** | Profil pendeta publik (dengan persetujuan), halaman Temui Pendeta, Buat Janji lewat tombol WhatsApp, halaman Ibadah/Kegiatan/Renungan, pencarian konten | M | Ya |

@@ -723,7 +723,8 @@ Deploy ke production
 |---|---|---|
 | Landing "sedang disiapkan" untuk `my`, `kegiatan`, `majelis` | ✅ Terpasang di produksi (24 Okt) | `deploy/landing/`, `deploy/nginx-landing.prod.conf`, `deploy/LANDING_CERTBOT.md`. Statis, tanpa PM2; SSL per domain; penangkap `default_server` aktif |
 | Portal jemaat `my.gkjjakarta.org` (Sprint 14–17) | 🗓️ Direncanakan | Menggantikan rencana `www/new` (dibatalkan). Rencana: `docs/RENCANA_PORTAL_JEMAAT.md`. Sprint 14 siap; menunggu keputusan QR (Sprint 13) |
-| Perbaikan QR kartu anggota (Sprint 13) | ⏸️ Ditahan | QR mau dipakai absensi kegiatan; desain token diputuskan dulu (`docs/PLATFORM.md` P7) |
+| Perbaikan QR kartu anggota (Sprint 13) | 🗓️ Siap dikerjakan | Token acak menggantikan id berurutan; juga kunci absensi (`docs/PLATFORM.md` P7 diputuskan 24 Okt) |
+| Absensi kegiatan via QR kartu (Sprint 13B) | 🗓️ Siap dikerjakan setelah Sprint 13 | Petugas memindai kartu di `/m`, cari manual, tamu dihitung, antrean kirim ulang, rekap. Uji coba ±100 orang; hanya rekap, tampil di layar. Lanjutan: ekspor Excel, notifikasi ke Penatua, retensi 3 tahun (purge). `sprints/sprint_13b.md` |
 | SSO antar aplikasi (login satu akun) | 💡 Keputusan terbuka | Cara berbagi login (redirect vs cookie), peran baru, tanda tangan token: `docs/PLATFORM.md` P1–P2 |
 | `kegiatan.gkjjakarta.org` (rencana, anggaran, dana, monitoring, laporan UPK) | 💡 Ide | Belum ada rencana. Butuh `docs/kegiatan/RENCANA.md` |
 | `majelis.gkjjakarta.org` (notula MPH/MPL) | 💡 Ide | Data sensitif: dokumen keamanan dulu (`docs/PLATFORM.md` P6). Dokumentasi menyusul |
@@ -736,7 +737,7 @@ Deploy ke production
 | Penyesuaian aplikasi mobile `/m` untuk Jemaat | 🗓️ Usulan | API sudah menolak; halaman `/m` dialihkan ke Profil Saya |
 | Laporan rekap per kelompok/wilayah | 🗓️ Planned | Export PDF/Excel |
 | Notifikasi ulang tahun jemaat via WhatsApp | 🗓️ Planned | API daftar ulang tahun bulan ini sudah ada (`GET /warga/ulang-tahun`); belum ada tampilan maupun pengiriman |
-| Absensi ibadah via QR scan | 💡 Ide | Scan kartu di gerbang gereja |
+| Absensi ibadah besar via QR (kios di gerbang, ±1.000 orang) | 💡 Ide | Lanjutan Sprint 13B (opsi kios dan offline penuh); tahap uji coba memakai kelompok kecil |
 | Patch keamanan dependensi (audit 23 Okt) | ✅ Dipatch dan dideploy 23 Okt | Sisa 7 temuan (4 high, 3 moderate) butuh upgrade mayor. Temuan awal `npm audit --omit=dev`: 2 critical (`next` 15.5.27 RCE image optimization SVG + DoS Server Actions; `proxy-addr` IP spoofing), 6 high (`compression`, `follow-redirects`, `postcss`, `prisma`/`deepmerge-ts`). `npm audit fix` (tanpa `--force`) menutup sebagian besar tanpa breaking change; `exceljs`/`uuid` jangan di-force (downgrade ke 3.4.0) |
 | Upgrade mayor: Next 16, Express 5 | 🔧 Teknis | Next 16 menutup `postcss` (4 temuan `npm audit` tersisa: 1 high, 3 moderate; `exceljs`/`uuid` tanpa perbaikan aman). **Prisma 7 sudah dideploy 23 Okt** (driver adapter pg, `prisma.config.ts`, `.env` dimuat lewat `dotenv`). `multer` dihapus (tidak pernah dipakai); syarat Node `>=22` |
 | Pengujian visual di browser | 🔧 Teknis | Sprint 12 sudah dicek di browser (kartu Demografi desktop + 390px, form Keanggotaan 390px). Belum: form Keanggotaan desktop, detail warga, `/m`, simpan ulang; UI Sprint 10–11 baru lewat tes komponen |
