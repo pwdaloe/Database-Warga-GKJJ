@@ -68,7 +68,9 @@ docs/
 sprints/
 ```
 
-## 5. Memori VPS (2 GB): batas yang nyata
+## 5. Memori VPS: batas yang nyata
+
+> **Perlu dikonfirmasi (24 Okt 2026):** dokumen deploy menyebut VPS 2 GB, tetapi `free -m` di produksi menunjukkan total ±3.915 MB (terpakai ±1.135 MB, tersedia ±2.779 MB saat idle). Cek paket VPS sebenarnya sebelum menghitung ulang anggaran di bawah; angka 2 GB di bawah adalah asumsi konservatif lama.
 
 Sekarang berjalan: `gkjj-api` (batas 512 MB), `gkjj-web` (700 MB), `gkj-klasis`, PostgreSQL, Nginx. Menambah empat proses Node (kegiatan dan majelis) plus portal **tidak akan muat** di 2 GB, terutama saat `next build`. Sebelum aplikasi kedua hidup:
 
