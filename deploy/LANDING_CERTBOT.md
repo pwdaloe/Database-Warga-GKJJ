@@ -96,7 +96,9 @@ nginx -T 2>/dev/null | grep -E "^\s*server_name"   # semua host yang dilayani VP
 Jika `www.gkjjakarta.org` (WordPress) ternyata berjalan di VPS ini, pastikan ia punya `server_name` eksplisit dan **bukan** `default_server`. Bila ragu, lewati langkah ini.
 
 ```bash
-apt-get install -y ssl-cert                # sertifikat self-signed untuk blok 443 (Nginx 1.18 belum punya ssl_reject_handshake)
+# Nginx >= 1.19.4 (cek: nginx -v). Pada Nginx 1.18 (Ubuntu 22.04) ganti blok 443 di berkas ini dengan
+# ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem; ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key; return 444;
+# (apt-get install -y ssl-cert)
 rm -f /etc/nginx/sites-enabled/default     # tautan saja; berkas asli di sites-available tetap ada
 cp deploy/nginx-default.prod.conf /etc/nginx/sites-available/000-default-catchall
 ln -sf /etc/nginx/sites-available/000-default-catchall /etc/nginx/sites-enabled/

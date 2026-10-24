@@ -721,7 +721,7 @@ Deploy ke production
 
 | Fitur | Status | Keterangan |
 |---|---|---|
-| Landing "sedang disiapkan" untuk `my`, `kegiatan`, `majelis` | ✅ Berkas siap (24 Okt); menunggu dipasang di VPS | `deploy/landing/`, `deploy/nginx-landing.prod.conf`, `deploy/LANDING_CERTBOT.md`. Statis, tanpa PM2. Pasang oleh user dengan langkah di LANDING_CERTBOT.md |
+| Landing "sedang disiapkan" untuk `my`, `kegiatan`, `majelis` | ✅ Terpasang di produksi (24 Okt) | `deploy/landing/`, `deploy/nginx-landing.prod.conf`, `deploy/LANDING_CERTBOT.md`. Statis, tanpa PM2; SSL per domain; penangkap `default_server` aktif |
 | Portal jemaat `my.gkjjakarta.org` (Sprint 14–17) | 🗓️ Direncanakan | Menggantikan rencana `www/new` (dibatalkan). Rencana: `docs/RENCANA_PORTAL_JEMAAT.md`. Sprint 14 siap; menunggu keputusan QR (Sprint 13) |
 | Perbaikan QR kartu anggota (Sprint 13) | ⏸️ Ditahan | QR mau dipakai absensi kegiatan; desain token diputuskan dulu (`docs/PLATFORM.md` P7) |
 | SSO antar aplikasi (login satu akun) | 💡 Keputusan terbuka | Cara berbagi login (redirect vs cookie), peran baru, tanda tangan token: `docs/PLATFORM.md` P1–P2 |

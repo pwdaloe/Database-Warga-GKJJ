@@ -3,7 +3,7 @@
 
 ---
 
-## [2026-10-24 WIB] — Platform multi-domain: landing, peta platform, revisi portal | ✅ Berkas siap, belum dipasang di VPS
+## [2026-10-24 WIB] — Platform multi-domain: landing, peta platform, revisi portal | ✅ DONE, landing terpasang di VPS produksi
 
 **Project**: Database Warga GKJJ
 
@@ -13,6 +13,7 @@
 - Direvisi: `docs/RENCANA_PORTAL_JEMAAT.md` dan `sprints/sprint_14.md` (tanpa `basePath`, tanpa mode ganda; Q1 WordPress gugur; Sprint 17 mengganti landing `my`). `sprints/sprint_13.md` ditandai ditahan menunggu keputusan QR absensi.
 - Pembersihan: direktori kosong `packages/types 2` dihapus (tidak ter-track).
 - Diverifikasi: `render.sh` menghasilkan tiga halaman tanpa placeholder tersisa dan lolos pengurai HTML. Dilihat di browser lewat server lokal (mode gelap; kontras tombol utama diperbaiki sesudahnya). **Belum dicek**: mode terang, lebar 390 px, `nginx -t` (Nginx tidak ada di mesin ini), dan seluruh langkah di VPS (belum dijalankan; hanya berkas di repo).
+- **Dipasang di VPS (24 Okt, oleh Daru, dipandu langkah per langkah)**: DNS ketiga domain ke `202.155.95.183` tanpa AAAA; `render.sh`, Nginx, tiga sertifikat certbot terpisah (kedaluwarsa 2027-01-22); `certbot renew --dry-run` lolos untuk keenam sertifikat; HTTPS 200 dan `X-Robots-Tag: noindex`, HTTP 301 ke HTTPS; penangkap `default_server` dipasang (akses lewat IP ditolak; `jemaat`, `api`, `klasis` tetap normal). VPS memakai Nginx 1.24 (Ubuntu 24.04), jadi catch-all memakai `ssl_reject_handshake`; `nginx-default.prod.conf` dan `LANDING_CERTBOT.md` disesuaikan. Tidak ada situs `www` di VPS ini (WordPress di tempat lain). Tautan `sites-available/default` dibiarkan sebagai cadangan rollback.
 - Tidak ada perubahan kode aplikasi, skema, atau dependensi.
 
 ---

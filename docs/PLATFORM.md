@@ -17,7 +17,7 @@ Satu repositori (monorepo) menaungi beberapa aplikasi di bawah domain `gkjjakart
 
 Rencana lama `www.gkjjakarta.org/new` **dibatalkan** (24 Okt 2026): portal jemaat memakai `my.gkjjakarta.org`. Akibatnya tidak ada lagi `basePath`, tidak ada perubahan Nginx pada `www`, dan WordPress tidak perlu disentuh.
 
-Halaman "sedang disiapkan" untuk tiga domain baru: `deploy/landing/` dan `deploy/LANDING_CERTBOT.md`.
+Halaman "sedang disiapkan" untuk tiga domain baru: `deploy/landing/` dan `deploy/LANDING_CERTBOT.md`. **Terpasang di VPS produksi sejak 24 Okt 2026** (IP `202.155.95.183`, Nginx 1.24, sertifikat per domain, penangkap `default_server` aktif). `www.gkjjakarta.org` tidak berada di VPS ini.
 
 ## 2. Prinsip struktur
 
