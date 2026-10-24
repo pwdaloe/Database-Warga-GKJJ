@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{{NAMA}} · GKJ Jakarta</title>
+<meta name="description" content="{{DESKRIPSI}}">
+<style>
+:root{--bg:#F4F8FC;--kartu:#FFFFFF;--garis:#E3EAF3;--teks:#1B2B45;--redup:#55657D;--navy:#0E2A63;--biru:#1458B4;--lencana-bg:#FFF1E2;--lencana-teks:#8A4A0A;--tombol-teks:#FFFFFF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1424;--kartu:#13213A;--garis:#24365A;--teks:#E8EEF7;--redup:#A9B7CC;--navy:#FFFFFF;--biru:#7DB2F5;--lencana-bg:#3A2A14;--lencana-teks:#F5C58A;--tombol-teks:#0B1424}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--teks);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 16px}
+.kartu{width:100%;max-width:440px;background:var(--kartu);border:1px solid var(--garis);border-radius:20px;padding:32px 24px;text-align:center;box-shadow:0 2px 12px rgba(14,42,99,.06)}
+.logo{width:56px;height:56px;border-radius:16px;background:#0E2A63;display:inline-flex;align-items:center;justify-content:center}
+.merek{margin:14px 0 0;font-size:14px;font-weight:800;letter-spacing:.08em;color:var(--navy)}
+h1{margin:20px 0 0;font-size:24px;line-height:1.25;color:var(--navy)}
+.lencana{display:inline-block;margin-top:14px;padding:4px 12px;border-radius:999px;background:var(--lencana-bg);color:var(--lencana-teks);font-size:13px;font-weight:700}
+p.isi{margin:16px 0 0;font-size:15px;color:var(--redup)}
+.aksi{margin-top:24px;display:flex;flex-direction:column;gap:10px}
+.aksi:empty{display:none}
+.tombol{display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border-radius:14px;font-weight:700;font-size:15px;text-decoration:none;border:1.5px solid var(--biru);color:var(--biru)}
+.tombol.utama{background:var(--biru);color:var(--tombol-teks)}
+.tombol:focus-visible{outline:3px solid var(--biru);outline-offset:2px}
+footer{padding:16px;text-align:center;font-size:12px;color:var(--redup)}
+</style>
+</head>
+<body>
+<main>
+  <section class="kartu">
+    <span class="logo" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M10 4h4M12 6l6 4v11H6V10zM10 21v-5h4v5"/></svg>
+    </span>
+    <p class="merek">GKJ JAKARTA</p>
+    <h1>{{NAMA}}</h1>
+    <span class="lencana">Sedang disiapkan</span>
+    <p class="isi">{{DESKRIPSI}}</p>
+    <div class="aksi">{{TOMBOL}}</div>
+  </section>
+</main>
+<footer>Gereja Kristen Jawa Jakarta · {{DOMAIN}}</footer>
+</body>
+</html>

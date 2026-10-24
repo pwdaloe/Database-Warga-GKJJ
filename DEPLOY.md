@@ -22,11 +22,18 @@ deploy/
 ├── env.api.dev              ← Template .env API untuk testing (purwandaru.com)
 ├── env.api.production       ← Template .env API untuk production (gkjjakarta.org)
 │
+├── nginx-landing.prod.conf  ← Nginx 3 landing statis (my, kegiatan, majelis) → lihat LANDING_CERTBOT.md
+├── nginx-default.prod.conf  ← Nginx penangkap host tidak dikenal (opsional)
+├── landing/                 ← templat HTML + render.sh untuk halaman "sedang disiapkan"
+├── LANDING_CERTBOT.md       ← langkah pasang landing + certbot + rollback
+│
 ├── nginx-jemaat.dev.conf    ← Nginx frontend testing  → jemaat.purwandaru.com
 ├── nginx-jemaat.prod.conf   ← Nginx frontend production → jemaat.gkjjakarta.org
 ├── nginx-api.dev.conf       ← Nginx API testing  → api.purwandaru.com
 └── nginx-api.prod.conf      ← Nginx API production → api.gkjjakarta.org
 ```
+
+> Peta domain, port, dan aturan menambah aplikasi baru: [`docs/PLATFORM.md`](docs/PLATFORM.md). `2-deploy.sh` saat ini hanya untuk aplikasi jemaat (`jemaat` dan `api`); landing statis dipasang terpisah lewat `deploy/LANDING_CERTBOT.md`.
 
 ---
 

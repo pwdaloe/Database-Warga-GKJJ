@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Saya, Masuk Warga Jemaat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}
+input::placeholder{color:#6B7A90}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#F4F8FC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#1B2B45;display:flex;flex-direction:column;overflow:hidden">
+
+  <header style="height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#FFFFFF;border-bottom:1px solid #E3EAF3">
+    <a href="Main.dc.html" aria-label="GKJ Jakarta, beranda" style="display:flex;align-items:center;gap:10px">
+      <span style="width:36px;height:36px;border-radius:10px;background:#0E2A63;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M10 4h4M12 6l6 4v11H6V10zM10 21v-5h4v5"/></svg>
+      </span>
+      <span style="font-weight:800;font-size:17px;letter-spacing:.02em;color:#0E2A63">GKJ JAKARTA</span>
+    </a>
+    <a href="Menu.dc.html" aria-label="Buka menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0E2A63" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </a>
+  </header>
+
+  <main style="flex:1;min-height:0;overflow:hidden;padding:24px 16px 0">
+    <h1 style="margin:0;font-size:24px;font-weight:800;color:#0E2A63">Masuk Warga Jemaat</h1>
+    <p style="margin:6px 0 0;font-size:14px;line-height:1.5;color:#55657D">Gunakan akun dari admin gereja untuk melihat dan memperbarui data Anda.</p>
+
+    <form style="margin-top:18px;padding:18px 16px 16px;background:#FFFFFF;border-radius:20px;box-shadow:0 2px 12px rgba(14,42,99,.06)">
+      <div>
+        <label for="username" style="display:block;font-size:13px;font-weight:700;color:#1B2B45">Username</label>
+        <input id="username" type="text" autocomplete="username" placeholder="mis. nama.depan" style="margin-top:6px;width:100%;box-sizing:border-box;min-height:48px;padding:0 14px;border-radius:12px;border:1.500px solid #C9D6E6;background:#FFFFFF;font:inherit;font-size:15px;color:#1B2B45;outline:none">
+      </div>
+      <div style="margin-top:14px">
+        <label for="password" style="display:block;font-size:13px;font-weight:700;color:#1B2B45">Password</label>
+        <div style="margin-top:6px;display:flex;align-items:center;min-height:48px;border-radius:12px;border:1.500px solid #C9D6E6;background:#FFFFFF">
+          <input id="password" type="password" autocomplete="current-password" placeholder="Masukkan password" style="flex:1;min-width:0;box-sizing:border-box;height:45px;padding:0 14px;border:0;background:transparent;font:inherit;font-size:15px;color:#1B2B45;outline:none">
+          <button type="button" aria-label="Tampilkan password" style="width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#55657D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:10px;text-align:right">
+        <a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-size:13px;font-weight:700;color:#1458B4">Lupa password?</a>
+      </div>
+      <button type="submit" style="margin-top:4px;width:100%;min-height:50px;border:0;border-radius:14px;background:#1458B4;color:#FFFFFF;font:inherit;font-size:15px;font-weight:800">Masuk</button>
+    </form>
+
+    <section aria-label="Yang bisa dilakukan setelah masuk" style="margin-top:16px;padding:16px;background:#FFFFFF;border-radius:20px;box-shadow:0 2px 12px rgba(14,42,99,.06)">
+      <h2 style="margin:0;font-size:15px;font-weight:800;color:#0E2A63">Setelah masuk, Anda bisa</h2>
+      <ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px">
+        <li style="display:flex;align-items:flex-start;gap:12px">
+          <span style="width:36px;height:36px;border-radius:10px;background:#E3F1FD;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1769B8" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+          <span style="font-size:13px;line-height:1.45;color:#1B2B45"><b style="font-weight:700">Profil Saya</b><br><span style="color:#55657D">Lihat dan ubah data diri dan alamat keluarga. Perubahan diperiksa staf sebelum berlaku.</span></span>
+        </li>
+        <li style="display:flex;align-items:flex-start;gap:12px">
+          <span style="width:36px;height:36px;border-radius:10px;background:#E3F6EC;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14804D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span>
+          <span style="font-size:13px;line-height:1.45;color:#1B2B45"><b style="font-weight:700">Kartu Anggota</b><br><span style="color:#55657D">Tampilkan kartu dengan kode QR kapan saja.</span></span>
+        </li>
+        <li style="display:flex;align-items:flex-start;gap:12px">
+          <span style="width:36px;height:36px;border-radius:10px;background:#FFF1E2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4650F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.500 1.500a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span>
+          <span style="font-size:13px;line-height:1.45;color:#1B2B45"><b style="font-weight:700">Hubungi gereja</b><br><span style="color:#55657D">Majelis kelompok, WA Center, dan pendeta dalam satu tempat.</span></span>
+        </li>
+      </ul>
+    </section>
+
+    <p style="margin:14px 4px 0;font-size:12px;line-height:1.5;color:#55657D">Penatua, majelis, dan staf gereja masuk lewat halaman yang sama dan langsung diarahkan ke dashboard pengelolaan data.</p>
+  </main>
+
+  <nav aria-label="Navigasi utama" style="height:72px;flex-shrink:0;display:grid;grid-template-columns:repeat(5,1fr);background:#FFFFFF;border-top:1px solid #E3EAF3">
+    <a href="Main.dc.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#55657D;font-size:11px;font-weight:600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#55657D" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Beranda</a>
+    <a href="#" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#55657D;font-size:11px;font-weight:600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#55657D" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Ibadah</a>
+    <a href="Pendeta.dc.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#55657D;font-size:11px;font-weight:600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#55657D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-8-5.200-8-11a4.500 4.500 0 0 1 8-2.800A4.500 4.500 0 0 1 20 10c0 5.800-8 11-8 11z"/></svg>Pelayanan</a>
+    <a href="#" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#55657D;font-size:11px;font-weight:600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#55657D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z"/></svg>Renungan</a>
+    <a href="Saya.dc.html" aria-current="page" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#1458B4;font-size:11px;font-weight:700">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#1458B4" stroke="#1458B4" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

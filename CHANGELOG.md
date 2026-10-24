@@ -3,6 +3,20 @@
 
 ---
 
+## [2026-10-24 WIB] — Platform multi-domain: landing, peta platform, revisi portal | ✅ Berkas siap, belum dipasang di VPS
+
+**Project**: Database Warga GKJJ
+
+- Tiga domain baru diarahkan ke VPS produksi: `my` (portal jemaat), `kegiatan` (perencanaan dan pelaporan UPK), `majelis` (notula MPH/MPL). Rencana portal `www.gkjjakarta.org/new` **dibatalkan**, diganti `my.gkjjakarta.org`.
+- Baru: `deploy/landing/` (templat HTML + `render.sh`), `deploy/nginx-landing.prod.conf` (3 blok server), `deploy/nginx-snippet-landing-headers.conf`, `deploy/nginx-default.prod.conf` (opsional), `deploy/LANDING_CERTBOT.md` (DNS, Nginx, certbot per domain, penangkap default, rollback). Statis, tanpa PM2.
+- Baru: `docs/PLATFORM.md` (peta domain, konvensi nama dan port, struktur target, kapasitas memori VPS, keputusan terbuka SSO/peran/API/kapasitas/QR, cara mengganti landing dengan aplikasi).
+- Direvisi: `docs/RENCANA_PORTAL_JEMAAT.md` dan `sprints/sprint_14.md` (tanpa `basePath`, tanpa mode ganda; Q1 WordPress gugur; Sprint 17 mengganti landing `my`). `sprints/sprint_13.md` ditandai ditahan menunggu keputusan QR absensi.
+- Pembersihan: direktori kosong `packages/types 2` dihapus (tidak ter-track).
+- Diverifikasi: `render.sh` menghasilkan tiga halaman tanpa placeholder tersisa dan lolos pengurai HTML. Dilihat di browser lewat server lokal (mode gelap; kontras tombol utama diperbaiki sesudahnya). **Belum dicek**: mode terang, lebar 390 px, `nginx -t` (Nginx tidak ada di mesin ini), dan seluruh langkah di VPS (belum dijalankan; hanya berkas di repo).
+- Tidak ada perubahan kode aplikasi, skema, atau dependensi.
+
+---
+
 ## [2026-10-23 WIB] — Status Keanggotaan: Pindah Gereja & Pindah Agama | ✅ DONE, dideploy ke produksi (`111bc3e`)
 
 **Project**: Database Warga GKJJ

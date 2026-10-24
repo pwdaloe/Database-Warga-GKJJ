@@ -701,7 +701,7 @@ Deploy ke production
 
 ### 9.4 Backlog Fitur
 
-*Diperbarui 23 Oktober 2026 (setelah Sprint 12; dideploy 23 Oktober).*
+*Diperbarui 24 Oktober 2026 (setelah Sprint 12; dideploy 23 Oktober). Peta platform multi-domain: `docs/PLATFORM.md`.*
 
 **Sudah selesai (di production per 7 Oktober 2026)**
 
@@ -721,6 +721,14 @@ Deploy ke production
 
 | Fitur | Status | Keterangan |
 |---|---|---|
+| Landing "sedang disiapkan" untuk `my`, `kegiatan`, `majelis` | ✅ Berkas siap (24 Okt); menunggu dipasang di VPS | `deploy/landing/`, `deploy/nginx-landing.prod.conf`, `deploy/LANDING_CERTBOT.md`. Statis, tanpa PM2. Pasang oleh user dengan langkah di LANDING_CERTBOT.md |
+| Portal jemaat `my.gkjjakarta.org` (Sprint 14–17) | 🗓️ Direncanakan | Menggantikan rencana `www/new` (dibatalkan). Rencana: `docs/RENCANA_PORTAL_JEMAAT.md`. Sprint 14 siap; menunggu keputusan QR (Sprint 13) |
+| Perbaikan QR kartu anggota (Sprint 13) | ⏸️ Ditahan | QR mau dipakai absensi kegiatan; desain token diputuskan dulu (`docs/PLATFORM.md` P7) |
+| SSO antar aplikasi (login satu akun) | 💡 Keputusan terbuka | Cara berbagi login (redirect vs cookie), peran baru, tanda tangan token: `docs/PLATFORM.md` P1–P2 |
+| `kegiatan.gkjjakarta.org` (rencana, anggaran, dana, monitoring, laporan UPK) | 💡 Ide | Belum ada rencana. Butuh `docs/kegiatan/RENCANA.md` |
+| `majelis.gkjjakarta.org` (notula MPH/MPL) | 💡 Ide | Data sensitif: dokumen keamanan dulu (`docs/PLATFORM.md` P6). Dokumentasi menyusul |
+| Kapasitas VPS 2 GB untuk beberapa aplikasi | 🔧 Perlu diputuskan | Ukur `free -m`/`pm2 monit`; naikkan atau pisah server sebelum aplikasi kedua hidup (`docs/PLATFORM.md` bagian 5) |
+| Tinjau 5 warga berstatus Pindah Agama | 🗓️ Menunggu user | Id 736, 739, 836, 1123, 1124; ubah ke Pindah Gereja bila memang pindah gereja. Judul surat atestasi ("Keterangan Pindah Keluar") menunggu istilah baku |
 | Status Keanggotaan: tambah "Pindah Gereja", "Pindah Keluar" menjadi "Pindah Agama" | ✅ Opsi A selesai dan dideploy (23 Okt, `111bc3e`) | Satu daftar bersama di API (`constants/statusKeanggotaan.ts`) dan web (`lib/statusKeanggotaan.ts`), dijaga tes agar selalu sama dengan enum database. Perpindahan KELUAR kini menghasilkan Pindah Gereja. Pindah Gereja dan Pindah Agama tidak dihitung aktif. **Opsi B (master yang bisa diubah di Pengaturan)** ditunda: perlu migrasi enum → tabel master di produksi, dikerjakan bila memang sering menambah status |
 | Pembuatan akun Jemaat massal | 🗓️ Usulan | Pilih banyak warga → akun + tautan WhatsApp berurutan (saat ini satu per satu) |
 | Survei & kebutuhan jemaat | 🗓️ Usulan | Struktur sudah siap (`CatatanJemaat.jenis`: CATATAN, KEBUTUHAN, SURVEI); belum ada antarmuka |

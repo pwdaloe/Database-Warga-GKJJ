@@ -15,6 +15,7 @@ Dibangun dengan arsitektur monorepo untuk mengelola data warga, keluarga, kelomp
 - [Pengujian (Testing)](#pengujian-testing)
 - [Keamanan & Kepatuhan PDP](#keamanan--kepatuhan-pdp)
 - [Tech Stack](#tech-stack)
+- [Platform & Domain](#platform--domain)
 - [Struktur Proyek](#struktur-proyek)
 - [Persyaratan](#persyaratan)
 - [Instalasi & Menjalankan](#instalasi--menjalankan)
@@ -354,6 +355,23 @@ Body snapshot pada `ActivityLog` secara otomatis:
 
 ---
 
+## Platform & Domain
+
+Repositori ini menaungi beberapa aplikasi GKJ Jakarta. Peta lengkap (port, nama proses, keputusan SSO, kapasitas VPS, cara menambah aplikasi): [`docs/PLATFORM.md`](docs/PLATFORM.md).
+
+| Domain | Fungsi | Status |
+|---|---|---|
+| `jemaat.gkjjakarta.org` · `api.gkjjakarta.org` | Database warga jemaat (`apps/web`, `apps/api`) | ✅ Produksi |
+| `my.gkjjakarta.org` | Portal jemaat: informasi publik, lalu area "Saya" (`apps/portal`, Sprint 14–17) | 🟡 Landing "sedang disiapkan" |
+| `kegiatan.gkjjakarta.org` | Perencanaan, anggaran, dana, monitoring, pelaporan UPK | 🟡 Landing; belum direncanakan |
+| `majelis.gkjjakarta.org` | Notula rapat MPH dan MPL | 🟡 Landing; dokumentasi menyusul |
+
+Halaman "sedang disiapkan" untuk tiga domain baru ada di `deploy/landing/` (satu templat HTML, teks per domain di `render.sh`), blok Nginx di `deploy/nginx-landing.prod.conf`, langkah pemasangan dan certbot di `deploy/LANDING_CERTBOT.md`. Semuanya statis (tanpa proses PM2 tambahan). Rencana `www.gkjjakarta.org/new` untuk portal dibatalkan; portal memakai `my.gkjjakarta.org`.
+
+Login semua aplikasi direncanakan satu akun (SSO) dari `jemaat.gkjjakarta.org`; caranya belum diputuskan (`docs/PLATFORM.md` P1).
+
+---
+
 ## Struktur Proyek
 
 > Diagram arsitektur (komponen, alur deploy, autentikasi): [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
@@ -431,8 +449,10 @@ Database-Warga-GKJJ/
 │           │   │   └── CookieConsentBanner.tsx # Banner consent site-wide (localStorage)
 │           │   └── ui/             # Modal, Badge, Pagination, FormField
 │           └── hooks/              # Custom React hooks per domain
+├── packages/types/                 # Tipe bersama
+├── deploy/                         # Skrip deploy, PM2, Nginx per domain, landing/ (halaman "sedang disiapkan")
 ├── database/
-├── docs/                           # PANDUAN_PRODUK.md, PANDUAN_PENATUA.md, dll.
+├── docs/                           # PLATFORM.md (peta domain & aplikasi), PANDUAN_*.md, RENCANA_PORTAL_JEMAAT.md, dll.
 ├── sprints/                        # Sprint plan untuk eksekusi via skill /sprint
 ├── docker-compose.yml
 └── package.json
