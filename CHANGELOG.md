@@ -3,6 +3,21 @@
 
 ---
 
+## [2026-10-24 WIB] — Sprint 13: token QR kartu anggota | ✅ DONE di lokal, belum dideploy
+
+**Project**: Database Warga GKJJ
+
+- QR kartu dan tautan WhatsApp kini `/m/{token}` (token acak per warga di kolom `warga.qr_token`), bukan `/m/{id}` berurutan: menutup celah penelusuran massal data jemaat tanpa login. Rancangan dan penyimpangan: `sprints/sprint_13.md`.
+- Token diisi database (`DEFAULT replace(gen_random_uuid()::text,'-','')`): baris lama terisi otomatis dan warga baru dari form/impor/perpindahan juga, tanpa skrip backfill. Perlu PostgreSQL ≥ 13 di produksi. **SQL migrasi dijalankan manual sebelum deploy** (`prisma/migrations/20261024100000_warga_qr_token`): `prisma db push` menolak menambah constraint unik pada tabel berisi (diuji pada 1.183 baris); setelah SQL manual `db push` sinkron.
+- `GET /api/public/member/:token`: 404 seragam (token salah, tidak ada, id lama), `no-store`, `noindex`, batas laju 30/menit (id lama 10/menit). Id numerik lama mati kecuali `QR_ALLOW_LEGACY_ID=true` (default mati; nilai selain "true" persis dianggap mati).
+- `qrToken` dibuang dari semua respons secara bawaan (`omit` global Prisma), hanya dibaca untuk daftar dan detail warga lalu dibuang lagi untuk peran tanpa akses Kartu (VIEWER/JEMAAT); tidak ada di log aktivitas, audit log, dan log akses (disamarkan `[token]`).
+- Baru: `POST /api/warga/:id/qr-token/rotate` (Superadmin, Kepala Kantor, Staf Admin; audit tanpa token) dan tombol **Buat ulang QR** di detail warga.
+- Web: halaman publik `/m/[token]` (404 → "Kartu Tidak Tersedia… hubungi gereja"), `lib/kartuUrl.ts`, `lib/kartuCetak.ts` (cetak ID Card dipindah dari halaman agar teruji), tanpa token valid QR tidak dibuat (tidak jatuh ke id).
+- Tes: API 496 → 555, web 155 → 172; mutation check 14 (API) + 8 (web) tertangkap; QR di halaman didekode dan cocok dengan token DB.
+- **Sebelum deploy**: baca `DEPLOY.md` bagian "Catatan Rilis Khusus: Sprint 13" (cek versi PostgreSQL, tautan lama akan mati, log Nginx memuat token). Belum diverifikasi: klik "Buat ulang QR" di browser, cetak ID Card, `/m/kartu` di HP, kamera HP fisik.
+
+---
+
 ## [2026-10-24 WIB] — Platform multi-domain: landing, peta platform, revisi portal | ✅ DONE, landing terpasang di VPS produksi
 
 **Project**: Database Warga GKJJ

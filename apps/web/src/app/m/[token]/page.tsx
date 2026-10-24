@@ -14,17 +14,21 @@ const STATUS_KK_LABEL: Record<string, string> = {
 }
 
 export default function PublicMemberPage() {
-  const { id } = useParams<{ id: string }>()
+  const { token } = useParams<{ token: string }>()
   const [warga, setWarga] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get(`/public/member/${id}`)
+    api.get(`/public/member/${encodeURIComponent(token)}`)
       .then((r) => setWarga(r.data.data))
-      .catch((e) => setError(e?.response?.data?.error ?? 'Anggota tidak ditemukan'))
+      .catch((e) => setError(
+        e?.response?.status === 404
+          ? 'Kartu tidak ditemukan atau sudah diperbarui. Hubungi gereja untuk kartu terbaru.'
+          : 'Tidak dapat memuat kartu. Coba lagi sebentar lagi.',
+      ))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [token])
 
   if (loading) {
     return (
@@ -39,7 +43,7 @@ export default function PublicMemberPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#1e3a5f] to-[#2d5a9e] flex items-center justify-center p-6">
         <div className="text-center text-white">
           <XCircle size={48} className="mx-auto mb-4 opacity-60" />
-          <p className="text-lg font-semibold">Anggota Tidak Ditemukan</p>
+          <p className="text-lg font-semibold">Kartu Tidak Tersedia</p>
           <p className="text-white/60 text-sm mt-1">{error}</p>
         </div>
       </div>

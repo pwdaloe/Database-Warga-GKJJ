@@ -60,5 +60,11 @@ export function useWargaMutations() {
     onSuccess: invalidate,
   })
 
-  return { create, update, remove }
+  // Buat ulang token QR kartu (kartu hilang atau bocor). Token lama langsung tidak berlaku.
+  const rotateQr = useMutation({
+    mutationFn: (id: number) => api.post(`/warga/${id}/qr-token/rotate`).then((r) => r.data.data as { qrToken: string }),
+    onSuccess: invalidate,
+  })
+
+  return { create, update, remove, rotateQr }
 }

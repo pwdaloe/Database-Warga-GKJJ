@@ -121,6 +121,11 @@ Setiap akses dicatat ke `AuditLog` dengan action `ACCESS` (UU PDP Pasal 16 & 49)
 ```
 `newKeluarga` opsional — dipakai untuk membuat KK baru sekaligus saat warga adalah Kepala Keluarga.
 
+### `POST /warga/:id/qr-token/rotate`
+**Role:** SUPERADMIN, KEPALA_KANTOR, STAF_ADMIN. Membuat ulang token QR warga (kartu hilang atau bocor); token lama langsung `404` di halaman publik. Mengembalikan `{ data: { qrToken } }` hanya ke pemanggil. Tercatat di `AuditLog` (UPDATE, tanpa token). Error: `400` id tidak valid, `403` peran lain, `404` warga tidak ada.
+
+> Field `qrToken` pada `GET /warga` dan `GET /warga/:id` hanya ada untuk peran yang boleh membuka Kartu Anggota (bukan VIEWER/JEMAAT) dan tidak ada di endpoint lain.
+
 ### `PUT /warga/:id`
 Sama seperti `POST`, body sama. `tanggalKonsen` **ditentukan server**, bukan dari client — hanya terisi ulang saat transisi belum-setuju → setuju, dikosongkan saat consent ditarik.
 
@@ -303,7 +308,9 @@ Seluruh endpoint di bawah **Role:** SUPERADMIN, KEPALA_KANTOR (di-guard di level
 
 ## Publik (`/public`) — tanpa autentikasi
 
-### `GET /public/member/:id`
-Info anggota terbatas untuk kartu digital (dipanggil dari `/m/[id]`). **Tidak** mengembalikan NIK, alamat, koordinat, atau kontak.
+### `GET /public/member/:token`
+Info anggota terbatas untuk kartu digital (dipanggil dari `/m/[token]`). `:token` adalah token acak QR (32 karakter hex huruf kecil). **Tidak** mengembalikan NIK, alamat, koordinat, kontak, maupun token itu sendiri.
 
-**Error:** 400 jika id bukan angka, 404 jika warga tidak ditemukan.
+Header respons: `Cache-Control: no-store`, `X-Robots-Tag: noindex, nofollow`. Batas laju 30 permintaan/menit/IP (id lama 10/menit), lalu `429`.
+
+**Error:** `404` dengan pesan yang sama (`Anggota tidak ditemukan`) untuk token salah format, token tidak ada, dan id numerik lama. Id numerik (`/public/member/123`) hanya dilayani bila env `QR_ALLOW_LEGACY_ID=true` (default mati).

@@ -15,6 +15,7 @@ const REMOVE_FIELDS = new Set([
   'fotoUrl',           // base64 bisa ratusan KB — tidak boleh masuk log
   'newAlamat', 'newKelurahan', 'newKecamatan', 'newKota',
   'bodySnapshot',
+  'qrToken',           // kunci akses halaman publik anggota
 ])
 
 function sanitize(obj: unknown, depth = 0): unknown {

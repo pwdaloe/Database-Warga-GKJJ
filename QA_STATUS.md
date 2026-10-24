@@ -6,8 +6,8 @@
 
 | Layer | Test Files | Test Runner | Tests | Coverage (statement) |
 |-------|-----------|-------------|-------|----------------------|
-| Backend API (`apps/api`) | 29 | ✅ Vitest + Supertest | 496 passed | ±85% (belum diukur ulang) |
-| Frontend (`apps/web`) | 25 | ✅ Vitest + React Testing Library | 155 passed | 17,8% (belum diukur ulang) |
+| Backend API (`apps/api`) | 33 | ✅ Vitest + Supertest | 555 passed | ±85% (belum diukur ulang) |
+| Frontend (`apps/web`) | 30 | ✅ Vitest + React Testing Library | 172 passed | 17,8% (belum diukur ulang) |
 
 Type-check (`tsc --noEmit`) API dan web lulus; `next build` berhasil (23 Okt 2026, setelah patch dependensi).
 
@@ -21,6 +21,7 @@ Jalankan test: `npm run test --workspace=apps/api` / `npm run test --workspace=a
 | Area | File | Cakupan |
 |---|---|---|
 | Util | `utils/crypto.test.ts`, `utils/waNumber.test.ts` | enkripsi NIK (roundtrip, determinisme, null), normalisasi nomor WhatsApp |
+| Token QR | `utils/qrToken.test.ts`, `utils/prismaOmit.test.ts`, `routes/public.route.test.ts`, `public.limiter.route.test.ts`, `warga.qr.route.test.ts` | format 128 bit dan 10.000 token unik, 404 seragam, sakelar `QR_ALLOW_LEGACY_ID` (nilai tidak valid = mati), `no-store`/`noindex`, batas laju, redaksi `qrToken` per peran, rotasi (matriks peran, audit tanpa token, retry P2002), `omit` global, penyamaran token di log |
 | Middleware | `middleware/auth.test.ts`, `middleware/errorHandler.test.ts` | JWT dan role guard, ZodError/AppError/Prisma P2002/P2025/P2003 |
 | Auth | `services/auth.service*.test.ts`, `routes/auth*.test.ts` | login, ganti password, reset password mandiri |
 | Warga | `services/warga.service.test.ts`, `warga.kepala-kk.test.ts`, `warga.roundtrip.test.ts`, `routes/warga.keanggotaan.route.test.ts` | validasi, kepala KK, round-trip edit per peran, Keanggotaan (Sidi, Menikah) |

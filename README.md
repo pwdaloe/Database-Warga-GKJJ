@@ -241,7 +241,7 @@ Seluruh halaman utama (`/dashboard`, `/warga`, `/keluarga`, `/validasi-data`, `/
 
 Implementasi bersama: `components/layout/DashboardShell.tsx` (bar atas + drawer), `Sidebar.tsx`, serta komponen `Modal`, `Pagination`, dan `FormField` yang sudah responsif. Breakpoint memakai Tailwind standar (`sm` 640px, `md` 768px, `lg` 1024px).
 
-> Versi ringkas `/m/...` untuk Penatua Kelompok tetap tersedia (lihat bagian berikut). Halaman `/m/[id]` dipakai oleh tautan QR dan WhatsApp kartu anggota.
+> Versi ringkas `/m/...` untuk Penatua Kelompok tetap tersedia (lihat bagian berikut). Halaman `/m/[token]` dipakai oleh tautan QR dan WhatsApp kartu anggota.
 
 ---
 
@@ -258,7 +258,7 @@ Antarmuka ringkas berbasis browser (`/m/...`), dirancang untuk dipakai penatua s
 | `/m/warga/baru` | Form tambah warga ringkas (6 field): nama, jenis kelamin, status keluarga, kelompok (terkunci ke kelompok penatua), status keanggotaan, WhatsApp — data masuk sebagai **Draft**, dilengkapi & divalidasi staf kantor kemudian |
 | `/m/warga/[id]` | Detail + edit terbatas (status keanggotaan, WhatsApp, tanggal lahir, sakramen, alamat domisili) |
 | `/m/kartu` | Cari jemaat → tampilkan kartu digital, cocok untuk verifikasi kehadiran ibadah |
-| `/m/[id]` | Kartu digital publik (lihat [Halaman Publik](#halaman-publik)) |
+| `/m/[token]` | Kartu digital publik (lihat [Halaman Publik](#halaman-publik)) |
 
 Panduan langkah-demi-langkah untuk penatua: lihat [`docs/PANDUAN_PENATUA.md`](docs/PANDUAN_PENATUA.md).
 
@@ -320,6 +320,11 @@ Tiga field baru pada tabel `Warga`:
 Body snapshot pada `ActivityLog` secara otomatis:
 - **Menghapus** field: `nik`, `tanggalLahir`, `tempatLahir`, `alamatKtp`, `alamatDomisili`, `latitude`, `longitude`, `fotoUrl`
 - **Memask** field: `password`, `token`, `telepon`, `whatsapp`, `email` → diganti `***`
+
+#### 6. Token QR Kartu Anggota (Sprint 13)
+- URL publik kartu memakai token acak (kolom `warga.qr_token`, default `gen_random_uuid()` di database, jadi warga baru dari form, impor, dan perpindahan otomatis punya token), bukan id berurutan, sehingga jemaat tidak bisa ditelusuri massal tanpa login
+- Kolom token tidak pernah dibaca kecuali diminta eksplisit (`omit` global klien Prisma); `sanitizeForRole` membuangnya untuk peran tanpa akses Kartu; tidak ada di log aktivitas, audit log, maupun log akses (jalur `/api/public/member/…` disamarkan jadi `[token]`)
+- Batas laju khusus `/api/public/member/*`: 30/menit/IP, jalur id lama 10/menit
 
 ### Catatan Operasional Penting
 
@@ -628,6 +633,7 @@ Authorization: Bearer <token>
 | `POST` | `/warga` | Tambah warga baru (opsional: buat KK baru via `newKeluarga`) |
 | `PUT` | `/warga/:id` | Update data warga |
 | `DELETE` | `/warga/:id` | Hapus warga |
+| `POST` | `/warga/:id/qr-token/rotate` | Buat ulang token QR kartu (kartu hilang/bocor); token lama langsung mati — Superadmin/Kepala Kantor/Staf Admin |
 | `PATCH` | `/warga/bulk-status` | Validasi/batalkan validasi massal (stamp `validatedBy`/`validatedAt`) — Superadmin/Kepala Kantor/Staf Admin |
 
 ### Keluarga
@@ -697,7 +703,7 @@ Authorization: Bearer <token>
 ### Publik (tanpa autentikasi)
 | Method | Endpoint | Keterangan |
 |---|---|---|
-| `GET` | `/public/member/:id` | Info anggota terbatas untuk kartu digital |
+| `GET` | `/public/member/:token` | Info anggota terbatas untuk kartu digital (token acak dari QR; 404 seragam, `no-store`, 30 req/menit/IP) |
 | `GET` | `/system/status` | `{ maintenance, message, version }` untuk bar pembaruan aplikasi (baca file `.deploy/*`, limiter 120/menit) |
 
 ---
@@ -727,7 +733,7 @@ Authorization: Bearer <token>
 
 ## Halaman Publik
 
-### Kartu Digital Anggota — `/m/[id]`
+### Kartu Digital Anggota — `/m/[token]`
 
 Halaman **tanpa login** yang menampilkan kartu keanggotaan digital saat QR code di-scan.
 
@@ -742,11 +748,9 @@ Menampilkan:
 
 > **Catatan privasi:** Halaman ini TIDAK menampilkan NIK, email, nomor telepon, atau data sensitif lainnya.
 
-**Roadmap QR & Absensi:**
-Fondasi URL QR (`{app}/m/{wargaId}`) dirancang untuk mendukung fitur absensi kehadiran ibadah di masa mendatang:
-- Anggota scan QR acara → check-in mandiri
-- Penatua scan kartu anggota → catat kehadiran
-- Laporan kehadiran per acara dan per kelompok
+**Token QR (bukan id berurutan):** QR dan tautan WhatsApp kartu berisi `{app}/m/{token}`, token acak 128 bit (32 karakter hex) per warga. Token salah dan token tidak ada sama-sama `404` dengan pesan yang sama. Tautan lama berbasis id (`/m/123`) **tidak berfungsi** kecuali env `QR_ALLOW_LEGACY_ID=true` (default mati). Token hanya terlihat oleh peran yang boleh membuka Kartu Anggota, dan bisa dibuat ulang lewat tombol **Buat ulang QR** di detail warga (Superadmin, Kepala Kantor, Staf Admin).
+
+**Roadmap QR & Absensi:** token ini juga menjadi kunci absensi kegiatan: petugas yang login memindai kartu dan kehadiran dicatat per sesi. Rancangan: [`sprints/sprint_13b.md`](sprints/sprint_13b.md); keputusan: [`docs/PLATFORM.md`](docs/PLATFORM.md) P7.
 
 ### Kebijakan Cookie & Privasi — `/kebijakan-cookie`, `/kebijakan-privasi`
 

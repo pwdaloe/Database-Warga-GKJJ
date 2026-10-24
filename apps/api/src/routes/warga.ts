@@ -4,6 +4,7 @@ import { authenticate, authorize } from '../middleware/auth.js'
 import * as svc from '../services/warga.service.js'
 import { ok, created, paginated } from '../utils/response.js'
 import { prisma } from '../utils/prisma.js'
+import { AppError } from '../middleware/errorHandler.js'
 import { STATUS_KEANGGOTAAN_VALUES } from '../constants/statusKeanggotaan.js'
 
 export const wargaRouter = Router()
@@ -190,6 +191,18 @@ wargaRouter.put(
       alamatKeluarga,
     )
     ok(res, warga)
+  },
+)
+
+// POST /api/warga/:id/qr-token/rotate — buat ulang token QR kartu (kartu hilang atau bocor)
+wargaRouter.post(
+  '/:id/qr-token/rotate',
+  authorize(...svc.PERAN_ROTASI_QR),
+  async (req, res) => {
+    const id = Number(req.params['id'])
+    if (!Number.isInteger(id) || id <= 0) throw new AppError(400, 'ID warga tidak valid')
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket.remoteAddress ?? null
+    ok(res, await svc.rotasiQrToken(id, req.user!.userId, ip))
   },
 )
 

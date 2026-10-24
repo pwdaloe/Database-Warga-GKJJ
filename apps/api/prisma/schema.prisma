@@ -141,6 +141,11 @@ model Warga {
   nik                      String?             @unique @db.VarChar(64) // encrypted AES-256
   golonganDarah            GolonganDarah?      @map("golongan_darah")
   fotoUrl                  String?             @map("foto_url") @db.Text
+  // Token acak di QR kartu anggota (122 bit dari gen_random_uuid(), 32 hex). Diisi database saat baris dibuat,
+  // sehingga warga baru dari form, impor, maupun perpindahan otomatis punya token dan baris lama terisi saat
+  // kolom ditambahkan. Pengganti id berurutan di URL publik /m/{token}. Jangan pernah dikirim ke VIEWER/JEMAAT,
+  // ekspor, atau log; dirotasi lewat POST /api/warga/:id/qr-token/rotate.
+  qrToken                  String              @unique @default(dbgenerated("replace((gen_random_uuid())::text, '-'::text, ''::text)")) @map("qr_token") @db.VarChar(32)
   statusKeluarga           StatusDalamKeluarga @default(LAINNYA) @map("status_keluarga")
   statusKeanggotaan        StatusKeanggotaan   @default(AKTIF) @map("status_keanggotaan")
   sudahBaptis              Boolean             @default(false) @map("sudah_baptis")
