@@ -1,7 +1,6 @@
 import 'dotenv/config'
-import { PrismaClient } from '../src/generated/prisma/client.js'
-
-const prisma = new PrismaClient()
+// Prisma 7 wajib memakai driver adapter; klien bersama di utils/prisma.ts sudah memasangnya.
+import { prisma } from '../src/utils/prisma.js'
 
 const KELURAHAN_JAKARTA_TIMUR = [
   // Kecamatan Cakung
@@ -110,6 +109,10 @@ async function main() {
   }
 }
 
+// Exit code 1 saat gagal, supaya skrip deploy tidak mengira seed berhasil/dilewati.
 main()
-  .catch(console.error)
+  .catch((e) => {
+    console.error('❌ Seed master gagal:', e)
+    process.exitCode = 1
+  })
   .finally(() => prisma.$disconnect())

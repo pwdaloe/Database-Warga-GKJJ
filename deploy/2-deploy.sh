@@ -164,7 +164,11 @@ sudo -u "$APP_USER" npx prisma db push
 
 # ── 5. Seed master data (skip jika sudah ada) ─────────────────
 info "Seed master data (kelurahan & komisi)..."
-sudo -u "$APP_USER" npx tsx prisma/seed-master.ts || warn "Seed dilewati (data sudah ada)"
+# Seed idempoten: bila data sudah ada ia mencetak "already seeded ... skipping" dan exit 0.
+# Exit non-0 berarti SEED ITU SENDIRI GAGAL (bukan "data sudah ada"); deploy tetap lanjut karena data master
+# produksi sudah ada, tetapi penyebabnya harus diperiksa.
+sudo -u "$APP_USER" npx tsx prisma/seed-master.ts \
+  || warn "Seed master GAGAL (error di atas; BUKAN karena data sudah ada). Deploy dilanjutkan, periksa penyebabnya."
 
 # PM2 berjalan sebagai root, sehingga Next.js (runtime) menulis cache ke .next sebagai root.
 # Build dijalankan sebagai $APP_USER dan gagal (EACCES unlink) jika masih ada file milik root.

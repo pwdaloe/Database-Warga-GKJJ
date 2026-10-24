@@ -3,7 +3,18 @@
 
 ---
 
-## [2026-10-24 WIB] — Sprint 13: token QR kartu anggota | ✅ DONE di lokal, belum dideploy
+## [2026-10-24 WIB] — Perbaikan seed untuk Prisma 7 | ✅ DONE di lokal (belum dideploy)
+
+**Project**: Database Warga GKJJ
+
+- Temuan dari log deploy Sprint 13: `prisma/seed-master.ts` (dan `seed.ts`) membuat `new PrismaClient()` tanpa driver adapter, yang gagal sejak upgrade Prisma 7 (23 Okt), dan `2-deploy.sh` menampilkannya sebagai "Seed dilewati (data sudah ada)". Tidak berdampak di produksi (data master sudah ada); akan gagal di database kosong.
+- Perbaikan: kedua seed memakai klien bersama `src/utils/prisma.ts`; `seed-master.ts` tidak lagi menelan error (exit code 1 saat gagal); `2-deploy.sh` kini memberi pesan "Seed master GAGAL (BUKAN karena data sudah ada)" saat exit non-0.
+- Tes penjaga baru `tests/utils/prismaClient.guard.test.ts`: tidak boleh ada `new PrismaClient(` selain di `utils/prisma.ts`, adapter harus terpasang, seed harus exit 1 saat gagal. Mutation check 4 dari 4 tertangkap (satu regex diperketat setelah lolos).
+- Diuji di database sementara: seed-master (63 kelurahan, 6 komisi) dan seed.ts (3 wilayah, 23 kelompok, 24 user) berhasil di DB kosong, idempoten pada jalan kedua, DB tidak ada → exit 1. API 559 tes.
+
+---
+
+## [2026-10-24 WIB] — Sprint 13: token QR kartu anggota | ✅ DONE, dideploy ke produksi (`241e2da`)
 
 **Project**: Database Warga GKJJ
 
@@ -14,7 +25,7 @@
 - Baru: `POST /api/warga/:id/qr-token/rotate` (Superadmin, Kepala Kantor, Staf Admin; audit tanpa token) dan tombol **Buat ulang QR** di detail warga.
 - Web: halaman publik `/m/[token]` (404 → "Kartu Tidak Tersedia… hubungi gereja"), `lib/kartuUrl.ts`, `lib/kartuCetak.ts` (cetak ID Card dipindah dari halaman agar teruji), tanpa token valid QR tidak dibuat (tidak jatuh ke id).
 - Tes: API 496 → 555, web 155 → 172; mutation check 14 (API) + 8 (web) tertangkap; QR di halaman didekode dan cocok dengan token DB.
-- **Sebelum deploy**: baca `DEPLOY.md` bagian "Catatan Rilis Khusus: Sprint 13" (cek versi PostgreSQL, tautan lama akan mati, log Nginx memuat token). Belum diverifikasi: klik "Buat ulang QR" di browser, cetak ID Card, `/m/kartu` di HP, kamera HP fisik.
+- **Dideploy 24 Okt (`241e2da`)**: PostgreSQL produksi 16.15; cadangan `pra_qr_20261024_135847.dump`; SQL migrasi manual dulu (1.183 token unik, format benar), lalu `2-deploy.sh prod` (`db push`: "already in sync"). Pasca-deploy: `db:integritas` bersih, `/public/member/123` 404, token valid 200 dengan `no-store` dan `noindex`. Uji browser oleh Daru lolos: QR dipindai dengan kamera HP membuka kartu, `/m/{id}` lama menampilkan "Kartu Tidak Tersedia", tombol Buat ulang QR tampil, tautan WhatsApp memakai token. Belum diverifikasi: klik "Buat ulang QR" di data nyata, cetak ID Card, `/m/kartu` di HP.
 
 ---
 
