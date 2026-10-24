@@ -1,0 +1,406 @@
+// ============================================================
+// Prisma Schema — kegiatan.gkjjakarta.org (perencanaan program kerja dan anggaran UPK)
+// Database terpisah dari aplikasi jemaat. Uang = bilangan bulat rupiah (BigInt).
+// ============================================================
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Enum ─────────────────────────────────────────────────────
+
+enum PeranPengguna {
+  ADMIN
+  SEKRETARIAT
+  KOORDINATOR_BIDANG
+  PENGURUS_UPK
+  MAJELIS
+
+  @@map("peran_pengguna_enum")
+}
+
+enum JenisUnit {
+  UPK // unit pelayanan kategorial
+  POS // pos biaya di luar UPK (mis. Penatalayanan: rumah tangga, kesekretariatan)
+
+  @@map("jenis_unit_enum")
+}
+
+enum Jabatan {
+  KETUA
+  SEKRETARIS
+  BENDAHARA
+
+  @@map("jabatan_enum")
+}
+
+enum JenisAcuan {
+  VISI
+  MISI
+  SASARAN
+
+  @@map("jenis_acuan_enum")
+}
+
+enum StatusPengajuan {
+  BELUM_DIBUKA
+  DIBUKA
+  DITUTUP
+
+  @@map("status_pengajuan_enum")
+}
+
+enum StatusProgram {
+  DRAFT
+  DIAJUKAN
+
+  @@map("status_program_enum")
+}
+
+enum JenisProgram {
+  BARU
+  LANJUTAN
+  GABUNGAN
+
+  @@map("jenis_program_enum")
+}
+
+enum KategoriWaktu {
+  SEKALI // Sekali Diberikan
+  PERIODE
+  RENTANG // Spesifik Rentang
+  TAHUN
+
+  @@map("kategori_waktu_enum")
+}
+
+enum JenisSumberDana {
+  GEREJA
+  SWADAYA
+  PENGGALANGAN
+  DONASI
+
+  @@map("jenis_sumber_dana_enum")
+}
+
+enum KategoriEvaluasi {
+  A
+  B
+  C
+  D
+
+  @@map("kategori_evaluasi_enum")
+}
+
+// ── Master ───────────────────────────────────────────────────
+
+model TahunAnggaran {
+  id               Int             @id @default(autoincrement())
+  tahun            Int             @unique
+  nama             String          @db.VarChar(100)
+  statusPengajuan  StatusPengajuan @default(BELUM_DIBUKA) @map("status_pengajuan")
+  rencanaBuka      DateTime?       @map("rencana_buka") @db.Date
+  rencanaTutup     DateTime?       @map("rencana_tutup") @db.Date
+  praMukerTanggal  DateTime?       @map("pra_muker_tanggal") @db.Date
+  mukerTanggal     DateTime?       @map("muker_tanggal") @db.Date
+  aktif            Boolean         @default(false)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  pagu     PaguUnit[]
+  acuan    AcuanStrategis[]
+  programs ProgramKerja[]
+
+  @@map("tahun_anggaran")
+}
+
+model Bidang {
+  id     Int    @id @default(autoincrement())
+  kode   String @unique @db.VarChar(20)
+  nama   String @db.VarChar(100)
+  urutan Int    @default(0)
+
+  units    Unit[]
+  pengguna Pengguna[]
+
+  @@map("bidang")
+}
+
+model Unit {
+  id         Int       @id @default(autoincrement())
+  kode       String    @unique @db.VarChar(20)
+  nama       String    @db.VarChar(150) // nama resmi (dipakai di anggaran)
+  singkatan  String?   @db.VarChar(30)
+  alias      String[] // nama lain yang beredar (mis. "Komisi Dewasa" untuk "Komisi Warga Dewasa")
+  jenis      JenisUnit @default(UPK)
+  bidangId   Int       @map("bidang_id")
+  urutan     Int       @default(0)
+  aktif      Boolean   @default(true)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  bidang    Bidang        @relation(fields: [bidangId], references: [id])
+  pagu      PaguUnit[]
+  pengurus  Pengurus[]
+  pengguna  Pengguna[]
+  programs  ProgramKerja[]
+  program2026 Program2026[]
+
+  @@map("unit")
+}
+
+model PaguUnit {
+  id        Int      @id @default(autoincrement())
+  tahunId   Int      @map("tahun_id")
+  unitId    Int      @map("unit_id")
+  nilai     BigInt   @default(0)
+  catatan   String?  @db.VarChar(255)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tahun TahunAnggaran @relation(fields: [tahunId], references: [id])
+  unit  Unit          @relation(fields: [unitId], references: [id])
+
+  @@unique([tahunId, unitId])
+  @@map("pagu_unit")
+}
+
+// Badan Pengurus Harian per unit: tiga posisi tetap; nama, WhatsApp, dan email dapat diganti.
+model Pengurus {
+  id        Int      @id @default(autoincrement())
+  unitId    Int      @map("unit_id")
+  jabatan   Jabatan
+  nama      String   @db.VarChar(150)
+  whatsapp  String?  @db.VarChar(20)
+  email     String?  @db.VarChar(150)
+  aktif     Boolean  @default(true)
+  isContoh  Boolean  @default(false) @map("is_contoh")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  unit     Unit      @relation(fields: [unitId], references: [id])
+  pengguna Pengguna?
+
+  @@unique([unitId, jabatan])
+  @@map("pengurus")
+}
+
+model Pengguna {
+  id                 Int           @id @default(autoincrement())
+  username           String        @unique @db.VarChar(50)
+  nama               String        @db.VarChar(150)
+  email              String?       @db.VarChar(150)
+  whatsapp           String?       @db.VarChar(20)
+  passwordHash       String        @map("password_hash") @db.VarChar(255)
+  peran              PeranPengguna
+  unitId             Int?          @map("unit_id")
+  bidangId           Int?          @map("bidang_id")
+  pengurusId         Int?          @unique @map("pengurus_id")
+  aktif              Boolean       @default(true)
+  wajibGantiPassword Boolean       @default(true) @map("wajib_ganti_password")
+  lastLogin          DateTime?     @map("last_login")
+  isContoh           Boolean       @default(false) @map("is_contoh")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  unit     Unit?     @relation(fields: [unitId], references: [id])
+  bidang   Bidang?   @relation(fields: [bidangId], references: [id])
+  pengurus Pengurus? @relation(fields: [pengurusId], references: [id])
+  logs     LogAudit[]
+
+  @@map("pengguna")
+}
+
+// Visi, misi, dan sasaran strategis: per tahun anggaran, hierarkis, dikelola admin.
+model AcuanStrategis {
+  id        Int        @id @default(autoincrement())
+  tahunId   Int        @map("tahun_id")
+  jenis     JenisAcuan
+  kode      String     @db.VarChar(30)
+  nama      String     @db.VarChar(200)
+  deskripsi String?    @db.Text
+  parentId  Int?       @map("parent_id")
+  urutan    Int        @default(0)
+  aktif     Boolean    @default(true)
+
+  tahun    TahunAnggaran    @relation(fields: [tahunId], references: [id])
+  parent   AcuanStrategis?  @relation("AcuanHierarki", fields: [parentId], references: [id])
+  children AcuanStrategis[] @relation("AcuanHierarki")
+  programs ProgramAcuan[]
+
+  @@unique([tahunId, kode])
+  @@map("acuan_strategis")
+}
+
+model Satuan {
+  id     Int     @id @default(autoincrement())
+  nama   String  @unique @db.VarChar(40)
+  urutan Int     @default(0)
+  aktif  Boolean @default(true)
+
+  @@map("satuan")
+}
+
+model KategoriBiaya {
+  id     Int     @id @default(autoincrement())
+  nama   String  @unique @db.VarChar(60)
+  urutan Int     @default(0)
+  aktif  Boolean @default(true)
+
+  rab RabItem[]
+
+  @@map("kategori_biaya")
+}
+
+// Baseline evaluasi program 2026 (Matriks Evaluasi Program UPK): rujukan "lanjutan atau baru".
+model Program2026 {
+  id          Int              @id @default(autoincrement())
+  unitId      Int              @map("unit_id")
+  nama        String           @db.VarChar(200)
+  keselarasan String?          @db.VarChar(255)
+  kategori    KategoriEvaluasi
+  bersyarat   Boolean          @default(false) // A*
+  rekomendasi String?          @db.Text
+
+  unit     Unit           @relation(fields: [unitId], references: [id])
+  programs ProgramKerja[]
+
+  @@map("program_2026")
+}
+
+// ── Program Kerja (unit pengajuan) ───────────────────────────
+
+model ProgramKerja {
+  id              Int           @id @default(autoincrement())
+  tahunId         Int           @map("tahun_id")
+  unitId          Int           @map("unit_id")
+  nomor           String?       @unique @db.VarChar(40)
+  judul           String        @db.VarChar(200)
+  jenisProgram    JenisProgram  @default(BARU) @map("jenis_program")
+  program2026Id   Int?          @map("program_2026_id")
+  latarBelakang   String?       @map("latar_belakang") @db.Text
+  kebutuhan       String?       @db.Text
+  tujuan          String?       @db.Text
+  sasaranPenerima String?       @map("sasaran_penerima") @db.Text
+  targetPeserta   Int?          @map("target_peserta")
+  evaluasi        String?       @db.Text // rencana evaluasi dan pelaporan
+  picNama         String?       @map("pic_nama") @db.VarChar(150)
+  picWhatsapp     String?       @map("pic_whatsapp") @db.VarChar(20)
+  checklist       Json?
+  status          StatusProgram @default(DRAFT)
+  diajukanPada    DateTime?     @map("diajukan_pada")
+  diajukanOleh    Int?          @map("diajukan_oleh")
+  dibuatOleh      Int           @map("dibuat_oleh")
+  diubahOleh      Int?          @map("diubah_oleh")
+  isContoh        Boolean       @default(false) @map("is_contoh")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  tahun       TahunAnggaran   @relation(fields: [tahunId], references: [id])
+  unit        Unit            @relation(fields: [unitId], references: [id])
+  program2026 Program2026?    @relation(fields: [program2026Id], references: [id])
+  acuan       ProgramAcuan[]
+  jadwal      KegiatanJadwal[]
+  indikator   Indikator[]
+  rab         RabItem[]
+  sumberDana  SumberDana[]
+
+  @@index([tahunId, unitId])
+  @@index([status])
+  @@map("program_kerja")
+}
+
+model ProgramAcuan {
+  programId Int @map("program_id")
+  acuanId   Int @map("acuan_id")
+
+  program ProgramKerja   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  acuan   AcuanStrategis @relation(fields: [acuanId], references: [id])
+
+  @@id([programId, acuanId])
+  @@map("program_acuan")
+}
+
+model KegiatanJadwal {
+  id               Int           @id @default(autoincrement())
+  programId        Int           @map("program_id")
+  urutan           Int           @default(0)
+  nama             String        @db.VarChar(200)
+  kategoriWaktu    KategoriWaktu @map("kategori_waktu")
+  tanggalMulai     DateTime?     @map("tanggal_mulai") @db.Date
+  tanggalSelesai   DateTime?     @map("tanggal_selesai") @db.Date
+  keteranganPeriode String?      @map("keterangan_periode") @db.VarChar(150)
+  lokasi           String?       @db.VarChar(150)
+  hasilLangsung    String?       @map("hasil_langsung") @db.Text
+
+  program ProgramKerja @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@map("kegiatan_jadwal")
+}
+
+model Indikator {
+  id        Int    @id @default(autoincrement())
+  programId Int    @map("program_id")
+  urutan    Int    @default(0)
+  indikator String @db.VarChar(255)
+  target    String @db.VarChar(150)
+  bukti     String @db.VarChar(255)
+
+  program ProgramKerja @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@map("indikator")
+}
+
+model RabItem {
+  id          Int      @id @default(autoincrement())
+  programId   Int      @map("program_id")
+  urutan      Int      @default(0)
+  kategoriId  Int?     @map("kategori_id")
+  uraian      String   @db.VarChar(255)
+  perhitungan String?  @db.VarChar(255)
+  volume      Int
+  satuan      String   @db.VarChar(40)
+  hargaSatuan BigInt   @map("harga_satuan")
+  jumlah      BigInt // volume x hargaSatuan, dihitung server
+
+  program  ProgramKerja   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  kategori KategoriBiaya? @relation(fields: [kategoriId], references: [id])
+
+  @@index([programId])
+  @@map("rab_item")
+}
+
+model SumberDana {
+  id         Int             @id @default(autoincrement())
+  programId  Int             @map("program_id")
+  jenis      JenisSumberDana
+  nilai      BigInt
+  keterangan String?         @db.VarChar(255)
+
+  program ProgramKerja @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([programId, jenis])
+  @@map("sumber_dana")
+}
+
+model LogAudit {
+  id         BigInt   @id @default(autoincrement())
+  penggunaId Int?     @map("pengguna_id")
+  aksi       String   @db.VarChar(60)
+  entitas    String   @db.VarChar(40)
+  entitasId  Int?     @map("entitas_id")
+  ringkasan  String?  @db.VarChar(500)
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  pengguna Pengguna? @relation(fields: [penggunaId], references: [id])
+
+  @@index([entitas, entitasId])
+  @@map("log_audit")
+}

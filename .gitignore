@@ -21,3 +21,4 @@ docs/final-import-*.xlsx
 
 # Prisma Client hasil generate (Prisma 7)
 apps/api/src/generated/
+apps/kegiatan-api/src/generated/

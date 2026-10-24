@@ -11,7 +11,7 @@ Satu repositori (monorepo) menaungi beberapa aplikasi di bawah domain `gkjjakart
 | `jemaat.gkjjakarta.org` | Database warga jemaat: entry data, validasi, kartu, perpindahan | Staf, Penatua, Majelis, Jemaat | `apps/web` | 3000 | ✅ Produksi (dipakai entry data) |
 | `api.gkjjakarta.org` | API aplikasi jemaat dan **penerbit identitas (login)** | Aplikasi di atas | `apps/api` | 4000 | ✅ Produksi |
 | `my.gkjjakarta.org` | Portal jemaat: informasi ibadah, kegiatan, renungan, layanan; nanti area "Saya" | Publik, lalu jemaat yang masuk | `apps/portal` (belum dibuat) | 3100 (SSR; membaca `api`, tanpa API sendiri) | 🟡 Landing "sedang disiapkan"; sprint 13–17 |
-| `kegiatan.gkjjakarta.org` | Perencanaan kegiatan, pengajuan anggaran dan dana, monitoring, pelaporan UPK, dashboard untuk pengurus UPK | Pengurus UPK, bagian GKJ Jakarta | `apps/kegiatan-web`, `apps/kegiatan-api` (belum dibuat) | 3200 / 4200 | 🟡 Landing; belum direncanakan |
+| `kegiatan.gkjjakarta.org` | Perencanaan program kerja dan anggaran UPK (RKA), dashboard pagu vs pengajuan; kelak monitoring dan pelaporan | Pengurus UPK, sekretariat, majelis | `apps/kegiatan-web` :3200, `apps/kegiatan-api` :4200 (API di jalur `/api` pada domain yang sama) | 3200 / 4200 | 🟢 **Sprint K1 selesai di lokal (24 Okt)**; belum dipasang di VPS. Rencana: `docs/kegiatan/RENCANA_MVP_MUKER_2026.md`; pemasangan: `deploy/DEPLOY_KEGIATAN.md` |
 | `majelis.gkjjakarta.org` | Notula rapat MPH dan MPL | Majelis | `apps/majelis-web`, `apps/majelis-api` (belum dibuat) | 3300 / 4300 | 🟡 Landing; dokumentasi menyusul |
 | `www.gkjjakarta.org` | Situs gereja (WordPress) | Publik | di luar repo ini | — | Tidak diubah. Cukup menaruh tautan ke `my` |
 

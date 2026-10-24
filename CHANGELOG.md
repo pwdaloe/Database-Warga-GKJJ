@@ -3,6 +3,19 @@
 
 ---
 
+## [2026-10-24 WIB] — Sprint K1: aplikasi Kegiatan (RKA 2027) | ✅ DONE di lokal, belum dipasang di VPS
+
+**Project**: Database Warga GKJJ (produk baru `kegiatan.gkjjakarta.org`)
+
+- Dua aplikasi baru: `apps/kegiatan-api` (:4200, database `gkjj_kegiatan`) dan `apps/kegiatan-web` (:3200). Terpisah dari jemaat (login, JWT, database sendiri). Rencana dan keputusan: `docs/kegiatan/RENCANA_MVP_MUKER_2026.md`, `sprints/sprint_k1.md`.
+- Fitur: login per pengguna (password sementara wajib diganti, pengguna dibaca ulang tiap permintaan), master editable (tahun + jendela pengajuan, 14 UPK + 2 pos, pagu = angka 2026, BPH Ketua/Sekretaris/Bendahara dengan nama/WA/email, visi-misi, satuan, kategori biaya), formulir Program Kerja 9 bagian (RAB volume × harga, sumber dana harus sama dengan total, daftar periksa 9 butir), ajukan/tarik/hapus, ringkasan cetak, dashboard pagu vs pengajuan (status Under/Over/Sesuai/**Belum mengajukan**), akun (password acak sekali tampil + tautan WhatsApp), audit log.
+- Aturan penting ditegakkan di server: akses per unit (program unit lain = 404), jendela pengajuan, total RAB dan sumber dana dihitung server, kelengkapan diperiksa dari data tersimpan.
+- Pemasangan: `deploy/DEPLOY_KEGIATAN.md`, `3-deploy-kegiatan.sh`, `ecosystem.kegiatan.config.cjs`, `nginx-kegiatan.prod.conf` (API di jalur `/api`), `ganti-landing.sh`, `env.kegiatan-api.production`. Tidak menyentuh jemaat.
+- Tes: API 188, web 27; mutation check 25 + 8 tertangkap. Dicoba di browser: login, formulir, validasi, ajukan, dashboard, master tahun, akun. **Belum**: tampilan HP 390 px, tarik/hapus di browser, ringkasan cetak, tab master lain, dan semua langkah di VPS.
+- Dokumen: panduan pengurus UPK dan admin (`docs/kegiatan/`), brief, rencana MVP. Formulir 2026 (Smartsheet) dibaca langsung dan keterbatasannya diperbaiki (satu baris biaya, total diketik manual, tanpa login, tanpa draft).
+
+---
+
 ## [2026-10-24 WIB] — Perbaikan seed untuk Prisma 7 | ✅ DONE, dideploy ke produksi (`10222b3`)
 
 **Project**: Database Warga GKJJ

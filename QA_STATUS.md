@@ -7,6 +7,8 @@
 | Layer | Test Files | Test Runner | Tests | Coverage (statement) |
 |-------|-----------|-------------|-------|----------------------|
 | Backend API (`apps/api`) | 34 | ✅ Vitest + Supertest | 559 passed | ±85% (belum diukur ulang) |
+| Kegiatan API (`apps/kegiatan-api`) | 12 | ✅ Vitest + Supertest | 188 passed | belum diukur |
+| Kegiatan web (`apps/kegiatan-web`) | 3 | ✅ Vitest + RTL | 27 passed | belum diukur |
 | Frontend (`apps/web`) | 30 | ✅ Vitest + React Testing Library | 172 passed | 17,8% (belum diukur ulang) |
 
 Type-check (`tsc --noEmit`) API dan web lulus; `next build` berhasil (23 Okt 2026, setelah patch dependensi).

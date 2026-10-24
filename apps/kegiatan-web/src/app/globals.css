@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-gray-200; }
+  body { @apply bg-gray-50 text-gray-900; }
+  input, select, textarea { font-size: 16px; } /* mencegah zoom otomatis di iOS saat fokus */
+}
+
+@media print {
+  .tanpa-cetak { display: none !important; }
+  body { background: white; }
+  @page { margin: 14mm; }
+}

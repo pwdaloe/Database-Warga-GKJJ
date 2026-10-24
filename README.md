@@ -368,12 +368,25 @@ Repositori ini menaungi beberapa aplikasi GKJ Jakarta. Peta lengkap (port, nama 
 |---|---|---|
 | `jemaat.gkjjakarta.org` · `api.gkjjakarta.org` | Database warga jemaat (`apps/web`, `apps/api`) | ✅ Produksi |
 | `my.gkjjakarta.org` | Portal jemaat: informasi publik, lalu area "Saya" (`apps/portal`, Sprint 14–17) | 🟡 Landing "sedang disiapkan" |
-| `kegiatan.gkjjakarta.org` | Perencanaan, anggaran, dana, monitoring, pelaporan UPK | 🟡 Landing; belum direncanakan |
+| `kegiatan.gkjjakarta.org` | Pengajuan program kerja dan anggaran UPK (RKA), dashboard pagu vs pengajuan (`apps/kegiatan-web`, `apps/kegiatan-api`) | 🟢 Sprint K1 selesai di lokal; belum dipasang di VPS (`deploy/DEPLOY_KEGIATAN.md`) |
 | `majelis.gkjjakarta.org` | Notula rapat MPH dan MPL | 🟡 Landing; dokumentasi menyusul |
 
 Halaman "sedang disiapkan" untuk tiga domain baru ada di `deploy/landing/` (satu templat HTML, teks per domain di `render.sh`), blok Nginx di `deploy/nginx-landing.prod.conf`, langkah pemasangan dan certbot di `deploy/LANDING_CERTBOT.md`. Semuanya statis (tanpa proses PM2 tambahan). Rencana `www.gkjjakarta.org/new` untuk portal dibatalkan; portal memakai `my.gkjjakarta.org`.
 
 Login semua aplikasi direncanakan satu akun (SSO) dari `jemaat.gkjjakarta.org`; caranya belum diputuskan (`docs/PLATFORM.md` P1).
+
+---
+
+### Aplikasi Kegiatan (RKA) — `apps/kegiatan-api`, `apps/kegiatan-web`
+
+Pengurus UPK login dan mengajukan **Program Kerja** untuk RKA tahun berikutnya; sekretariat/majelis memantau **pagu vs pengajuan**. Dibangun cepat untuk pra-muker 15 Nov dan muker 22 Nov 2026.
+
+- **Terpisah dari aplikasi jemaat**: database `gkjj_kegiatan`, login sendiri, JWT sendiri; tidak membaca data warga.
+- **Formulir 9 bagian** mengikuti Contoh Program Kerja UPK 2027: identitas, acuan visi-misi, latar belakang dan kebutuhan, tujuan dan sasaran, rencana kegiatan dan jadwal, indikator, **RAB** (volume × harga, total dihitung server), **sumber dana** (gereja, swadaya, penggalangan mandiri, donasi; harus sama dengan RAB), evaluasi, dan daftar periksa 9 butir.
+- Alur: Draft → Diajukan (terkunci) → dapat ditarik kembali selama pengajuan **Dibuka**; admin membuka/menutup jendela.
+- Peran: Admin, Sekretariat (master dan akun), Koordinator bidang, Majelis (lihat), Pengurus UPK (unit sendiri).
+- Dev: `npm run dev --workspace=apps/kegiatan-api` (:4200) dan `--workspace=apps/kegiatan-web` (:3200); `cp .env.example .env`, buat database `gkjj_kegiatan`, `npx prisma db push`, `npm run db:seed` (dan `db:seed:contoh` untuk akun/program contoh).
+- Dokumen: `docs/kegiatan/` (rencana MVP, brief, panduan pengurus UPK dan admin), pemasangan: `deploy/DEPLOY_KEGIATAN.md`.
 
 ---
 
