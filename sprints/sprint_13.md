@@ -1,6 +1,6 @@
 # Sprint 13 — Perbaikan QR Kartu Anggota: token acak menggantikan id berurutan
 
-> **Status (24 Okt 2026): SELESAI DI LOKAL, belum dideploy** (lihat "Hasil pelaksanaan" di akhir). Direvisi setelah diskusi QR absensi. Token QR ini juga menjadi kunci absensi kegiatan (`sprints/sprint_13b.md`, `docs/PLATFORM.md` P7 diputuskan). Hasil diskusi: kartu fisik **belum dicetak**, jadi tidak perlu masa transisi panjang; kehadiran hanya rekap; uji coba ±100 orang.
+> **Status (24 Okt 2026): SELESAI dan DIDEPLOY ke produksi (`241e2da`, uji browser lolos)** (lihat "Hasil pelaksanaan" di akhir). Direvisi setelah diskusi QR absensi. Token QR ini juga menjadi kunci absensi kegiatan (`sprints/sprint_13b.md`, `docs/PLATFORM.md` P7 diputuskan). Hasil diskusi: kartu fisik **belum dicetak**, jadi tidak perlu masa transisi panjang; kehadiran hanya rekap; uji coba ±100 orang.
 > Perubahan terhadap rancangan awal: `QR_ALLOW_LEGACY_ID` **default `false`** (jika env tidak ada, id numerik ditolak). Tautan WhatsApp lama `/m/{id}` yang pernah terkirim (skala uji coba) **diabaikan** atas keputusan user 24 Okt 2026: tidak ada masa transisi, id numerik langsung ditolak. Token **tidak menampilkan data lebih dari sekarang** dan tidak dipakai di luar kartu, QR, dan absensi.
 
 ## Konteks

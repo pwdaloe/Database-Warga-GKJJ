@@ -1,8 +1,7 @@
 import 'dotenv/config'
-import { PrismaClient } from '../src/generated/prisma/client.js'
 import bcrypt from 'bcryptjs'
-
-const prisma = new PrismaClient()
+// Prisma 7 wajib memakai driver adapter; klien bersama di utils/prisma.ts sudah memasangnya.
+import { prisma } from '../src/utils/prisma.js'
 
 // Password seed tidak boleh hardcoded di repo (repo publik) — wajib dari environment.
 function requireSeedPassword(name: string): string {

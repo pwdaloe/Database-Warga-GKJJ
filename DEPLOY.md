@@ -356,4 +356,5 @@ Lalu buka Kartu Anggota, pindai QR salah satu warga uji dengan kamera HP, dan pa
 
 - Kartu atau tautan WhatsApp yang dibuat **sebelum** rilis berhenti berfungsi (tampil "Kartu Tidak Tersedia"). Kirim ulang tautan lewat **Kirim via WhatsApp** bila perlu.
 - Token ada di URL, jadi tercatat di **log akses Nginx** (`/var/log/nginx/access.log`) untuk `jemaat.gkjjakarta.org`/`api.gkjjakarta.org`. Log aplikasi (PM2) sudah menyamarkannya menjadi `[token]`. Batasi akses baca log Nginx ke root, dan buat ulang QR warga bila token diduga bocor.
+- Seed master di langkah deploy: sebelum perbaikan seed (24 Okt) langkah ini selalu gagal dengan "PrismaClient was instantiated without any options" dan ditampilkan keliru sebagai "Seed dilewati (data sudah ada)". Sesudahnya pesan "already seeded ... skipping" berarti data sudah ada; pesan "Seed master GAGAL" berarti error sungguhan.
 - Rollback: kembalikan kode (`git revert`); kolom `qr_token` boleh dibiarkan. Untuk menghidupkan tautan lama sementara tanpa deploy: `QR_ALLOW_LEGACY_ID=true` lalu `pm2 reload gkjj-api --update-env`.

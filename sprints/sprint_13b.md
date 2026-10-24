@@ -8,6 +8,8 @@ Keputusan user (24 Okt 2026, diskusi QR absensi):
 3. **Kartu fisik belum dicetak**: QR memakai token dari Sprint 13 tanpa masa transisi yang panjang.
 4. Kehadiran dipakai **sebagai rekap kegiatan saja**, belum menjadi syarat apa pun (sertifikat, hak suara).
 
+> **Jadwal (keputusan user 24 Okt 2026): dikerjakan SETELAH Sprint 14 (portal fondasi) mulai dikerjakan**, bukan sebelumnya. Sprint 13 (token QR) sudah dideploy (`241e2da`), jadi prasyarat teknis terpenuhi.
+
 **Prasyarat: Sprint 13 (token QR) selesai.** Absensi memakai `qr_token`, bukan id warga. Sprint portal (14) tidak bergantung pada sprint ini dan boleh berjalan paralel setelah Sprint 13.
 
 ### Prinsip rancangan
