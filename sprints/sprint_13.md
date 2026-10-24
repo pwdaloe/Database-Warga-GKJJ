@@ -1,6 +1,6 @@
 # Sprint 13 — Perbaikan QR Kartu Anggota: token acak menggantikan id berurutan
 
-> **Status (24 Okt 2026): SIAP DIKERJAKAN, direvisi setelah diskusi QR absensi.** Token QR ini juga menjadi kunci absensi kegiatan (`sprints/sprint_13b.md`, `docs/PLATFORM.md` P7 diputuskan). Hasil diskusi: kartu fisik **belum dicetak**, jadi tidak perlu masa transisi panjang; kehadiran hanya rekap; uji coba ±100 orang.
+> **Status (24 Okt 2026): SELESAI DI LOKAL, belum dideploy** (lihat "Hasil pelaksanaan" di akhir). Direvisi setelah diskusi QR absensi. Token QR ini juga menjadi kunci absensi kegiatan (`sprints/sprint_13b.md`, `docs/PLATFORM.md` P7 diputuskan). Hasil diskusi: kartu fisik **belum dicetak**, jadi tidak perlu masa transisi panjang; kehadiran hanya rekap; uji coba ±100 orang.
 > Perubahan terhadap rancangan awal: `QR_ALLOW_LEGACY_ID` **default `false`** (jika env tidak ada, id numerik ditolak). Tautan WhatsApp lama `/m/{id}` yang pernah terkirim (skala uji coba) **diabaikan** atas keputusan user 24 Okt 2026: tidak ada masa transisi, id numerik langsung ditolak. Token **tidak menampilkan data lebih dari sekarang** dan tidak dipakai di luar kartu, QR, dan absensi.
 
 ## Konteks
@@ -79,3 +79,21 @@ npm run build --workspace=apps/web
 1. ~~Kartu fisik / tautan WhatsApp sudah dibagikan?~~ **Dijawab 24 Okt: kartu belum dicetak; tautan WhatsApp lama hanya skala uji coba dan boleh diabaikan.** `QR_ALLOW_LEGACY_ID` tetap ada sebagai pengaman, default `false`.
 2. **Apakah foto perlu tetap tampil di halaman QR publik?** Usulan: tetap tampil sekarang, dinilai ulang setelah token berjalan.
 3. **Siapa yang boleh membuat ulang QR?** Usulan: Superadmin, Kepala Kantor, Staf Admin.
+
+## Hasil pelaksanaan (24 Okt 2026) dan penyimpangan dari rancangan
+
+Semua task selesai di lokal; **belum di-commit ke main, belum dideploy**. Penyimpangan yang disengaja:
+
+1. **Token dibuat oleh database, tanpa skrip backfill.** Kolom `qr_token VARCHAR(32) NOT NULL UNIQUE DEFAULT replace(gen_random_uuid()::text,'-','')`. PostgreSQL mengisi semua baris lama dengan token unik saat kolom ditambahkan, dan warga baru (form, impor, perpindahan) otomatis mendapat token tanpa mengubah tiga jalur pembuatan. Format: 32 hex huruf kecil (122 bit acak bawaan UUID v4 untuk baris baru; 128 bit untuk rotasi), bukan base64url 22 karakter. `utils/qrToken.ts` memvalidasi pola yang sama. Task 3 (skrip backfill `db:backfill-qr`) **tidak dibuat** karena tidak diperlukan. Prasyarat: PostgreSQL ≥ 13. **Temuan saat verifikasi**: `prisma db push` menolak menambah constraint unik ke tabel berisi tanpa `--accept-data-loss` (diuji di DB sementara dengan 1.183 baris), sehingga SQL aditif (`prisma/migrations/20261024100000_warga_qr_token/migration.sql`) dijalankan **manual sebelum deploy**; setelah itu `db push` melaporkan "already in sync" dan aplikasi lama tetap bisa INSERT. Urutan di `DEPLOY.md`.
+2. **`omit` global di klien Prisma** (`utils/prismaOmit.ts`): `qrToken` tidak pernah dibaca kecuali diminta (`omit: { qrToken: false }` atau `select`). Redaksi per peran (`sanitizeForRole`) tetap ada sebagai lapisan kedua. Lebih aman daripada daftar putih per respons karena respons baru tidak bisa membocorkannya tidak sengaja.
+3. **Token disamarkan di log akses** (`morgan`): `/api/public/member/[token]`. Log Nginx tetap memuatnya (dicatat di `DEPLOY.md`).
+4. **Tahap B dilebur**: tidak ada masa transisi (keputusan user: kartu belum dicetak, tautan lama skala uji coba boleh diabaikan). `QR_ALLOW_LEGACY_ID` default mati.
+5. **DB lokal diubah dengan `ALTER TABLE` langsung (psql), bukan `prisma db push`**, karena `db push` lokal juga akan men-DROP `nomor_sidi` yang masih ada di DB dev. Hasil SQL identik dengan yang akan dibuat `db push` di produksi (`prisma migrate diff` tidak lagi menampilkan selisih untuk `qr_token`).
+
+**Verifikasi yang dilakukan**
+- API 33 file / 555 tes (sebelumnya 29 / 496), web 30 file / 172 tes (sebelumnya 25 / 155); `type-check` dan `build` API dan web lulus.
+- Mutation check: 14 mutasi API dan 8 mutasi web, semuanya tertangkap setelah satu tes diperbaiki (tes konfirmasi memeriksa terlalu cepat).
+- Server nyata (lokal): token valid 200 dengan field terkunci; id numerik 404 bila env tidak diset dan 200 bila `true`; 404 seragam; header `no-store`/`noindex`; limiter (id lama 10/menit, token 30/menit); VIEWER tidak menerima `qrToken` di daftar maupun detail; 8 endpoint lain tidak membocorkan token; rotasi: 403 untuk Majelis/Penatua/Viewer, token lama 404 dan baru 200, audit log tanpa token.
+- Browser: halaman Kartu menampilkan QR yang **didekode** (Vision macOS dari tangkapan layar) menjadi `{origin}/m/{token}` yang sama dengan token di DB; tautan token membuka kartu; `/m/{id}` menampilkan "Kartu Tidak Tersedia"; tombol "Buat ulang QR" tampil di detail warga.
+
+**Belum diverifikasi**: klik "Buat ulang QR" di browser (dialog `confirm` bawaan browser; logikanya dicakup tes komponen dan API nyata), cetak ID Card (jendela print), halaman `/m/kartu` mobile di HP, uji dengan kamera HP fisik, penyamaran token oleh `morgan` hanya dilihat di keluaran log (tidak ada tes otomatis untuk integrasinya), dan seluruh langkah di produksi.

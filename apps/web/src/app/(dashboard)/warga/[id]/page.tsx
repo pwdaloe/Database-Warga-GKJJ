@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useWargaDetail, useWargaMutations } from '@/hooks/useWarga'
 import { useAuth } from '@/hooks/useAuth'
+import { BuatUlangQrButton, PERAN_ROTASI_QR } from '@/components/warga/BuatUlangQrButton'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { WargaForm } from '../WargaForm'
@@ -45,6 +46,7 @@ export default function WargaDetailPage() {
   const { data: warga, isLoading } = useWargaDetail(Number(id))
   const { update } = useWargaMutations()
 
+  const canRotasiQr = isRole(...PERAN_ROTASI_QR)
   const canEdit = isRole('SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK')
 
   async function handleEdit(formData: any) {
@@ -137,15 +139,18 @@ export default function WargaDetailPage() {
               )}
             </div>
           </div>
-          {canEdit && (
-            <button
-              onClick={() => setEditOpen(true)}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 transition shrink-0 whitespace-nowrap"
-            >
-              <Pencil size={14} />
-              Edit
-            </button>
-          )}
+          <div className="flex items-start gap-2 shrink-0">
+            {canRotasiQr && <BuatUlangQrButton wargaId={Number(id)} nama={warga.namaLengkap} />}
+            {canEdit && (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 transition shrink-0 whitespace-nowrap"
+              >
+                <Pencil size={14} />
+                Edit
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

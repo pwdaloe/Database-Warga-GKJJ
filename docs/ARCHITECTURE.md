@@ -53,7 +53,7 @@ tidak disimpan ke disk) dan QR code kartu anggota (qrcode, di sisi frontend).
 graph TD
     Browser["Browser Desktop"]
     Mobile["Browser/HP — PWA Mobile (/m/...)"]
-    QR["QR Scan Publik (/m/[id])"]
+    QR["QR Scan Publik (/m/[token])"]
     FE["Frontend<br/>Next.js 15 + React 19<br/>:3000"]
     BE["Backend<br/>Express + TypeScript + Prisma<br/>:4000"]
     DB[("PostgreSQL 16<br/>:5435 dev")]

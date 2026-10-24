@@ -6,9 +6,19 @@ import { Search, CreditCard, ChevronRight, Loader2, MessageCircle } from 'lucide
 import { useWargaList } from '@/hooks/useWarga'
 import { cn } from '@/lib/utils'
 import { kirimWhatsApp } from '@/lib/kartuWhatsapp'
+import { adalahQrTokenValid } from '@/lib/kartuUrl'
 
 export default function MobileKartuPage() {
   const router = useRouter()
+
+  // Kartu dibuka lewat token acak, bukan id berurutan. Tanpa token valid, kartu tidak dibuka.
+  function bukaKartu(w: any) {
+    if (!adalahQrTokenValid(w?.qrToken)) {
+      alert('QR kartu anggota ini belum tersedia. Hubungi admin gereja.')
+      return
+    }
+    router.push(`/m/${w.qrToken}`)
+  }
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch]           = useState('')
 
@@ -92,8 +102,8 @@ export default function MobileKartuPage() {
                   key={w.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => router.push(`/m/${w.id}`)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/m/${w.id}`) }}
+                  onClick={() => bukaKartu(w)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') bukaKartu(w) }}
                   className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 text-left hover:shadow-md active:scale-[0.98] transition-all cursor-pointer"
                 >
                   {w.fotoUrl ? (

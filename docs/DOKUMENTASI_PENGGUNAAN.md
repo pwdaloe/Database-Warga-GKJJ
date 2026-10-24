@@ -37,7 +37,7 @@ Aplikasi web untuk mengelola data seluruh warga jemaat GKJ Jakarta di satu tempa
 |---|---|---|
 | Komputer (desktop) | `https://jemaat.gkjjakarta.org` | Semua role |
 | HP (mobile) | `https://jemaat.gkjjakarta.org/m/login` | Penatua Kelompok |
-| Kartu digital publik | `https://jemaat.gkjjakarta.org/m/[id]` | Siapa saja yang memindai QR (tanpa login) |
+| Kartu digital publik | `https://jemaat.gkjjakarta.org/m/[token]` | Siapa saja yang memindai QR (tanpa login) |
 
 ### 1.3 Login
 
@@ -333,7 +333,9 @@ Dipakai untuk memasukkan banyak warga sekaligus (disarankan di atas 50 data).
    - **Kirim via WhatsApp:** membuka WhatsApp dengan pesan dan tautan kartu.
    - **Buka Data Warga:** menuju biodata lengkap.
 
-QR mengarah ke halaman publik yang bisa dibuka tanpa login. Halaman itu **tidak menampilkan** NIK, email, dan nomor telepon.
+QR mengarah ke halaman publik yang bisa dibuka tanpa login. Halaman itu **tidak menampilkan** NIK, email, dan nomor telepon. Alamat di QR memakai kode acak per warga (bukan nomor urut), jadi tidak bisa ditebak.
+
+**Kartu hilang atau QR-nya tersebar?** Superadmin, Kepala Kantor, dan Staf Admin bisa membuka **Data Warga → detail warga → Buat ulang QR**. QR lama langsung tidak berlaku: cetak ulang kartu atau kirim ulang tautan ke yang bersangkutan.
 
 ### 4.7 Mencatat Perpindahan
 

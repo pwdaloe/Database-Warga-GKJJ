@@ -24,6 +24,7 @@ import { logsRouter } from './routes/logs.js'
 import { perpindahanRouter } from './routes/perpindahan.js'
 import { systemRouter } from './routes/system.js'
 import { activityLogger } from './middleware/activityLogger.js'
+import { samarkanQrTokenDiUrl } from './utils/qrToken.js'
 
 const app = express()
 
@@ -58,6 +59,8 @@ app.use(
 // Body parsing & logging
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
+// URL akses ke halaman publik anggota memuat token QR; disamarkan agar tidak tertulis di log PM2
+morgan.token('url', (req) => samarkanQrTokenDiUrl((req as { originalUrl?: string }).originalUrl || req.url || ''))
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 
 // Activity logger — harus sebelum routes agar menangkap semua mutasi

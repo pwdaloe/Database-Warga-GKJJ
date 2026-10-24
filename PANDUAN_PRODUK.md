@@ -150,7 +150,8 @@ DRAFT → VALIDASI → AKTIF → TIDAK_AKTIF
    - **Buka Data Warga** → navigasi ke biodata lengkap
 
 **QR Code Kartu:**
-- QR mengarah ke halaman publik: `https://jemaat.gkjjakarta.org/m/[id]`
+- QR mengarah ke halaman publik: `https://jemaat.gkjjakarta.org/m/[token]` (kode acak per warga, bukan id berurutan)
+- Kartu hilang atau bocor: **Buat ulang QR** di detail warga (Superadmin, Kepala Kantor, Staf Admin); QR lama langsung mati
 - Halaman publik bisa diakses siapa saja tanpa login
 - **Tidak menampilkan** NIK, email, atau nomor telepon (proteksi privasi)
 
@@ -723,7 +724,7 @@ Deploy ke production
 |---|---|---|
 | Landing "sedang disiapkan" untuk `my`, `kegiatan`, `majelis` | ✅ Terpasang di produksi (24 Okt) | `deploy/landing/`, `deploy/nginx-landing.prod.conf`, `deploy/LANDING_CERTBOT.md`. Statis, tanpa PM2; SSL per domain; penangkap `default_server` aktif |
 | Portal jemaat `my.gkjjakarta.org` (Sprint 14–17) | 🗓️ Direncanakan | Menggantikan rencana `www/new` (dibatalkan). Rencana: `docs/RENCANA_PORTAL_JEMAAT.md`. Sprint 14 siap; menunggu keputusan QR (Sprint 13) |
-| Perbaikan QR kartu anggota (Sprint 13) | 🗓️ Siap dikerjakan | Token acak menggantikan id berurutan; juga kunci absensi (`docs/PLATFORM.md` P7 diputuskan 24 Okt) |
+| Perbaikan QR kartu anggota (Sprint 13) | ✅ Selesai di lokal 24 Okt, **belum dideploy** | Token acak (kolom `qr_token`) menggantikan id berurutan; rotasi token; tautan id lama mati secara bawaan (`QR_ALLOW_LEGACY_ID`). Juga kunci absensi (`docs/PLATFORM.md` P7). Rencana deploy: `DEPLOY.md` bagian Sprint 13 (SQL migrasi manual dulu, lalu deploy) |
 | Absensi kegiatan via QR kartu (Sprint 13B) | 🗓️ Siap dikerjakan setelah Sprint 13 | Petugas memindai kartu di `/m`, cari manual, tamu dihitung, antrean kirim ulang, rekap. Uji coba ±100 orang; hanya rekap, tampil di layar. Lanjutan: ekspor Excel, notifikasi ke Penatua, retensi 3 tahun (purge). `sprints/sprint_13b.md` |
 | SSO antar aplikasi (login satu akun) | 💡 Keputusan terbuka | Cara berbagi login (redirect vs cookie), peran baru, tanda tangan token: `docs/PLATFORM.md` P1–P2 |
 | `kegiatan.gkjjakarta.org` (rencana, anggaran, dana, monitoring, laporan UPK) | 💡 Ide | Belum ada rencana. Butuh `docs/kegiatan/RENCANA.md` |

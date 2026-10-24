@@ -4,13 +4,21 @@ import { AppError } from '../middleware/errorHandler.js'
 import type { JwtPayload } from '../middleware/auth.js'
 import { wargaScope, assertKelompokPenatua, isKelompokScoped } from './dashboardScope.js'
 import { encryptField, decryptField } from '../utils/crypto.js'
+import { buatQrToken } from '../utils/qrToken.js'
 
 // ── Field redaction per role (UU PDP Pasal 16) ────────────────
 const FULL_ACCESS_ROLES = new Set(['SUPERADMIN', 'KEPALA_KANTOR'])
 
+// Peran yang boleh membuka Kartu Anggota, jadi boleh menerima qrToken. Peran lain (VIEWER, JEMAAT) tidak.
+// Selain ini token tidak pernah dibaca dari DB (lihat PRISMA_OMIT di utils/prisma.ts).
+const PERAN_KARTU = new Set(['SUPERADMIN', 'KEPALA_KANTOR', 'MAJELIS', 'STAF_ADMIN', 'PENATUA_KELOMPOK'])
+// Peran yang boleh membuat ulang QR (kartu hilang atau bocor)
+export const PERAN_ROTASI_QR = ['SUPERADMIN', 'KEPALA_KANTOR', 'STAF_ADMIN'] as const
+
 function sanitizeForRole(warga: Record<string, any>, role: string): Record<string, any> {
   if (FULL_ACCESS_ROLES.has(role)) return warga
   const w = { ...warga }
+  if (!PERAN_KARTU.has(role)) delete w.qrToken
   // Role terbatas: hapus NIK + alamat KTP
   if (role === 'PENATUA_KELOMPOK' || role === 'VIEWER') {
     w.nik       = null
@@ -146,6 +154,7 @@ export async function listWarga(filter: WargaFilter, user: JwtPayload) {
     prisma.warga.findMany({
       where,
       include: wargaInclude,
+      omit: { qrToken: false }, // dibutuhkan halaman Kartu; dihapus lagi untuk peran tanpa akses oleh sanitizeForRole
       orderBy: { namaLengkap: 'asc' },
       skip: (page - 1) * limit,
       take: limit,
@@ -163,6 +172,7 @@ export async function getWargaById(id: number, user: JwtPayload) {
   const warga = await prisma.warga.findUnique({
     where: { id },
     include: wargaDetailInclude,
+    omit: { qrToken: false },
   })
 
   if (!warga) throw new AppError(404, 'Data warga tidak ditemukan')
@@ -457,4 +467,31 @@ export async function getWargaUlangTahunBulanIni() {
     },
     orderBy: { tanggalLahir: 'asc' },
   })
+}
+
+/**
+ * Buat ulang token QR seorang warga (kartu hilang atau bocor). Token lama langsung tidak berlaku.
+ * Mengembalikan token baru HANYA ke pemanggil (peran admin); token tidak ditulis ke audit log.
+ */
+export async function rotasiQrToken(id: number, userId: number, ipAddress: string | null) {
+  const ada = await prisma.warga.findUnique({ where: { id }, select: { id: true } })
+  if (!ada) throw new AppError(404, 'Data warga tidak ditemukan')
+
+  // Bentrok unik (P2002) hampir mustahil untuk 128 bit; tetap diulang beberapa kali, bukan dibiarkan 500.
+  for (let percobaan = 0; percobaan < 3; percobaan++) {
+    try {
+      const baru = await prisma.warga.update({
+        where: { id },
+        data: { qrToken: buatQrToken() },
+        select: { qrToken: true }, // select eksplisit mengalahkan omit global
+      })
+      await prisma.auditLog.create({
+        data: { userId, action: 'UPDATE', tabel: 'warga', recordId: id, dataBaru: { aksi: 'rotasi-qr-token' }, ipAddress },
+      })
+      return { qrToken: baru.qrToken }
+    } catch (err: any) {
+      if (err?.code !== 'P2002') throw err
+    }
+  }
+  throw new AppError(500, 'Gagal membuat token baru, coba lagi')
 }

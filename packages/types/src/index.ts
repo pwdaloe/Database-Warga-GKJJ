@@ -65,6 +65,8 @@ export interface Warga {
   nik: string | null
   golonganDarah: GolonganDarah | null
   fotoUrl: string | null
+  /** Token QR kartu anggota. Hanya ada untuk peran yang boleh membuka Kartu Anggota (tidak untuk VIEWER/JEMAAT). */
+  qrToken?: string
   statusKeluarga: StatusDalamKeluarga
   statusKeanggotaan: StatusKeanggotaan
   sudahBaptis: boolean

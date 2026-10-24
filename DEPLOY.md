@@ -182,7 +182,7 @@ Checklist sebelum migrasi ke production:
 - [ ] Tambah warga baru berhasil
 - [ ] Import Excel berfungsi
 - [ ] Kartu anggota QR tampil
-- [ ] Halaman publik `/m/[id]` bisa diakses tanpa login
+- [ ] Halaman publik `/m/[token]` bisa diakses tanpa login (QR kartu memakai token acak, bukan id)
 - [ ] Filter per kelompok untuk Penatua berfungsi
 - [ ] Log aktivitas mencatat operasi
 - [ ] SSL hijau di browser (tidak ada warning)
@@ -315,3 +315,45 @@ bash /var/www/gkjj/deploy/2-deploy.sh dev
 /root/gkjj-db-credentials.txt        ← Credential DB (simpan aman!)
 /etc/letsencrypt/                     ← SSL certificates
 ```
+
+---
+
+## Catatan Rilis Khusus: Sprint 13 (token QR kartu anggota)
+
+Rilis ini menambah kolom `warga.qr_token` dan mengubah URL QR dari `/m/{id}` menjadi `/m/{token}`. Bersifat **menambah** (tidak menghapus kolom), tetapi menyentuh tabel `warga` (1.183 baris), jadi ikuti urutan ini.
+
+**Sebelum deploy**
+
+1. PostgreSQL produksi harus **13 atau lebih baru** (default kolom memakai `gen_random_uuid()` bawaan): `psql -c "SHOW server_version;"` (sebagai user DB). Jika lebih lama, hentikan dan hubungi pengembang.
+2. Deploy di jam sepi (seperti biasa). Backup `pg_dump` otomatis oleh `2-deploy.sh` tetap berjalan.
+3. Tentukan sikap terhadap tautan lama `/m/{id}`: **default mati** (env tidak diisi). Hanya bila ada kartu cetak atau tautan WhatsApp yang masih harus berfungsi, set `QR_ALLOW_LEGACY_ID=true` di `apps/api/.env` sementara.
+
+**Langkah A: jalankan SQL migrasi SEBELUM `2-deploy.sh prod` (wajib)**
+
+`prisma db push` (dipakai skrip deploy) **menolak** menambah constraint unik pada tabel berisi tanpa `--accept-data-loss` (peringatan "A unique constraint ... will be added"); diuji di database sementara berisi 1.183 baris. Tanpa langkah ini deploy berhenti di langkah 4 (sebelum build dan restart, jadi aplikasi lama tetap berjalan, tetapi deploy gagal). Karena itu SQL aditif dijalankan manual lebih dulu, seperti CHECK constraint dan DROP `nomor_sidi` sebelumnya. **Aman saat aplikasi lama masih berjalan**:
+
+```bash
+# di VPS, sebagai user yang punya akses DB (cadangan manual opsional: pg_dump -Fc -f /var/backups/gkjj/pra_qr.dump <nama_db>)
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f /var/www/gkjj/apps/api/prisma/migrations/20261024100000_warga_qr_token/migration.sql
+psql "$DATABASE_URL" -c "SELECT count(*) AS total, count(DISTINCT qr_token) AS unik, bool_and(qr_token ~ '^[0-9a-f]{32}$') AS format_ok FROM warga;"
+# total = unik, format_ok = t
+```
+
+(`DATABASE_URL` tanpa `?schema=public` bila `psql` menolak parameter itu.) PostgreSQL mengisi **setiap baris lama dengan token unik** saat itu juga (tanpa skrip backfill) dan menulis ulang tabel sebentar, hitungan detik untuk ±1.200 baris. Aplikasi lama mengabaikan kolom baru dan INSERT-nya otomatis mendapat token dari default.
+
+**Langkah B: deploy seperti biasa** (`bash deploy/2-deploy.sh prod`). `db push` kini melaporkan "already in sync" dan tidak meminta apa pun; jika ia masih meminta `--accept-data-loss`, **hentikan** dan periksa apa yang diubah, jangan memaksa.
+
+**Sesudah deploy** (baca-saja)
+
+```bash
+npm run db:integritas --workspace=apps/api
+curl -s -o /dev/null -w "%{http_code}\n" https://api.gkjjakarta.org/api/public/member/123   # 404 (id lama mati)
+```
+
+Lalu buka Kartu Anggota, pindai QR salah satu warga uji dengan kamera HP, dan pastikan halaman kartu terbuka.
+
+**Catatan operasional**
+
+- Kartu atau tautan WhatsApp yang dibuat **sebelum** rilis berhenti berfungsi (tampil "Kartu Tidak Tersedia"). Kirim ulang tautan lewat **Kirim via WhatsApp** bila perlu.
+- Token ada di URL, jadi tercatat di **log akses Nginx** (`/var/log/nginx/access.log`) untuk `jemaat.gkjjakarta.org`/`api.gkjjakarta.org`. Log aplikasi (PM2) sudah menyamarkannya menjadi `[token]`. Batasi akses baca log Nginx ke root, dan buat ulang QR warga bila token diduga bocor.
+- Rollback: kembalikan kode (`git revert`); kolom `qr_token` boleh dibiarkan. Untuk menghidupkan tautan lama sementara tanpa deploy: `QR_ALLOW_LEGACY_ID=true` lalu `pm2 reload gkjj-api --update-env`.

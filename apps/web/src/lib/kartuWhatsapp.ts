@@ -1,11 +1,12 @@
 export { STATUS_KEANGGOTAAN_LABEL } from './statusKeanggotaan'
 import { STATUS_KEANGGOTAAN_LABEL } from './statusKeanggotaan'
+import { tautanKartu } from './kartuUrl'
 
 export function buildWhatsAppMessage(warga: any): string {
   const kelompok = warga.keluarga?.kelompok
   const wilayah = kelompok?.wilayah
   const nomorTampil = warga.nomorInduk || warga.nomorAnggota || '-'
-  const memberUrl = `${window.location.origin}/m/${warga.id}`
+  const memberUrl = tautanKartu(window.location.origin, warga)
   return [
     `Halo ${warga.namaPanggilan || warga.namaLengkap}! 🙏`,
     '',
@@ -17,8 +18,7 @@ export function buildWhatsAppMessage(warga: any): string {
     `✅ *Status:* ${STATUS_KEANGGOTAAN_LABEL[warga.statusKeanggotaan] ?? warga.statusKeanggotaan}`,
     `${warga.sudahBaptis ? '✓' : '✗'} Baptis   ${warga.sudahSidi ? '✓' : '✗'} Sidi`,
     '',
-    `🪪 Kartu digital: ${memberUrl}`,
-    '',
+    ...(memberUrl ? [`🪪 Kartu digital: ${memberUrl}`, ''] : []),
     `Untuk informasi lebih lanjut hubungi kantor gereja. ✝️`,
   ].join('\n')
 }
