@@ -98,7 +98,7 @@ Prasyarat yang sudah ada: DNS `my` mengarah ke VPS, sertifikat SSL dan halaman l
 
 | Risiko | Dampak | Mitigasi |
 |---|---|---|
-| Memori VPS 2 GB saat build dua aplikasi Next | Deploy gagal atau proses dimatikan OOM | Build berurutan, batas heap, cek `free -m` sebelum deploy; uji build di lokal dengan `--max-old-space-size=1400` |
+| Memori VPS (4 GB) saat build dua aplikasi Next | Deploy gagal atau proses dimatikan OOM | Build berurutan, batas heap, cek `free -m` sebelum deploy; uji build di lokal dengan `--max-old-space-size=1400` |
 | Konten kosong/basi | Portal terlihat mati | Tugas pengisian awal di Sprint 17, penanggung jawab konten (Q2), tanggal tayang dan "Terakhir diperbarui" |
 | Kebocoran data pribadi lewat endpoint publik | Pelanggaran UU PDP | Daftar putih field + tes penjaga + `setuju_tampil_publik` |
 | Beban kerja ganda (aplikasi data + portal) | Perhatian terpecah | Portal sengaja dipisah dan bertahap; sprint 13 tanpa DB/produksi |

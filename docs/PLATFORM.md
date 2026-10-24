@@ -68,17 +68,30 @@ docs/
 sprints/
 ```
 
-## 5. Memori VPS: batas yang nyata
+## 5. Kapasitas VPS (dikonfirmasi 24 Okt 2026)
 
-> **Perlu dikonfirmasi (24 Okt 2026):** dokumen deploy menyebut VPS 2 GB, tetapi `free -m` di produksi menunjukkan total ±3.915 MB (terpakai ±1.135 MB, tersedia ±2.779 MB saat idle). Cek paket VPS sebenarnya sebelum menghitung ulang anggaran di bawah; angka 2 GB di bawah adalah asumsi konservatif lama.
+Server: Ubuntu 24.04, **3 CPU core, 4 GB RAM, 60 GB disk** (terukur `free -m`: total ±3.915 MB). Dokumen lama menyebut 2 GB; itu salah.
 
-Sekarang berjalan: `gkjj-api` (batas 512 MB), `gkjj-web` (700 MB), `gkj-klasis`, PostgreSQL, Nginx. Menambah empat proses Node (kegiatan dan majelis) plus portal **tidak akan muat** di 2 GB, terutama saat `next build`. Sebelum aplikasi kedua hidup:
+Pemakaian nyata saat idle (24 Okt, sesudah deploy): terpakai ±1.135 MB, tersedia ±2.779 MB. Rinciannya: `gkjj-api` ±121 MB, `gkjj-web` ±207 MB, `gkj-klasis` ±38 MB, sisanya (±770 MB) sistem operasi, PostgreSQL, dan Nginx.
 
-1. Ukur pemakaian nyata: `free -m`, `pm2 monit`, `ps aux --sort=-%mem | head`.
-2. Pilih: naikkan VPS (paling sederhana), atau pisahkan produk ke VPS kedua (isolasi lebih baik untuk `majelis` yang sensitif), atau gabungkan API.
-3. Build berurutan, tidak paralel, dengan `NODE_OPTIONS=--max-old-space-size=1400`.
+Perkiraan kasar bila semua produk hidup (anggap tiap Next ±200 MB dan tiap API ±120 MB, seperti yang ada sekarang; angka sebenarnya harus diukur):
 
-Landing statis di Nginx tidak memakai memori Node, jadi pemasangannya aman sekarang.
+| Komponen | Idle |
+|---|---|
+| Sekarang (OS, PostgreSQL, Nginx, jemaat, klasis) | ±1.135 MB |
+| `portal` (Next) | +200 MB |
+| `kegiatan` (web + API) | +320 MB |
+| `majelis` (web + API) | +320 MB |
+| **Total perkiraan** | **±1.975 MB dari 3.915 MB** |
+
+Risiko utama bukan keadaan idle, tetapi **`next build`**: dengan batas heap 1.400 MB, satu build bisa memakai ±1,4–1,6 GB tambahan, jadi saat semua produk hidup puncaknya mendekati 3,5 GB dari 3,9 GB. Pegangan:
+
+1. Build **satu per satu**, tidak paralel, dengan `NODE_OPTIONS=--max-old-space-size=1400`; pastikan swap aktif (`swapon --show`; terverifikasi 24 Okt: `/swapfile` 2 GB, terpakai ±55 MB saat idle).
+2. Sebelum aplikasi baru hidup: `free -m`, `pm2 monit`, `ps aux --sort=-%mem | head`, lalu bandingkan dengan tabel di atas.
+3. Bila puncak build melewati ±3,2 GB: build di mesin lain (CI/lokal) lalu kirim hasil build, atau naikkan RAM. Pisah server untuk `majelis` tetap pilihan bila isolasi data sensitif diinginkan, bukan karena memori.
+4. 3 core cukup untuk beban saat ini; build paralel adalah yang akan merebut CPU dan memori bersamaan.
+
+Landing statis di Nginx tidak memakai memori Node.
 
 ## 6. Keputusan terbuka (perlu diputuskan sebelum aplikasi terkait dibangun)
 
@@ -88,7 +101,7 @@ Landing statis di Nginx tidak memakai memori Node, jadi pemasangannya aman sekar
 | P2 | **Peran baru** (Pengurus UPK, anggota MPH/MPL, notulis) | Peran sekarang ada di tabel user `jemaat` | Identitas tetap di `jemaat`; hak akses per produk disimpan di produk masing-masing, dikaitkan lewat id pengguna |
 | P3 | **API terpisah atau satu API** | — | Terpisah per produk (isolasi), dengan syarat P5 terjawab |
 | P4 | **Database** | Satu PostgreSQL | Database logis terpisah per produk di server yang sama; tidak ada FK antarproduk |
-| P5 | **Kapasitas VPS** | Bagian 5 | Putuskan sebelum `kegiatan` atau `majelis` dibangun |
+| P5 | **Kapasitas VPS** | 4 GB RAM, 3 core (dikonfirmasi 24 Okt); bagian 5 | Cukup untuk portal, kegiatan, dan majelis bila build dilakukan satu per satu dengan swap; ukur ulang sebelum tiap aplikasi baru hidup |
 | P6 | **Data sensitif `majelis`** (notula, keputusan) | — | Dokumen keamanan tersendiri: siapa yang boleh baca, log akses, cadangan, retensi. Sebelum kode apa pun |
 | P7 | **QR kartu anggota sebagai absensi** | **Diputuskan 24 Okt 2026**: token acak (Sprint 13); petugas login memindai kartu di `/m` (Sprint 13B), cari manual sebagai cadangan, tamu dihitung; online dengan antrean kirim ulang; hanya rekap; ±100 orang | Warga memindai sendiri, kios, offline penuh, dan kehadiran sebagai syarat ditunda. Data kehadiran ada di aplikasi jemaat; produk `kegiatan` kelak membacanya lewat API |
 

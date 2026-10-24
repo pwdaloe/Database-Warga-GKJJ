@@ -1,6 +1,6 @@
 # Panduan Deploy — Database Warga GKJJ
 
-**Server:** VPS Ubuntu 22.04 LTS (Domainesia Cloud VPS Lite 2GB)
+**Server:** VPS Ubuntu 24.04 LTS (Domainesia Cloud VPS: 3 CPU core, 4 GB RAM, 60 GB disk; dikonfirmasi 24 Okt 2026, dulu tertulis 2 GB)
 
 | Environment | Frontend | API |
 |---|---|---|
@@ -130,7 +130,7 @@ Script ini menjalankan:
 5. `prisma db push` → sync schema
 6. Seed master data (kelurahan Jakarta Timur + komisi)
 7. Build API (TypeScript → JavaScript)
-8. Build Next.js (`NODE_OPTIONS=--max-old-space-size=1400` untuk VPS 2GB)
+8. Build Next.js (`NODE_OPTIONS=--max-old-space-size=1400`; batas heap dipertahankan agar build tidak merebut memori proses yang berjalan)
 9. Copy Nginx config + aktifkan symlink
 10. Start/restart PM2
 11. Tunggu aplikasi siap → tulis versi baru → hapus flag (pengguna melihat bar "Versi baru tersedia")
