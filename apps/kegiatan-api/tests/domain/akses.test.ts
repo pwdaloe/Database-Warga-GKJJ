@@ -9,8 +9,8 @@ const draft = (unitId: number, bidangId = 1) => ({ unitId, status: 'DRAFT' as co
 const diajukan = (unitId: number, bidangId = 1) => ({ unitId, status: 'DIAJUKAN' as const, unit: { bidangId } })
 
 describe('bolehLihatProgram', () => {
-  it('admin, sekretariat, majelis melihat semua', () => {
-    for (const peran of ['ADMIN', 'SEKRETARIAT', 'MAJELIS'] as const) expect(bolehLihatProgram(p(peran), draft(5, 9))).toBe(true)
+  it('admin, sekretariat, majelis, dan pengawas (LP4WG, Kepala Kantor, Ministerium) melihat semua', () => {
+    for (const peran of ['ADMIN', 'SEKRETARIAT', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM'] as const) expect(bolehLihatProgram(p(peran), draft(5, 9))).toBe(true)
   })
   it('pengurus UPK hanya unitnya sendiri', () => {
     expect(bolehLihatProgram(p('PENGURUS_UPK', 5), draft(5))).toBe(true)
@@ -95,5 +95,22 @@ describe('bolehKelola', () => {
     expect(bolehKelola(p('ADMIN'))).toBe(true)
     expect(bolehKelola(p('SEKRETARIAT'))).toBe(true)
     for (const peran of ['MAJELIS', 'KOORDINATOR_BIDANG', 'PENGURUS_UPK'] as const) expect(bolehKelola(p(peran, 1, 1))).toBe(false)
+  })
+})
+
+describe('pengawas hanya-lihat (MAJELIS, LP4WG, KEPALA_KANTOR, MINISTERIUM)', () => {
+  const PENGAWAS = ['MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM'] as const
+
+  it.each(PENGAWAS)('%s: cakupan semua unit tetapi tidak dapat mengelola', (peran) => {
+    expect(cakupanDari(p(peran))).toEqual({ jenis: 'semua' })
+    expect(bolehKelola(p(peran))).toBe(false)
+  })
+
+  it.each(PENGAWAS)('%s: ditolak membuat, mengubah, mengajukan, menarik, dan menghapus program unit mana pun', (peran) => {
+    expect(bolehBuatProgram(p(peran, 5), 5, 'DIBUKA').boleh).toBe(false)
+    expect(bolehUbahProgram(p(peran, 5), draft(5), 'DIBUKA').boleh).toBe(false)
+    expect(bolehAjukanProgram(p(peran, 5), draft(5), 'DIBUKA').boleh).toBe(false)
+    expect(bolehTarikProgram(p(peran, 5), diajukan(5), 'DIBUKA').boleh).toBe(false)
+    expect(bolehHapusProgram(p(peran, 5), draft(5), 'DIBUKA').boleh).toBe(false)
   })
 })

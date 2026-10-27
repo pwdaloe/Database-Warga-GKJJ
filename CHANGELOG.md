@@ -3,6 +3,20 @@
 
 ---
 
+## [2026-10-27 WIB] — Kegiatan v0.2.0: logo, versi aplikasi, bantuan WhatsApp, batas login | ✅ DONE di lokal, belum dideploy
+
+**Project**: Database Warga GKJJ (`kegiatan.gkjjakarta.org`)
+
+- **Batas login**: hanya login gagal yang dihitung (20 per 15 menit per IP, sebelumnya semua login dihitung, 10 per 15 menit); batas global 600 → 3000. Alasan: banyak pengurus berbagi satu IP (wifi gereja).
+- **Logo GKJ** (dari `apps/web/public/logo-gkj.jpg`) di halaman masuk dan pojok kiri atas header (dalam lingkaran putih), ikon tab/layar utama.
+- **Versi**: `constants/rilis.ts` (catatan rilis terurut, jenis Baru/Pembaruan/Perbaikan), `GET /api/versi` publik (versi, tanggal, commit dari `.deploy/kegiatan-version` yang ditulis skrip deploy), footer + halaman masuk menampilkan versi, halaman publik `/versi` ("Apa yang baru"). Tes menjaga versi rilis = `package.json` API dan web. Versi 0.1.0 dan 0.2.0.
+- **Bantuan WhatsApp**: tabel baru `pengaturan` (kunci-nilai), `PUT /master/dukungan`, tab Master "Dukungan" (aktif, nomor, pesan awal dengan `{nama}`/`{unit}`), ikon di kanan atas sebelum tombol keluar; `dukungan` ikut payload `GET /master`.
+- **Tes peran baru dan endpoint baru** (menutup blocker HIGH retro): peran LP4WG, Kepala Kantor, Ministerium pada tes akses dan penolakan tulis di seluruh route master; tes `/master/bidang` dan `/master/dukungan`; tes `/api/versi`; tes batas login (gagal dan berhasil). Mutation check 3 dari 3 tertangkap. API 188 → 277, web 27 → 36.
+- Dicoba di browser pada lebar HP 390 px: login, header (judul tidak terpotong), versi, tab Dukungan (validasi aktif-tanpa-nomor), tautan WhatsApp berisi nama dan unit akun.
+- **Pemasangan**: tabel baru saja (`db push` aman), seed menambah 3 baris pengaturan, skrip deploy menulis `kegiatan-version`. Notifikasi (pengumuman + kejadian) ditunda setelah pilot.
+
+---
+
 ## [2026-10-27 WIB] — Kegiatan: Struktur & anggaran, peran pengawas, dipasang di produksi | ✅ DONE, dideploy (`58efda4`, skrip `ffc5bd5`)
 
 **Project**: Database Warga GKJJ (`kegiatan.gkjjakarta.org`)

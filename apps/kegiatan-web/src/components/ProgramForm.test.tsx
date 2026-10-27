@@ -28,7 +28,7 @@ const pengguna = (peran: Pengguna['peran'], unitId: number | null = 5): Pengguna
 const unit = { id: 5, kode: 'U5', nama: 'Komisi Anak', singkatan: 'Anak', bidangId: 1, jenis: 'UPK' as const }
 const master = (statusPengajuan: 'DIBUKA' | 'DITUTUP' | 'BELUM_DIBUKA' = 'DIBUKA'): Master => ({
   tahun: { id: 1, tahun: 2027, nama: 'RKA 2027', statusPengajuan, rencanaBuka: null, rencanaTutup: null, praMukerTanggal: null, mukerTanggal: null, aktif: true },
-  tahunList: [], bidang: [], unit: [{ ...unit, alias: [], urutan: 1, aktif: true, pagu: 25_000_000 }], satuan: [{ id: 1, nama: 'Orang', urutan: 0, aktif: true }], kategoriBiaya: [],
+  tahunList: [], dukungan: { aktif: false, nomor: null, pesan: 'Halo' }, bidang: [], unit: [{ ...unit, alias: [], urutan: 1, aktif: true, pagu: 25_000_000 }], satuan: [{ id: 1, nama: 'Orang', urutan: 0, aktif: true }], kategoriBiaya: [],
   acuan: [
     { id: 1, tahunId: 1, jenis: 'VISI', kode: 'VISI', nama: 'Visi', deskripsi: 'Visi gereja', parentId: null, urutan: 0, aktif: true },
     { id: 2, tahunId: 1, jenis: 'MISI', kode: 'IMAN', nama: 'Bertumbuh dalam iman', deskripsi: null, parentId: 1, urutan: 1, aktif: true },

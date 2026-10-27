@@ -123,6 +123,16 @@ model TahunAnggaran {
   @@map("tahun_anggaran")
 }
 
+// Pengaturan aplikasi berbentuk kunci-nilai (mis. dukungan WhatsApp); diubah admin lewat Master.
+model Pengaturan {
+  id        Int      @id @default(autoincrement())
+  kunci     String   @unique @db.VarChar(60)
+  nilai     String   @default("") @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pengaturan")
+}
+
 model Bidang {
   id     Int    @id @default(autoincrement())
   kode   String @unique @db.VarChar(20)

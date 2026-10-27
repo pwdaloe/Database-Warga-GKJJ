@@ -7,9 +7,12 @@ import { ok } from '../utils/response.js'
 
 export const authRouter = Router()
 
+// Hanya login yang GAGAL dihitung: banyak pengurus berbagi satu IP (wifi gereja) dan login berhasil tidak boleh
+// menghabiskan jatah. 20 kegagalan per 15 menit per IP tetap menahan tebakan password.
 const batasLogin = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Terlalu banyak percobaan masuk. Coba lagi dalam 15 menit.' },

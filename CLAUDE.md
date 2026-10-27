@@ -28,6 +28,7 @@ Database Warga GKJJ adalah sistem pendataan dan pengelolaan data warga jemaat, m
 ### Git
 - Commit message singkat, deskriptif, bahasa Indonesia mengikuti gaya commit yang sudah ada (`feat:`, `fix:`, `docs:`)
 - Jangan commit kecuali diminta eksplisit oleh user
+- Aplikasi Kegiatan: setiap rilis (fitur, pembaruan, perbaikan bug) wajib menambah entri di `apps/kegiatan-api/src/constants/rilis.ts` dan menaikkan `version` di `package.json` apps/kegiatan-api dan apps/kegiatan-web (dijaga tes)
 
 ## Environment Variables
 Lihat `SETUP.md` dan `.env.example` di masing-masing app (`apps/api`, `apps/web`) untuk variabel yang dibutuhkan (DATABASE_URL, JWT_SECRET, dll).

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMaster } from '@/hooks/useData'
 import { Memuat, Pemberitahuan } from '@/components/ui'
 import { TabAcuan } from '@/components/admin/TabAcuan'
+import { TabDukungan } from '@/components/admin/TabDukungan'
 import { TabDaftar } from '@/components/admin/TabDaftar'
 import { TabPengurus } from '@/components/admin/TabPengurus'
 import { TabStruktur } from '@/components/admin/TabStruktur'
@@ -19,6 +20,7 @@ const TAB = [
   { k: 'pengurus', l: 'Pengurus (BPH)' },
   { k: 'acuan', l: 'Visi & misi' },
   { k: 'daftar', l: 'Satuan & kategori' },
+  { k: 'dukungan', l: 'Dukungan' },
 ] as const
 
 export default function MasterAdmin() {
@@ -49,6 +51,7 @@ export default function MasterAdmin() {
       {tab === 'unit' && <TabUnit master={m} />}
       {tab === 'pengurus' && <TabPengurus master={m} />}
       {tab === 'acuan' && <TabAcuan master={m} />}
+      {tab === 'dukungan' && <TabDukungan master={m} />}
       {tab === 'daftar' && (
         <div className="space-y-4">
           <TabDaftar judul="Satuan" petunjuk="Muncul sebagai saran pada kolom satuan di RAB. Pengurus tetap dapat mengetik satuan lain." basis="/master/satuan" item={m.satuan} />

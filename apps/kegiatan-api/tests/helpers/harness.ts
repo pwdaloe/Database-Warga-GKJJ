@@ -7,7 +7,7 @@ export interface PenggunaUji {
   id: number
   username: string
   nama: string
-  peran: 'ADMIN' | 'SEKRETARIAT' | 'KOORDINATOR_BIDANG' | 'PENGURUS_UPK' | 'MAJELIS'
+  peran: 'ADMIN' | 'SEKRETARIAT' | 'KOORDINATOR_BIDANG' | 'PENGURUS_UPK' | 'MAJELIS' | 'LP4WG' | 'KEPALA_KANTOR' | 'MINISTERIUM'
   unitId: number | null
   bidangId: number | null
   aktif: boolean
@@ -57,7 +57,8 @@ export function buatPrisma() {
     pengguna: m('findUnique', 'findFirst', 'findMany', 'create', 'update'),
     pengurus: m('findUnique', 'update'),
     unit: m('findUnique', 'findMany', 'create', 'update'),
-    bidang: m('findMany'),
+    bidang: m('findMany', 'create', 'update'),
+    pengaturan: m('findMany', 'upsert'),
     paguUnit: m('findMany', 'upsert', 'createMany'),
     tahunAnggaran: m('findUnique', 'findFirst', 'findMany', 'create', 'update', 'updateMany'),
     acuanStrategis: m('findMany', 'count', 'create', 'update', 'delete'),
@@ -75,5 +76,7 @@ export function buatPrisma() {
   }
   prisma.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => fn(prisma))
   prisma.logAudit.create.mockResolvedValue({})
+  prisma.pengaturan.findMany.mockResolvedValue([])
+  prisma.pengaturan.upsert.mockResolvedValue({})
   return prisma
 }

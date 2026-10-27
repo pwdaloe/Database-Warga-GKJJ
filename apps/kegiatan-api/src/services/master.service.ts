@@ -3,6 +3,7 @@ import { AppError } from '../middleware/errorHandler.js'
 import type { PenggunaLogin } from '../middleware/auth.js'
 import { bolehKelola, cakupanDari } from '../domain/akses.js'
 import { CHECKLIST_AJUKAN } from '../constants/checklist.js'
+import { ambilDukungan } from './pengaturan.service.js'
 import { KATEGORI_WAKTU, JENIS_SUMBER_DANA, JENIS_PROGRAM } from '../domain/validasiProgram.js'
 
 /** Seluruh master yang dibutuhkan formulir dan layar admin. Pagu dan pengurus hanya untuk yang berhak. */
@@ -30,6 +31,7 @@ export async function ambilMaster(user: PenggunaLogin, tahunId?: number) {
     }),
   ])
 
+  const dukungan = await ambilDukungan()
   const paguMap = new Map(pagu.map((p) => [p.unitId, Number(p.nilai)]))
   const bolehLihatPagu = (unitId: number): boolean =>
     cak.jenis === 'semua' || (cak.jenis === 'unit' && cak.unitId === unitId) || (cak.jenis === 'bidang' && units.find((u) => u.id === unitId)?.bidangId === cak.bidangId)
@@ -37,6 +39,7 @@ export async function ambilMaster(user: PenggunaLogin, tahunId?: number) {
   return {
     tahun,
     tahunList,
+    dukungan,
     bidang,
     unit: units.map((u) => ({ ...u, pagu: bolehLihatPagu(u.id) ? (paguMap.get(u.id) ?? 0) : null })),
     satuan,

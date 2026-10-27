@@ -86,6 +86,10 @@ else
 fi
 pm2 save
 
+# Versi yang berjalan (dibaca GET /api/versi untuk ditampilkan di aplikasi)
+install -d -m 755 "$APP_DIR/.deploy"
+echo "$VERSI" > "$APP_DIR/.deploy/kegiatan-version"
+
 tunggu() {
   for _ in $(seq 1 30); do curl -fs -o /dev/null "$1" && return 0; sleep 1; done
   warn "$2 belum merespons setelah 30 detik (cek: pm2 logs $3)"

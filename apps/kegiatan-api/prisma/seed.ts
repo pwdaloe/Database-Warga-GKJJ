@@ -126,6 +126,11 @@ async function seedMaster(): Promise<void> {
     })
   }
 
+  // Dukungan WhatsApp: nilai awal nonaktif; admin mengisinya di Master data > Dukungan (tidak menimpa isian admin).
+  for (const [kunci, nilai] of [['dukungan_wa_aktif', 'false'], ['dukungan_wa_nomor', ''], ['dukungan_wa_pesan', 'Halo, saya {nama} ({unit}). Saya membutuhkan bantuan pada aplikasi Kegiatan GKJ Jakarta.']] as const) {
+    await prisma.pengaturan.upsert({ where: { kunci }, update: {}, create: { kunci, nilai } })
+  }
+
   for (const [i, nama] of SATUAN.entries()) await prisma.satuan.upsert({ where: { nama }, update: {}, create: { nama, urutan: i } })
   for (const [i, nama] of KATEGORI_BIAYA.entries()) await prisma.kategoriBiaya.upsert({ where: { nama }, update: {}, create: { nama, urutan: i } })
 

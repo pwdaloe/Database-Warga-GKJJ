@@ -10,6 +10,9 @@
 - Sudah ditambahkan setelah K1 (27 Okt): layar **Struktur & anggaran**, 7 bidang (termasuk Ministerium dan Kemajelisan), 6 pos biaya (4 di Penatalayanan), peran pengawas baru (LP4WG, Kepala Kantor, Ministerium; Penatua = peran Majelis; Ketua Bidang = Koordinator bidang), seed akun contoh per peran (hanya lokal).
 - Tampilan HP 390 px sudah diuji untuk Struktur & anggaran, daftar program, formulir, dan dashboard pada 8 akun: tanpa scroll horizontal, toolbar bawah berfungsi.
 
+## Sudah dikerjakan 27 Okt (v0.2.0, belum dideploy)
+Logo, versi aplikasi dan halaman Apa yang baru, bantuan WhatsApp (Master > Dukungan), perbaikan batas login. Lihat `CHANGELOG.md`. **Notifikasi** (keputusan Daru: gabungan pengumuman admin + notifikasi kejadian, dikerjakan setelah pilot) belum dimulai.
+
 ## Langkah berikutnya (urut)
 1. **Isi master di produksi** (layar Struktur & anggaran: pagu per unit dan pos; BPH; akun). Ini hambatan utama sebelum pilot.
 2. **Verifikasi yang belum**: tarik kembali dan hapus di browser, ringkasan cetak, tab master selain Tahun dan Struktur, buat akun + tombol WhatsApp.

@@ -80,9 +80,34 @@ export interface Acuan {
   aktif: boolean
 }
 
+export interface Dukungan {
+  aktif: boolean
+  /** Format internasional tanpa plus (62812…) atau null */
+  nomor: string | null
+  /** Boleh memuat {nama} dan {unit} */
+  pesan: string
+}
+
+export type JenisPerubahan = 'BARU' | 'PEMBARUAN' | 'PERBAIKAN'
+
+export interface RilisItem {
+  versi: string
+  tanggal: string
+  judul: string
+  perubahan: Array<{ jenis: JenisPerubahan; teks: string }>
+}
+
+export interface InfoVersi {
+  versi: string
+  tanggal: string
+  commit: string | null
+  rilis: RilisItem[]
+}
+
 export interface Master {
   tahun: Tahun
   tahunList: Tahun[]
+  dukungan: Dukungan
   bidang: Array<{ id: number; kode: string; nama: string; urutan: number }>
   unit: UnitMaster[]
   satuan: Array<{ id: number; nama: string; urutan: number; aktif: boolean }>

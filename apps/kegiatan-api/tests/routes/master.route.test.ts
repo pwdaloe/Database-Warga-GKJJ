@@ -13,9 +13,12 @@ beforeEach(() => {
   prisma.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => fn(prisma))
 })
 
-const TANPA_HAK: PenggunaUji['peran'][] = ['MAJELIS', 'KOORDINATOR_BIDANG', 'PENGURUS_UPK']
+const TANPA_HAK: PenggunaUji['peran'][] = ['MAJELIS', 'KOORDINATOR_BIDANG', 'PENGURUS_UPK', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM']
 
 const tulis: Array<[string, string, string, object?]> = [
+  ['post', '/api/master/bidang', 'bidang', { kode: 'BARU', nama: 'Bidang Baru' }],
+  ['put', '/api/master/bidang/1', 'bidang', { nama: 'Bidang' }],
+  ['put', '/api/master/dukungan', 'pengaturan', { aktif: false, pesan: 'Halo bantuan' }],
   ['put', '/api/master/tahun/1', 'tahun', { nama: 'x' }],
   ['post', '/api/master/tahun', 'tahun', { tahun: 2028, nama: 'RKA 2028' }],
   ['post', '/api/master/unit', 'unit', { kode: 'BARU', nama: 'Unit Baru', bidangId: 1 }],
@@ -171,11 +174,86 @@ describe('GET /api/master', () => {
     expect(pagu).toEqual({ 5: 25_000_000, 6: null })
   })
 
+  it.each(['PENGURUS_UPK', 'KOORDINATOR_BIDANG', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM'] as const)('%s menerima pengaturan dukungan (nonaktif bila belum diisi)', async (peran) => {
+    siapMaster()
+    const res = await request(app).get('/api/master').set(masuk(prisma, pengguna(peran)))
+    expect(res.status).toBe(200)
+    expect(res.body.data.dukungan.aktif).toBe(false)
+    expect(res.body.data.dukungan.nomor).toBeNull()
+    expect(res.body.data.dukungan.pesan).toContain('{nama}')
+  })
+
+  it('dukungan aktif hanya bila nomor valid; nomor rusak membuatnya nonaktif', async () => {
+    siapMaster()
+    prisma.pengaturan.findMany.mockResolvedValue([{ kunci: 'dukungan_wa_aktif', nilai: 'true' }, { kunci: 'dukungan_wa_nomor', nilai: 'abc' }])
+    const rusak = await request(app).get('/api/master').set(masuk(prisma, pengguna('PENGURUS_UPK')))
+    expect(rusak.body.data.dukungan.aktif).toBe(false)
+    prisma.pengaturan.findMany.mockResolvedValue([{ kunci: 'dukungan_wa_aktif', nilai: 'true' }, { kunci: 'dukungan_wa_nomor', nilai: '6281234567890' }])
+    const baik = await request(app).get('/api/master').set(masuk(prisma, pengguna('PENGURUS_UPK')))
+    expect(baik.body.data.dukungan).toMatchObject({ aktif: true, nomor: '6281234567890' })
+  })
+
   it('memuat daftar periksa 9 butir dan enum formulir', async () => {
     siapMaster()
     const res = await request(app).get('/api/master').set(masuk(prisma, pengguna('PENGURUS_UPK')))
     expect(res.body.data.checklist).toHaveLength(9)
     expect(res.body.data.enum.kategoriWaktu).toEqual(['SEKALI', 'PERIODE', 'RENTANG', 'TAHUN'])
     expect(res.body.data.enum.sumberDana).toEqual(['GEREJA', 'SWADAYA', 'PENGGALANGAN', 'DONASI'])
+  })
+})
+
+describe('bidang', () => {
+  const kirim = (method: 'post' | 'put', path: string, b: object, peran: PenggunaUji['peran'] = 'SEKRETARIAT') =>
+    (request(app) as any)[method](path).set(masuk(prisma, pengguna(peran))).send(b)
+
+  it('menambah bidang dan tercatat audit; kode wajib huruf besar/angka/garis bawah', async () => {
+    prisma.bidang.create.mockResolvedValue({ id: 8, kode: 'BARU', nama: 'Bidang Baru', urutan: 8 })
+    const res = await kirim('post', '/api/master/bidang', { kode: 'BARU', nama: 'Bidang Baru', urutan: 8 })
+    expect(res.status).toBe(201)
+    expect(prisma.logAudit.create.mock.calls[0]![0].data.aksi).toBe('BUAT_BIDANG')
+    for (const kode of ['baru', 'ada spasi', 'X']) {
+      expect((await kirim('post', '/api/master/bidang', { kode, nama: 'Bidang Baru' })).status).toBe(400)
+    }
+    expect(prisma.bidang.create).toHaveBeenCalledTimes(1)
+  })
+
+  it('mengubah nama dan urutan bidang; nama terlalu pendek ditolak', async () => {
+    prisma.bidang.update.mockResolvedValue({ id: 1, kode: 'PEMBINAAN1', nama: 'Pembinaan Satu', urutan: 2 })
+    expect((await kirim('put', '/api/master/bidang/1', { nama: 'Pembinaan Satu', urutan: 2 })).status).toBe(200)
+    expect(prisma.logAudit.create.mock.calls[0]![0].data.aksi).toBe('UBAH_BIDANG')
+    expect((await kirim('put', '/api/master/bidang/1', { nama: 'P' })).status).toBe(400)
+  })
+})
+
+describe('dukungan WhatsApp', () => {
+  const put = (b: object, peran: PenggunaUji['peran'] = 'ADMIN') => request(app).put('/api/master/dukungan').set(masuk(prisma, pengguna(peran))).send(b)
+
+  it('menyimpan nomor dalam format internasional dan mencatat audit', async () => {
+    prisma.pengaturan.findMany.mockResolvedValue([
+      { kunci: 'dukungan_wa_aktif', nilai: 'true' }, { kunci: 'dukungan_wa_nomor', nilai: '6281234567890' }, { kunci: 'dukungan_wa_pesan', nilai: 'Halo {nama}' },
+    ])
+    const res = await put({ aktif: true, nomor: '0812-3456-7890', pesan: 'Halo {nama}' })
+    expect(res.status).toBe(200)
+    const nilai = Object.fromEntries(prisma.pengaturan.upsert.mock.calls.map((c: any[]) => [c[0].where.kunci, c[0].update.nilai]))
+    expect(nilai).toEqual({ dukungan_wa_aktif: 'true', dukungan_wa_nomor: '6281234567890', dukungan_wa_pesan: 'Halo {nama}' })
+    expect(res.body.data).toEqual({ aktif: true, nomor: '6281234567890', pesan: 'Halo {nama}' })
+    expect(prisma.logAudit.create.mock.calls[0]![0].data.aksi).toBe('UBAH_DUKUNGAN')
+  })
+
+  it.each([
+    ['nomor tidak valid', { aktif: false, nomor: '123', pesan: 'Halo bantuan' }],
+    ['aktif tanpa nomor', { aktif: true, nomor: '', pesan: 'Halo bantuan' }],
+    ['pesan terlalu pendek', { aktif: false, nomor: '081234567890', pesan: 'Hi' }],
+    ['pesan terlalu panjang', { aktif: false, nomor: '081234567890', pesan: 'x'.repeat(301) }],
+    ['aktif bukan boolean', { aktif: 'ya', nomor: '081234567890', pesan: 'Halo bantuan' }],
+  ])('menolak %s dan tidak menulis', async (_n, body) => {
+    expect((await put(body)).status).toBe(400)
+    expect(prisma.pengaturan.upsert).not.toHaveBeenCalled()
+  })
+
+  it('nonaktif tanpa nomor boleh disimpan (nomor dikosongkan)', async () => {
+    expect((await put({ aktif: false, nomor: '', pesan: 'Halo bantuan' }, 'SEKRETARIAT')).status).toBe(200)
+    const nomor = prisma.pengaturan.upsert.mock.calls.find((c: any[]) => c[0].where.kunci === 'dukungan_wa_nomor')![0]
+    expect(nomor.update.nilai).toBe('')
   })
 })

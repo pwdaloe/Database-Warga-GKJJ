@@ -8,6 +8,7 @@ import { catatAudit } from '../services/audit.service.js'
 import { created, ok } from '../utils/response.js'
 import { rupiah } from '../domain/rupiah.js'
 import { normalizeWa } from '../utils/waNumber.js'
+import { simpanDukungan, ambilDukungan } from '../services/pengaturan.service.js'
 
 export const masterRouter = Router()
 
@@ -82,6 +83,23 @@ masterRouter.post('/tahun', kelola, async (req, res) => {
     return baru
   })
   created(res, hasil)
+})
+
+// ── Dukungan (bantuan WhatsApp) ──────────────────────────────
+
+masterRouter.put('/dukungan', kelola, async (req, res) => {
+  const d = z
+    .object({
+      aktif: z.boolean(),
+      nomor: z.preprocess((v) => (v === '' ? null : v), z.string().trim().max(20).nullish()),
+      pesan: z.string().trim().min(5, 'Pesan awal minimal 5 karakter').max(300),
+    })
+    .refine((x) => !x.nomor || normalizeWa(x.nomor) !== null, { message: 'Nomor WhatsApp tidak valid', path: ['nomor'] })
+    .refine((x) => !x.aktif || !!x.nomor, { message: 'Isi nomor WhatsApp sebelum mengaktifkan', path: ['nomor'] })
+    .parse(req.body)
+  await simpanDukungan({ aktif: d.aktif, nomor: d.nomor ? normalizeWa(d.nomor) : null, pesan: d.pesan })
+  await catatAudit({ penggunaId: pelaku(req).id, aksi: 'UBAH_DUKUNGAN', entitas: 'pengaturan', ringkasan: d.aktif ? 'aktif' : 'nonaktif', ipAddress: ip(req) })
+  ok(res, await ambilDukungan())
 })
 
 // ── Bidang ───────────────────────────────────────────────────

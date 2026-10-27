@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { Dashboard, Master, ProgramDetail, ProgramRingkas } from '@/lib/tipe'
+import type { Dashboard, InfoVersi, Master, ProgramDetail, ProgramRingkas } from '@/lib/tipe'
 
 export function useMaster(tahunId?: number) {
   return useQuery({
@@ -60,4 +60,13 @@ export function useAksiProgram() {
       onSuccess: segarkan,
     }),
   }
+}
+
+/** Versi aplikasi dan catatan rilis (publik; dapat dipakai sebelum login). */
+export function useVersi() {
+  return useQuery({
+    queryKey: ['versi'],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => (await api.get('/versi')).data.data as InfoVersi,
+  })
 }
