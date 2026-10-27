@@ -1,6 +1,6 @@
 {
   "project": "Database Warga GKJJ",
-  "last_updated": "2026-10-07",
+  "last_updated": "2026-10-27",
   "note": "Retro 2026-10-03 (pasca Sprint 7, di luar alur /sprint): 4 fix/feat import & logs (2026-07-10) ditemukan lewat uji data nyata meski coverage import.ts 91%; relokasi folder ~/Documents -> ~/Projects + bentrok port Redis 6379; DB lokal kosong setelah relokasi (pulih via restore dump). sprints/.current_sprint = 8, belum ada sprint_08.md.",
   "sprints": [
     {
@@ -137,6 +137,45 @@
       "tasks_total": 7,
       "tasks_done": 7,
       "completion_pct": 100
+    },
+    {
+      "number": 12,
+      "name": "Integritas Data, Demografi, Keanggotaan (Sidi/Menikah)",
+      "commit": "14636ff",
+      "status": "done",
+      "blockers_count": 4,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": null,
+      "tasks_done": null,
+      "completion_pct": 100,
+      "note": "Dideploy 3d0e4aa (23 Okt). Backfill retro 2026-10-27."
+    },
+    {
+      "number": 13,
+      "name": "Token QR Kartu Anggota",
+      "commit": "241e2da",
+      "status": "done",
+      "blockers_count": 1,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": null,
+      "tasks_done": null,
+      "completion_pct": 100,
+      "note": "Dideploy 24 Okt; SQL migrasi manual dulu karena db push menolak constraint unik pada tabel berisi. Backfill retro 2026-10-27."
+    },
+    {
+      "number": "K1",
+      "name": "Aplikasi Kegiatan (RKA 2027): pengajuan program kerja dan anggaran UPK",
+      "commit": "419508b",
+      "status": "done",
+      "blockers_count": 3,
+      "high_severity_blockers": 0,
+      "fix_commits": 0,
+      "tasks_total": null,
+      "tasks_done": null,
+      "completion_pct": 100,
+      "note": "Aplikasi baru apps/kegiatan-*; dipasang di VPS 27 Okt (58efda4). Pasca-K1 hari yang sama: Struktur & anggaran, peran pengawas (tanpa tes baru), perbaikan skrip deploy ffc5bd5. Backfill retro 2026-10-27."
     }
   ],
   "recurring_blockers": [
@@ -203,10 +242,11 @@
       "occurrences": 4,
       "severity": "HIGH",
       "first_seen": "2026-07-09 (Sprint 7)",
-      "last_seen": "Sprint 11",
-      "resolved": false,
+      "last_seen": "2026-10-07",
+      "resolved": true,
       "root_cause": "sprint.md Langkah 6 (Verifikasi Sprint) tidak punya panduan eksplisit untuk kasus sesi tanpa browser tool — penanganan yang benar (fallback ke curl + disclosure) saat ini murni dari instruksi umum skill /verify, bukan dari sprint.md sendiri.",
-      "escalation_note": "Occurrence pertama. Berpotensi berulang di setiap sprint frontend selanjutnya kalau sesi tidak punya browser tool — didokumentasikan sebagai skill_improvement_candidate agar jadi standar konsisten."
+      "escalation_note": "Occurrence pertama. Berpotensi berulang di setiap sprint frontend selanjutnya kalau sesi tidak punya browser tool — didokumentasikan sebagai skill_improvement_candidate agar jadi standar konsisten.",
+      "resolution": "2026-10-27: verifikasi browser dilakukan pada K1 dan pada pekerjaan 27 Okt (Chrome + Playwright 390px, 8 akun). Teknik dicatat di sprint.md."
     },
     {
       "item": "Bug data-nyata di jalur import/serialisasi lolos dari test ber-mock prisma meski coverage tinggi (Excel Number vs string, NIK plaintext di import vs terenkripsi di jalur manual, VARCHAR overflow, BigInt tak ter-serialize di /api/logs) | Kejadian ke-9 (2026-10-07): integritas RELASIONAL — Kepala KK pindah KK meninggalkan KK kosong dengan kepala_keluarga_id basi; 14 KK kosong lolos tanpa terdeteksi sejak 2026-10-05; ditemukan pengguna, bukan tes.",
@@ -214,10 +254,11 @@
       "severity": "HIGH",
       "first_seen": "2026-07-10 (pasca Sprint 7)",
       "last_seen": "Maintenance 2026-10-07",
-      "resolved": false,
+      "resolved": true,
       "root_cause": "Test Sprint 6 memakai prisma mock dan input sintetis berbentuk string; tidak ada fixture Excel nyata, tidak ada paritas-check antar jalur tulis (import vs manual), dan tidak ada test serialisasi JSON untuk tipe BigInt/Decimal.",
       "escalation_note": "4 bug dalam satu hari = >=3x. Wajib jadi task sprint nyata (Sprint 8), bukan rekomendasi naratif.",
-      "note": "Eskalasi retro 2026-10-03 (wajib jadi task Sprint 8) tidak ditindaklanjuti; 4 kejadian baru: koordinat/NIK terhapus saat edit role terbatas, alamat KK dibuang, form detail tanpa foto/alamat/koordinat, nomor WRG vs Induk tidak konsisten. Perbaikan kode sudah dibuat (helper bersama + tes), tetapi qa.md belum diubah. [Sprint 8 2026-10-05: tes round-trip API per peran + form (paritas skema) ditambahkan dan terbukti gagal saat proteksi dimatikan; qa.md masih menunggu /improve. Resolved setelah qa.md diubah.] [/improve 2026-10-05: qa.md 4.3b dan review.md diperbarui; resolved ditandai setelah satu siklus tanpa kejadian baru.]"
+      "note": "Eskalasi retro 2026-10-03 (wajib jadi task Sprint 8) tidak ditindaklanjuti; 4 kejadian baru: koordinat/NIK terhapus saat edit role terbatas, alamat KK dibuang, form detail tanpa foto/alamat/koordinat, nomor WRG vs Induk tidak konsisten. Perbaikan kode sudah dibuat (helper bersama + tes), tetapi qa.md belum diubah. [Sprint 8 2026-10-05: tes round-trip API per peran + form (paritas skema) ditambahkan dan terbukti gagal saat proteksi dimatikan; qa.md masih menunggu /improve. Resolved setelah qa.md diubah.] [/improve 2026-10-05: qa.md 4.3b dan review.md diperbarui; resolved ditandai setelah satu siklus tanpa kejadian baru.]",
+      "resolution": "2026-10-27: task nyata dikerjakan Sprint 12 (db:integritas read-only, dijalankan tiap deploy); 4 deploy berturut (3d0e4aa, 241e2da, 10222b3, 58efda4 untuk Kegiatan) tanpa kejadian baru. Buka lagi bila ada bug data-nyata baru."
     },
     {
       "item": "Port host docker-compose bentrok dengan service lokal lain (Redis 6379 vs Redis Homebrew); sebelumnya Postgres 5433 (HIGH)",
@@ -264,7 +305,7 @@
       "first_seen": "Maintenance 2026-10-05",
       "last_seen": "Maintenance 2026-10-05",
       "resolved": false,
-      "note": "Production 14 -> 6, tanpa critical. Sisa: next/postcss (Next 16), prisma/deepmerge-ts (Prisma 8), uuid via exceljs. xlsx diganti exceljs (.xls tak didukung)."
+      "note": "Prisma 7 + patch 23 Okt menurunkan temuan production 7 -> 4; sisa butuh Next 16."
     },
     {
       "item": "Scoping Penatua tanpa kelompok tidak konsisten: dashboard fail-closed, /warga & /keluarga fail-open; peta dashboard menampilkan koordinat ke semua role (kebijakan PDP menyembunyikan)",
@@ -332,6 +373,44 @@
       "first_seen": "Maintenance 2026-10-07",
       "last_seen": "Maintenance 2026-10-07",
       "resolved": true
+    },
+    {
+      "item": "Panduan/skrip deploy yang belum pernah dijalankan memuat cacat (panduan menyebut prisma migrate deploy padahal skrip memakai db push; pemeriksaan placeholder .env menolak berkas benar karena komentar templat memuat kata GANTI, dan panduan menjanjikan grep -c = 0)",
+      "occurrences": 2,
+      "severity": "MED",
+      "first_seen": "2026-10-07",
+      "last_seen": "2026-10-27",
+      "resolved": true,
+      "root_cause": "Perintah pemeriksaan di panduan tidak dijalankan terhadap templat sebelum diberikan ke pengguna.",
+      "resolution": "ffc5bd5 memperbaiki skrip dan templat; devops.md kini mewajibkan uji lokal panduan/skrip deploy baru."
+    },
+    {
+      "item": "Peran baru (LP4WG, Kepala Kantor, Ministerium) dan endpoint bidang ditambahkan ke Kegiatan tanpa tes baru; daftar peran lihat-semua diduplikasi di API (akses.ts) dan web (tipe.ts) tanpa tes sinkron",
+      "occurrences": 1,
+      "severity": "HIGH",
+      "first_seen": "2026-10-27",
+      "last_seen": "2026-10-27",
+      "resolved": false,
+      "root_cause": "Verifikasi dilakukan lewat layar di browser; suite lama (188 API, 27 web) tetap hijau karena tidak menyentuh kode baru.",
+      "action": "Task nyata: tambah tes akses 3 peran baru, tes route /master/bidang, dan tes sinkron daftar peran."
+    },
+    {
+      "item": "learning_log.json tidak memuat Sprint 12, 13, K1 selama 20 hari (retro harus rekonstruksi dari CHANGELOG)",
+      "occurrences": 1,
+      "severity": "LOW",
+      "first_seen": "2026-10-27",
+      "last_seen": "2026-10-27",
+      "resolved": true,
+      "resolution": "Backfill hari ini; sprint.md mewajibkan catat ke learning_log saat sprint selesai."
+    },
+    {
+      "item": "Batas laju login (429) tertrigger oleh uji otomatis yang login berulang di lingkungan lokal",
+      "occurrences": 1,
+      "severity": "LOW",
+      "first_seen": "2026-10-27",
+      "last_seen": "2026-10-27",
+      "resolved": true,
+      "resolution": "Restart API lokal; teknik satu konteks per akun dicatat di sprint.md."
     }
   ],
   "skill_improvement_candidates": [
@@ -573,6 +652,51 @@
       "applied": true,
       "applied_date": "2026-10-07",
       "applied_summary": "devops.md: Langkah 8c baru — jalur deploy (db push), gerbang pasca-deploy, scp dengan tanda kutip zsh, prosedur analisis salinan produksi (docker pg16, null NIK, terapkan migrasi, hapus salinan)"
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Verifikasi lebar ponsel 390px: resize_window tidak mengubah viewport dan iframe ditolak X-Frame-Options; tidak ada teknik baku",
+      "suggested_fix": "Tambah teknik Playwright headless (Chrome sistem), assert scrollWidth, cek tinggi halaman, catatan rate limit",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-10-27",
+      "applied_summary": "Tambah blok teknik viewport 390px di Langkah 6"
+    },
+    {
+      "skill": "devops.md",
+      "issue": "Panduan/skrip deploy baru tidak diuji lokal; cacat 2x",
+      "suggested_fix": "Uji bash -n dan perintah pemeriksaan terhadap templat; satu langkah per pesan; catatan peringatan Nginx",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-10-27",
+      "applied_summary": "Tambah subbagian 'Uji panduan dan skrip deploy baru' sebelum Langkah 8c"
+    },
+    {
+      "skill": "qa.md",
+      "issue": "Peran/endpoint baru dan konstanta ganda tidak wajib punya tes di commit yang sama",
+      "suggested_fix": "Tambah 4.3b2: tes matriks akses, tes route, tes sinkron daftar ganda",
+      "priority": "HIGH",
+      "applied": true,
+      "applied_date": "2026-10-27",
+      "applied_summary": "Tambah bagian 4.3b2"
+    },
+    {
+      "skill": "improve.md",
+      "issue": "Langkah 6-7 push dan email otomatis bertentangan dengan CLAUDE.md",
+      "suggested_fix": "Push/email hanya setelah persetujuan; commit lokal boleh",
+      "priority": "MED",
+      "applied": true,
+      "applied_date": "2026-10-27",
+      "applied_summary": "Ubah blok commit/push dan tambah catatan konfirmasi"
+    },
+    {
+      "skill": "sprint.md",
+      "issue": "Sprint tidak dicatat ke learning_log.json saat selesai",
+      "suggested_fix": "Tambah langkah catat ke learning_log sebelum Langkah 10",
+      "priority": "LOW",
+      "applied": true,
+      "applied_date": "2026-10-27",
+      "applied_summary": "Tambah subbagian sebelum Langkah 10"
     }
   ],
   "improvement_history": [
@@ -713,6 +837,36 @@
       "skill": "devops.md",
       "change": "devops.md: Langkah 8c baru — jalur deploy (db push), gerbang pasca-deploy, scp dengan tanda kutip zsh, prosedur analisis salinan produksi (docker pg16, null NIK, terapkan migrasi, hapus salinan)",
       "trigger": "RETRO 2026-10-07: recurring blocker data-nyata 9x, verifikasi visual 4x, role baru fail-open"
+    },
+    {
+      "date": "2026-10-27",
+      "skill": "sprint.md",
+      "change": "Tambah blok teknik viewport 390px di Langkah 6",
+      "trigger": "RETRO 2026-10-27: Verifikasi lebar ponsel 390px: resize_window tidak mengubah viewport dan iframe ditolak X-"
+    },
+    {
+      "date": "2026-10-27",
+      "skill": "devops.md",
+      "change": "Tambah subbagian 'Uji panduan dan skrip deploy baru' sebelum Langkah 8c",
+      "trigger": "RETRO 2026-10-27: Panduan/skrip deploy baru tidak diuji lokal; cacat 2x"
+    },
+    {
+      "date": "2026-10-27",
+      "skill": "qa.md",
+      "change": "Tambah bagian 4.3b2",
+      "trigger": "RETRO 2026-10-27: Peran/endpoint baru dan konstanta ganda tidak wajib punya tes di commit yang sama"
+    },
+    {
+      "date": "2026-10-27",
+      "skill": "improve.md",
+      "change": "Ubah blok commit/push dan tambah catatan konfirmasi",
+      "trigger": "RETRO 2026-10-27: Langkah 6-7 push dan email otomatis bertentangan dengan CLAUDE.md"
+    },
+    {
+      "date": "2026-10-27",
+      "skill": "sprint.md",
+      "change": "Tambah subbagian sebelum Langkah 10",
+      "trigger": "RETRO 2026-10-27: Sprint tidak dicatat ke learning_log.json saat selesai"
     }
   ],
   "maintenance_batches": [

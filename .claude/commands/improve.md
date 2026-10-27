@@ -157,8 +157,12 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 ```bash
 git commit -m "pesan di atas"
-git push origin main
 ```
+
+**`git push` dan email (Langkah 7) hanya setelah pengguna menyetujui** bila `CLAUDE.md` meminta konfirmasi untuk operasi
+git berisiko; commit lokal boleh langsung. Sampaikan hash commit dan tanyakan "push sekarang?".
+
+<!-- improved: push dan email otomatis bertentangan dengan CLAUDE.md ("jangan commit kecuali diminta", konfirmasi git push) — retro 2026-10-27; sama dengan perbaikan sprint.md Langkah 8/10 sebelumnya (2026-10-27) -->
 
 ## Langkah 7 — Kirim Email Notifikasi
 

@@ -237,6 +237,18 @@ sering memiliki tool Claude in Chrome (`mcp__claude-in-chrome__*`) yang *deferre
 5. Hanya bila tool **benar-benar tidak tersedia** atau gagal 2–3 kali, pakai fallback di bawah dan nyatakan di laporan.
 6. Laporan akhir wajib menyebut **halaman apa saja yang benar-benar dilihat** dan bukti yang ditemukan (bukan sekadar "sudah dicek").
 
+**Lebar ponsel (390 px) — tool Chrome tidak dapat mempersempit viewport.** `resize_window` mengubah jendela, bukan viewport
+halaman (`innerWidth` tetap lebar desktop), dan iframe harness gagal karena aplikasi mengirim `X-Frame-Options: DENY`.
+Untuk pemeriksaan ponsel pakai `playwright-core` di scratchpad (`npm i playwright-core`, tanpa unduh browser):
+`chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' })`, konteks
+`{ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }`, login lewat form,
+`page.screenshot({ fullPage: true })`, dan **assert `document.documentElement.scrollWidth === 390`** (tanpa scroll horizontal).
+Satu konteks per akun, jangan login berulang tanpa perlu: batas laju login (429) dapat tertrigger; bila terjadi,
+restart API lokal untuk mengatur ulang. Periksa juga tinggi halaman: layar yang menumpuk label+kontrol per baris bisa
+berukuran ribuan piksel di ponsel (Struktur & anggaran Kegiatan awalnya ±11.000 px) dan perlu dipadatkan.
+
+<!-- improved: teknik verifikasi viewport 390px yang benar-benar bekerja — retro 2026-10-27: resize_window tidak mengubah viewport dan iframe ditolak X-Frame-Options; Playwright headless dengan Chrome sistem berhasil dan menemukan layar terlalu panjang serta tombol simpan yang menimpa isi (2026-10-27) -->
+
 <!-- improved: coba tool Claude in Chrome sebelum fallback "tidak ada browser tool" — retro 2026-10-07: UI Sprint 9, 10, 11 dilaporkan "belum divalidasi visual" 4x berturut-turut padahal tool tersedia lewat ToolSearch (2026-10-07) -->
 
 **Kalau sprint menyentuh `apps/web` dan DoD meminta uji interaktif ("coba manual via `npm run dev`",
@@ -299,6 +311,14 @@ git commit -m "pesan commit di atas"
 echo $((N + 1)) > sprints/.current_sprint
 echo "Sprint tracker diupdate ke Sprint $((N + 1))"
 ```
+
+### Catat ke learning_log.json (setiap sprint, termasuk aplikasi baru seperti Kegiatan)
+
+Setelah sprint selesai, tambahkan satu objek ke `sprints[]` di `learning_log.json` (nomor/nama, commit, status, jumlah task,
+blocker, fix_commits) agar `/retro` tidak perlu merekonstruksinya dari CHANGELOG. Sprint 12, 13, dan K1 sempat tidak tercatat
+selama 20 hari sehingga retro harus membaca ulang CHANGELOG.
+
+<!-- improved: catat sprint ke learning_log.json saat selesai — retro 2026-10-27: Sprint 12, 13, K1 tidak ada di learning_log (2026-10-27) -->
 
 ## Langkah 10 — Laporan PM
 

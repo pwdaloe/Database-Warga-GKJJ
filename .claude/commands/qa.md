@@ -225,6 +225,20 @@ bukan string sintetis; uji juga serialisasi tipe `BigInt`/`Date` ke JSON.
 
 <!-- improved: tambah pola tes round-trip + mutation check — retro 2026-10-05, blocker "bug data-nyata lolos dari test" 8x HIGH, kandidat qa.md pending sejak retro 2026-10-03 (2026-10-05) -->
 
+### 4.3b2 — Peran Baru, Endpoint Baru, dan Konstanta Ganda (WAJIB dalam commit yang sama)
+
+Setiap kali menambah **peran**, **endpoint**, atau **daftar konstanta yang ada di dua sisi** (API dan web), tulis tesnya
+di commit yang sama, bukan menyusul:
+- **Peran baru**: tambahkan ke tes matriks akses (`tests/domain/akses.test.ts` atau setara): boleh/tidaknya lihat,
+  buat, ubah, ajukan, tarik, hapus untuk peran itu, dan pastikan peran hanya-lihat ditolak pada setiap aksi tulis.
+- **Endpoint baru** (mis. `POST/PUT /master/bidang`): tes route untuk sukses, validasi gagal, dan penolakan peran tanpa hak.
+- **Daftar yang diduplikasi** (mis. daftar peran lihat-semua di API `akses.ts` dan web `tipe.ts`, daftar status
+  keanggotaan): tulis tes sinkron seperti `statusKeanggotaan.sinkron.test.ts` agar keduanya tidak bisa berbeda.
+- Lihat layar di browser tidak menggantikan tes: pada 2026-10-27, 3 peran dan 2 endpoint Kegiatan dikirim tanpa tes baru
+  (suite lama tetap hijau karena tidak menyentuhnya).
+
+<!-- improved: peran/endpoint baru wajib punya tes di commit yang sama — retro 2026-10-27: peran LP4WG/Kepala Kantor/Ministerium dan endpoint bidang ditambah tanpa tes; suite lama hijau tidak membuktikan apa-apa (2026-10-27) -->
+
 ### 4.3c — Integritas Relasional & Audit Data Produksi
 
 Tes round-trip (4.3b) menjaga **field**; ia tidak menjaga **relasi**. Kasus produksi 2026-10-07: Kepala KK dipindah ke KK lain,

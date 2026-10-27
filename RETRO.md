@@ -3,6 +3,86 @@
 
 ---
 
+## [2026-10-27] — Retrospektif Sprint 12, 13, K1 (+ pemasangan Kegiatan di produksi)
+
+**Project**: Database Warga GKJJ
+**Scope**: Sprint 12, Status Keanggotaan, Sprint 13 (QR), Prisma 7 + maintenance, perbaikan seed, landing multi-domain, Sprint K1 (aplikasi Kegiatan), pemasangan Kegiatan di VPS dan penambahan Struktur & anggaran + peran pengawas (27 Okt)
+**Reviewed**: Selasa, 27 Oktober 2026
+**Reviewed by**: Claude Code Retro Agent
+
+### 📊 Ringkasan Kuantitatif
+
+| Metric | Nilai |
+|--------|-------|
+| Sprint dianalisis | 3 sprint (12, 13, K1) + 5 pekerjaan maintenance/platform |
+| Commit sejak retro lalu (7 Okt) | 53, di antaranya 9 berkata fix/revert (17%, sama dengan retro lalu) |
+| Pertumbuhan tes | API jemaat 293 → 555; web 131 → 172; Kegiatan baru: API 188, web 27 |
+| Deploy ke produksi | 6 (jemaat 5, Kegiatan 1), tanpa insiden pada aplikasi jemaat |
+| Unique blockers baru | 4 |
+| Blocker ditutup | 3 (verifikasi visual, data-nyata, panduan deploy cacat) |
+| Recurring blockers terbuka | 2 (peran baru tanpa tes; dependensi) |
+| Skill gap terdeteksi | 5 (semua diterapkan) |
+
+### 🔁 Pola Blocker Sistemik
+
+#### Verifikasi visual UI tidak dilakukan — 4x → **RESOLVED**
+- Pada K1 dan pekerjaan 27 Okt, UI benar-benar dilihat di browser (login, formulir, dashboard, 8 akun, lebar HP 390 px). Menemukan dua masalah sebelum pengguna: layar Struktur & anggaran setinggi ±11.000 px di HP dan tombol Simpan melayang menimpa isi.
+- **Pelajaran teknis**: `resize_window` tidak mengubah viewport halaman, dan iframe harness ditolak `X-Frame-Options: DENY`. Yang bekerja: `playwright-core` + Chrome sistem. Dicatat di `sprint.md`.
+- Masih belum dilihat: tarik kembali/hapus, ringkasan cetak, tab master selain Tahun dan Struktur, akun + WhatsApp.
+
+#### Bug "data-nyata lolos dari test" — 9x → **RESOLVED** (bersyarat)
+- Task nyata dikerjakan di Sprint 12 (`db:integritas`, dijalankan tiap deploy). Empat deploy berturut tanpa kejadian baru. Dibuka lagi bila muncul bug data-nyata baru.
+
+#### Panduan/skrip deploy yang belum pernah dijalankan memuat cacat — **2x**, MED → RESOLVED
+- 7 Okt: panduan menyebut `prisma migrate deploy`; skrip memakai `db push`. 27 Okt: `grep -q GANTI` menolak `.env` benar karena komentar templat memuat kata itu, dan panduan menjanjikan `grep -c GANTI` = 0 padahal 1. Memerlukan dua putaran dengan pengguna di VPS; diperbaiki di `ffc5bd5`.
+- **Root cause**: perintah pemeriksaan di panduan tidak dijalankan terhadap templat sebelum diberikan.
+- **Skill diperbarui**: `devops.md` (uji lokal panduan/skrip baru).
+
+#### Peran baru dan endpoint baru tanpa tes — 1x, HIGH, **TERBUKA**
+- Peran LP4WG, Kepala Kantor, Ministerium dan endpoint `POST/PUT /master/bidang` ditambah tanpa tes. Daftar peran lihat-semua diduplikasi di `akses.ts` (API) dan `tipe.ts` (web) tanpa tes sinkron (padahal status keanggotaan punya tes sinkron sejak Opsi A).
+- Suite lama tetap hijau karena tidak menyentuh kode baru; verifikasi lewat layar bukan pengganti tes.
+- **Skill diperbarui**: `qa.md` bagian 4.3b2. **Task nyata yang tersisa**: tambah tes akses 3 peran, tes route bidang, tes sinkron daftar peran.
+
+#### Dependensi menumpuk — 1x MED, terbuka
+- Prisma 7 + patch menurunkan temuan production 7 → 4; sisanya butuh Next 16.
+
+### 🐛 Pola Git Bermasalah
+
+- **Commit fix**: 9 dari 53 (17%). Dua berasal dari tes yang menemukan bug (hapus wilayah 500 → 400; `DELETE /api/logs?days=0` menghapus semua log), satu dari lingkungan (seed Prisma 7 tanpa adapter, tidak berdampak di produksi), satu dari skrip deploy 27 Okt.
+- **File sering berubah**: `README.md`, `CHANGELOG.md`, `PANDUAN_PRODUK.md`, `warga.service.ts`, `schema.prisma`. Tidak ada tanda pengerjaan ulang karena kesalahan.
+
+### 🕳️ Gap Skill Coverage
+
+- **Teknik verifikasi ponsel** tidak ada → ditambah di `sprint.md`.
+- **Konflik `improve.md` vs `CLAUDE.md`** (push dan email otomatis) → diperbaiki.
+- **`learning_log.json` tidak mengikuti sprint** (Sprint 12, 13, K1 hilang 20 hari) → backfill dan langkah catat di `sprint.md`.
+- **Aplikasi baru di monorepo (Kegiatan)** tidak punya sprint tracker di `sprints/.current_sprint` (isinya masih 12): pengurutan K1/K2/K3 hanya di `sprints/sprint_k1.md` dan `docs/kegiatan/LANJUTAN.md`.
+
+### ✅ Yang Berjalan Baik
+
+- Pemasangan Kegiatan di VPS lewat panduan satu langkah per pesan dengan keluaran ditempel pengguna: 6 langkah, jemaat/api/my/majelis tidak tersentuh, cadangan otomatis, rollback tertulis.
+- Dokumen titik lanjut (`docs/kegiatan/LANJUTAN.md`) memudahkan melanjutkan lintas sesi.
+- Pengujian HP pada 8 akun menangkap dua cacat tata letak sebelum pengguna.
+- Sprint 13: SQL migrasi manual lebih dulu karena `db push` menolak constraint unik, hasilnya dideploy tanpa masalah.
+
+### 🔧 Kandidat Perbaikan Skill
+
+| Prioritas | Skill File | Masalah | Saran Perbaikan | Status |
+|-----------|-----------|---------|-----------------|--------|
+| HIGH | sprint.md | Tidak ada teknik verifikasi lebar 390 px yang berhasil | Playwright headless + assert scrollWidth | ✅ applied (2026-10-27) |
+| HIGH | qa.md | Peran/endpoint baru dan konstanta ganda tanpa tes | Bagian 4.3b2 | ✅ applied (2026-10-27) |
+| MED | devops.md | Panduan/skrip deploy baru tidak diuji lokal | Subbagian uji panduan | ✅ applied (2026-10-27) |
+| MED | improve.md | Push/email otomatis vs CLAUDE.md | Konfirmasi sebelum push/email | ✅ applied (2026-10-27) |
+| LOW | sprint.md | Sprint tidak dicatat ke learning_log | Langkah catat sebelum Langkah 10 | ✅ applied (2026-10-27) |
+
+### 💡 Rekomendasi untuk Siklus Berikutnya
+
+1. **Tambah tes untuk peran baru dan `/master/bidang` sebelum fitur Kegiatan berikutnya** (blocker HIGH terbuka; task nyata, bukan catatan).
+2. Verifikasi di browser sisa layar Kegiatan (tarik/hapus, ringkasan cetak, tab master lain, akun + WhatsApp) sebelum pilot UPK.
+3. Fitur yang diminta berikutnya (logo, versi aplikasi, ikon notifikasi dan WhatsApp support) perlu ditulis sebagai sprint dengan tes sejak awal, bukan menyusul.
+
+---
+
 ## [2026-10-07] — Retrospektif Sprint 10–11 (+ 2 perbaikan produksi)
 
 **Project**: Database Warga GKJJ

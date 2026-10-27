@@ -245,6 +245,24 @@ Aturan yang harus disampaikan ke pengguna:
 
 <!-- improved: pre-flight deploy VPS (kepemilikan file, git status, backup) — retro 2026-10-05, blocker deploy 4x HIGH (2026-10-05) -->
 
+### Uji panduan dan skrip deploy baru sebelum diberikan ke pengguna
+
+Skrip atau panduan yang **belum pernah dijalankan** di VPS wajib diuji secara lokal lebih dulu (2x kejadian: panduan
+menyebut `prisma migrate deploy` padahal skrip memakai `db push` [2026-10-07]; pemeriksaan placeholder `grep -q GANTI`
+menolak `.env` yang benar karena baris komentar templat memuat kata itu, dan panduan menyuruh `grep -c GANTI` = 0
+padahal hasilnya 1 [2026-10-27]):
+1. `bash -n skrip.sh` dan jalankan setiap **perintah pemeriksaan** di panduan terhadap berkas templat di repo
+   (`grep -c`, `awk`, `ls`) untuk memastikan hasil yang dijanjikan panduan memang yang keluar.
+2. Templat `.env` produksi: komentar tidak boleh memuat kata penanda placeholder; pemeriksaan placeholder di skrip harus
+   mengabaikan baris komentar.
+3. Pandu pengguna **satu langkah per pesan**, minta mereka menempel keluaran (kata sandi/rahasia disamarkan), dan
+   jangan lanjut sebelum keluaran diverifikasi. Pola ini menjalankan pemasangan Kegiatan 27 Okt tanpa insiden dan tanpa
+   menyentuh aplikasi jemaat.
+4. Peringatan Nginx tidak selalu kegagalan: `protocol options redefined for [::]:443` (opsi `http2` berbeda antar blok)
+   lulus `nginx -t`; catat, jangan rollback.
+
+<!-- improved: uji panduan/skrip deploy baru secara lokal sebelum diberikan — retro 2026-10-27, panduan deploy cacat 2x (migrate deploy 10-07; grep GANTI 10-27) (2026-10-27) -->
+
 ## Langkah 8c — Gerbang Pasca-Deploy & Analisis Salinan Produksi
 
 **Jalur deploy proyek ini:** `bash deploy/2-deploy.sh prod` di VPS (`/var/www/gkjj`, user `gkjj`, PM2 sebagai root). Skrip
