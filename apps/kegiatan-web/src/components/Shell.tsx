@@ -5,9 +5,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BarChart3, ClipboardList, LogOut, Settings, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { PERAN_LABEL } from '@/lib/tipe'
 import { Lencana } from './ui'
 
-const PERAN_LABEL = { ADMIN: 'Admin', SEKRETARIAT: 'Sekretariat', KOORDINATOR_BIDANG: 'Koordinator bidang', PENGURUS_UPK: 'Pengurus UPK', MAJELIS: 'Majelis' } as const
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const { user, logout, adalah } = useAuth()

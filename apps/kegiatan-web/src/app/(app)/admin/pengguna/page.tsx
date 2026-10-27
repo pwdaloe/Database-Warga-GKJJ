@@ -6,10 +6,10 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMaster } from '@/hooks/useData'
 import { type Kredensial, useAkun, useAksiAkun } from '@/hooks/useAdmin'
 import { pesanGalat } from '@/lib/api'
-import type { Peran } from '@/lib/tipe'
+import { PERAN_LABEL, type Peran } from '@/lib/tipe'
 import { Bidang, Input, Kartu, Lencana, Memuat, Pemberitahuan, Select, Tombol } from '@/components/ui'
 
-const PERAN: Record<Peran, string> = { ADMIN: 'Admin', SEKRETARIAT: 'Sekretariat', KOORDINATOR_BIDANG: 'Koordinator bidang', PENGURUS_UPK: 'Pengurus UPK', MAJELIS: 'Majelis' }
+const PERAN = PERAN_LABEL
 const JABATAN: Record<string, string> = { KETUA: 'Ketua', SEKRETARIS: 'Sekretaris', BENDAHARA: 'Bendahara' }
 
 function KotakKredensial({ k, nama, onTutup }: { k: Kredensial; nama: string; onTutup: () => void }) {

@@ -8,12 +8,14 @@ import { Memuat, Pemberitahuan } from '@/components/ui'
 import { TabAcuan } from '@/components/admin/TabAcuan'
 import { TabDaftar } from '@/components/admin/TabDaftar'
 import { TabPengurus } from '@/components/admin/TabPengurus'
+import { TabStruktur } from '@/components/admin/TabStruktur'
 import { TabTahun } from '@/components/admin/TabTahun'
 import { TabUnit } from '@/components/admin/TabUnit'
 
 const TAB = [
   { k: 'tahun', l: 'Tahun & jendela' },
-  { k: 'unit', l: 'Unit & pagu' },
+  { k: 'struktur', l: 'Struktur & anggaran' },
+  { k: 'unit', l: 'Detail unit' },
   { k: 'pengurus', l: 'Pengurus (BPH)' },
   { k: 'acuan', l: 'Visi & misi' },
   { k: 'daftar', l: 'Satuan & kategori' },
@@ -43,6 +45,7 @@ export default function MasterAdmin() {
         </div>
       </div>
       {tab === 'tahun' && <TabTahun master={m} />}
+      {tab === 'struktur' && <TabStruktur master={m} />}
       {tab === 'unit' && <TabUnit master={m} />}
       {tab === 'pengurus' && <TabPengurus master={m} />}
       {tab === 'acuan' && <TabAcuan master={m} />}

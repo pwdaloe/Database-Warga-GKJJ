@@ -18,8 +18,8 @@ export const PERAN_KELOLA: readonly PeranPengguna[] = ['ADMIN', 'SEKRETARIAT']
 
 export const bolehKelola = (p: Pelaku): boolean => PERAN_KELOLA.includes(p.peran)
 
-/** Peran yang melihat seluruh program dan dashboard semua unit. */
-const PERAN_LIHAT_SEMUA: readonly PeranPengguna[] = ['ADMIN', 'SEKRETARIAT', 'MAJELIS']
+/** Peran yang melihat seluruh program dan dashboard semua unit (supervisor, hanya-lihat kecuali admin/sekretariat). */
+const PERAN_LIHAT_SEMUA: readonly PeranPengguna[] = ['ADMIN', 'SEKRETARIAT', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM']
 
 export function bolehLihatProgram(p: Pelaku, prog: ProgramRingkas): boolean {
   if (PERAN_LIHAT_SEMUA.includes(p.peran)) return true

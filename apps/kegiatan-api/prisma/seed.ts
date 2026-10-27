@@ -17,6 +17,8 @@ const BIDANG = [
   { kode: 'PEMBINAAN2', nama: 'Pembinaan 2', urutan: 3 },
   { kode: 'KESAKSIAN', nama: 'Kesaksian & Pelayanan', urutan: 4 },
   { kode: 'PENATALAYANAN', nama: 'Penatalayanan', urutan: 5 },
+  { kode: 'MINISTERIUM', nama: 'Ministerium', urutan: 6 },
+  { kode: 'KEMAJELISAN', nama: 'Kemajelisan', urutan: 7 },
 ]
 
 // Pemetaan unit → bidang adalah USULAN (belum dikonfirmasi) dan dapat diubah admin. Pagu = angka 2026 (Rp), field master.
@@ -30,17 +32,21 @@ const UNIT = [
   { kode: 'PERPUS', nama: 'Perpustakaan Aksara Kita', singkatan: 'Aksara Kita', alias: [], bidang: 'PEMBINAAN1', pagu: 3_000_000 },
   { kode: 'KOMAN', nama: 'Komisi Anak', singkatan: 'Anak', alias: [], bidang: 'PEMBINAAN2', pagu: 25_000_000 },
   { kode: 'KOREM', nama: 'Komisi Remaja', singkatan: 'Korem', alias: [], bidang: 'PEMBINAAN2', pagu: 50_000_000 },
-  { kode: 'KOMPA', nama: 'Komisi Pemuda', singkatan: 'KOMPA', alias: [], bidang: 'PEMBINAAN2', pagu: 25_000_000 },
+  { kode: 'KOMPA', nama: 'Komisi Pemuda', singkatan: 'Komisi Pemuda', alias: [], bidang: 'PEMBINAAN2', pagu: 25_000_000 },
   { kode: 'DIAKEN', nama: 'Diaken', singkatan: 'Diaken', alias: [], bidang: 'KESAKSIAN', pagu: 3_000_000 },
   { kode: 'KESPEL', nama: 'Komisi Kespel', singkatan: 'KESPEL', alias: ['Kesehatan dan Pelayanan Masyarakat'], bidang: 'KESAKSIAN', pagu: 50_000_000 },
   { kode: 'PEJ', nama: 'Pengembangan Ekonomi Jemaat', singkatan: 'PEJ', alias: ['Pengembangan Ekonomi'], bidang: 'KESAKSIAN', pagu: 15_000_000 },
   { kode: 'LP4WG', nama: 'LP4WG', singkatan: 'LP4WG', alias: [], bidang: 'KESAKSIAN', pagu: 3_000_000 },
 ] as const
 
-// Penatalayanan bukan UPK: biaya kantor dan operasional di luar ministerium dan majelis (rumah tangga, kesekretariatan).
+// Penatalayanan, Ministerium, Kemajelisan bukan UPK: pos biaya. Nilai pagu diisi admin lewat master data (Struktur & anggaran).
 const POS = [
-  { kode: 'POS_RT', nama: 'Pemeliharaan Rumah Tangga', singkatan: 'Rumah Tangga', alias: [], bidang: 'PENATALAYANAN', pagu: 0 },
+  { kode: 'POS_GAJI', nama: 'Biaya Hidup Pendeta dan Karyawan', singkatan: 'Biaya Hidup', alias: [], bidang: 'PENATALAYANAN', pagu: 0 },
+  { kode: 'POS_OPS', nama: 'Biaya Operasional Kantor', singkatan: 'Operasional Kantor', alias: [], bidang: 'PENATALAYANAN', pagu: 0 },
+  { kode: 'POS_RT', nama: 'Biaya Pemeliharaan Rumah Tangga', singkatan: 'Rumah Tangga', alias: [], bidang: 'PENATALAYANAN', pagu: 0 },
   { kode: 'POS_SEKRE', nama: 'Kesekretariatan', singkatan: 'Sekretariat', alias: [], bidang: 'PENATALAYANAN', pagu: 0 },
+  { kode: 'POS_MINISTERIUM', nama: 'Ministerium', singkatan: 'Ministerium', alias: [], bidang: 'MINISTERIUM', pagu: 0 },
+  { kode: 'POS_MAJELIS', nama: 'Kemajelisan', singkatan: 'Kemajelisan', alias: [], bidang: 'KEMAJELISAN', pagu: 0 },
 ] as const
 
 const SATUAN = ['Kegiatan', 'Orang', 'Paket', 'Sesi', 'Kali', 'Hari', 'Bulan', 'Jam', 'Buah', 'Set', 'Unit', 'Lembar', 'Eksemplar', 'Terbitan', 'Lembaga', 'Penerima']
@@ -133,7 +139,7 @@ async function seedMaster(): Promise<void> {
       }),
     })
   }
-  console.log(`  ✓ tahun 2027, ${BIDANG.length} bidang, ${semua.length} unit (14 UPK + 2 pos), pagu, BPH, acuan, satuan, kategori, ${PROGRAM_2026.length} program 2026`)
+  console.log(`  ✓ tahun 2027, ${BIDANG.length} bidang, ${semua.length} unit (14 UPK + 6 pos), pagu, BPH, acuan, satuan, kategori, ${PROGRAM_2026.length} program 2026`)
 }
 
 function wajibEnv(nama: string): string {
@@ -157,18 +163,23 @@ async function seedContoh(): Promise<void> {
   const hash = await bcrypt.hash(wajibEnv('SEED_CONTOH_PASSWORD'), 10)
   const tahun = await prisma.tahunAnggaran.findUniqueOrThrow({ where: { tahun: 2027 } })
 
-  const akun = async (username: string, nama: string, peran: 'SEKRETARIAT' | 'MAJELIS' | 'KOORDINATOR_BIDANG' | 'PENGURUS_UPK', extra: { unitId?: number; bidangId?: number; pengurusId?: number } = {}) =>
+  const akun = async (username: string, nama: string, peran: 'SEKRETARIAT' | 'MAJELIS' | 'KOORDINATOR_BIDANG' | 'PENGURUS_UPK' | 'LP4WG' | 'KEPALA_KANTOR' | 'MINISTERIUM', extra: { unitId?: number; bidangId?: number; pengurusId?: number } = {}) =>
     prisma.pengguna.upsert({
       where: { username },
-      update: {},
+      update: { nama },
       create: { username, nama, peran, passwordHash: hash, wajibGantiPassword: false, isContoh: true, ...extra },
     })
 
+  // Pengawas (hanya lihat): Penatua = peran MAJELIS; Ketua Bidang = KOORDINATOR_BIDANG per bidang.
   await akun('sekretariat', '(contoh) Sekretariat', 'SEKRETARIAT')
-  await akun('majelis', '(contoh) Majelis', 'MAJELIS')
-  for (const b of await prisma.bidang.findMany()) await akun(`koord.${b.kode.toLowerCase()}`, `(contoh) Koordinator ${b.nama}`, 'KOORDINATOR_BIDANG', { bidangId: b.id })
-  for (const pg of await prisma.pengurus.findMany({ where: { jabatan: 'KETUA' }, include: { unit: true } })) {
-    await akun(`ketua.${pg.unit.kode.toLowerCase().replace(/_/g, '-')}`, pg.nama, 'PENGURUS_UPK', { unitId: pg.unitId, pengurusId: pg.id })
+  await akun('penatua', '(contoh) Penatua', 'MAJELIS')
+  await akun('lp4wg', '(contoh) LP4WG', 'LP4WG')
+  await akun('kepala.kantor', '(contoh) Kepala Kantor', 'KEPALA_KANTOR')
+  await akun('ministerium', '(contoh) Ministerium', 'MINISTERIUM')
+  for (const b of await prisma.bidang.findMany()) await akun(`ketua.bidang.${b.kode.toLowerCase()}`, `(contoh) Ketua Bidang ${b.nama}`, 'KOORDINATOR_BIDANG', { bidangId: b.id })
+  // Entry data per unit: Ketua, Sekretaris, Bendahara masing-masing satu akun (melihat dan mengisi program unitnya).
+  for (const pg of await prisma.pengurus.findMany({ include: { unit: true } })) {
+    await akun(`${pg.jabatan.toLowerCase()}.${pg.unit.kode.toLowerCase().replace(/_/g, '-')}`, pg.nama, 'PENGURUS_UPK', { unitId: pg.unitId, pengurusId: pg.id })
   }
 
   const unit = async (kode: string) => prisma.unit.findUniqueOrThrow({ where: { kode } })
@@ -208,7 +219,7 @@ async function seedContoh(): Promise<void> {
   await buat('KOMAN', '(CONTOH) Ibadah Minggu Anak', 'DIAJUKAN', [{ uraian: 'Konsumsi', volume: 40, satuan: 'Orang', harga: 25_000 }, { uraian: 'Bahan peraga', volume: 10, satuan: 'Sesi', harga: 150_000 }], { GEREJA: 2_000_000, SWADAYA: 500_000 }, true)
   await buat('KOREM', '(CONTOH) Retreat Remaja', 'DIAJUKAN', [{ uraian: 'Akomodasi', volume: 30, satuan: 'Orang', harga: 600_000 }, { uraian: 'Narasumber', volume: 3, satuan: 'Sesi', harga: 1_000_000 }], { GEREJA: 14_000_000, SWADAYA: 7_000_000 }, true)
   await buat('PEJ', '(CONTOH) Mentoring Usaha', 'DRAFT', [{ uraian: 'Modul', volume: 20, satuan: 'Eksemplar', harga: 50_000 }], { GEREJA: 500_000 }, false)
-  console.log('  ✓ akun contoh (sekretariat, majelis, koordinator per bidang, ketua per unit) dan 3 program contoh')
+  console.log('  ✓ akun contoh (sekretariat, penatua, lp4wg, kepala kantor, ministerium, ketua bidang, ketua/sekretaris/bendahara per unit) dan 3 program contoh')
 }
 
 async function main(): Promise<void> {

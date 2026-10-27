@@ -1,4 +1,12 @@
-export type Peran = 'ADMIN' | 'SEKRETARIAT' | 'KOORDINATOR_BIDANG' | 'PENGURUS_UPK' | 'MAJELIS'
+export type Peran = 'ADMIN' | 'SEKRETARIAT' | 'KOORDINATOR_BIDANG' | 'PENGURUS_UPK' | 'MAJELIS' | 'LP4WG' | 'KEPALA_KANTOR' | 'MINISTERIUM'
+
+export const PERAN_LABEL: Record<Peran, string> = {
+  ADMIN: 'Admin', SEKRETARIAT: 'Sekretariat', KOORDINATOR_BIDANG: 'Ketua Bidang', PENGURUS_UPK: 'Pengurus UPK',
+  MAJELIS: 'Penatua', LP4WG: 'LP4WG', KEPALA_KANTOR: 'Kepala Kantor', MINISTERIUM: 'Ministerium',
+}
+
+/** Peran yang melihat seluruh program dan dashboard (sama dengan sisi API). */
+export const PERAN_LIHAT_SEMUA: readonly Peran[] = ['ADMIN', 'SEKRETARIAT', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM']
 export type StatusPengajuan = 'BELUM_DIBUKA' | 'DIBUKA' | 'DITUTUP'
 export type StatusProgram = 'DRAFT' | 'DIAJUKAN'
 export type KategoriWaktu = 'SEKALI' | 'PERIODE' | 'RENTANG' | 'TAHUN'

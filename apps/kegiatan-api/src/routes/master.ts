@@ -84,6 +84,25 @@ masterRouter.post('/tahun', kelola, async (req, res) => {
   created(res, hasil)
 })
 
+// ── Bidang ───────────────────────────────────────────────────
+
+const bidangSchema = z.object({ nama: z.string().trim().min(2).max(100), urutan: z.number().int().min(0).max(999).default(0) })
+
+masterRouter.post('/bidang', kelola, async (req, res) => {
+  const d = bidangSchema.extend({ kode: z.string().trim().min(2).max(20).regex(/^[A-Z0-9_]+$/, 'Kode: huruf besar, angka, garis bawah') }).parse(req.body)
+  const b = await prisma.bidang.create({ data: d })
+  await catatAudit({ penggunaId: pelaku(req).id, aksi: 'BUAT_BIDANG', entitas: 'bidang', entitasId: b.id, ringkasan: d.nama, ipAddress: ip(req) })
+  created(res, b)
+})
+
+masterRouter.put('/bidang/:id', kelola, async (req, res) => {
+  const id = idParam(req.params['id'])
+  const d = bidangSchema.parse(req.body)
+  const b = await prisma.bidang.update({ where: { id }, data: d })
+  await catatAudit({ penggunaId: pelaku(req).id, aksi: 'UBAH_BIDANG', entitas: 'bidang', entitasId: id, ringkasan: d.nama, ipAddress: ip(req) })
+  ok(res, b)
+})
+
 // ── Unit, pagu, pengurus ─────────────────────────────────────
 
 const unitSchema = z.object({

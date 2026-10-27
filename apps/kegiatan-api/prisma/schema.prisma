@@ -21,6 +21,9 @@ enum PeranPengguna {
   KOORDINATOR_BIDANG
   PENGURUS_UPK
   MAJELIS
+  LP4WG
+  KEPALA_KANTOR
+  MINISTERIUM
 
   @@map("peran_pengguna_enum")
 }

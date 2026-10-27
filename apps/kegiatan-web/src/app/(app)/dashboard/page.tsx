@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { useAuth } from '@/hooks/useAuth'
 import { useDashboard, useMaster } from '@/hooks/useData'
 import { formatRupiah, persen } from '@/lib/format'
-import type { StatusPagu } from '@/lib/tipe'
+import { PERAN_LIHAT_SEMUA, type StatusPagu } from '@/lib/tipe'
 import { Kartu, Lencana, Memuat, Pemberitahuan } from '@/components/ui'
 import { BannerPengajuan } from '@/components/BannerPengajuan'
 
@@ -24,7 +24,7 @@ export default function HalamanDashboard() {
 
   const d = dash.data
   const t = d.total
-  const semua = adalah('ADMIN', 'SEKRETARIAT', 'MAJELIS')
+  const semua = adalah(...PERAN_LIHAT_SEMUA)
 
   return (
     <div className="space-y-5">

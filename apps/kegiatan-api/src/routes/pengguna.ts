@@ -25,7 +25,7 @@ penggunaRouter.post('/', async (req, res) => {
   const d = z
     .object({
       username: z.string().trim().toLowerCase().min(3).max(50).regex(/^[a-z0-9._-]+$/, 'Username: huruf kecil, angka, titik, garis bawah, strip'),
-      peran: z.enum(['ADMIN', 'SEKRETARIAT', 'KOORDINATOR_BIDANG', 'PENGURUS_UPK', 'MAJELIS']),
+      peran: z.enum(['ADMIN', 'SEKRETARIAT', 'KOORDINATOR_BIDANG', 'PENGURUS_UPK', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM']),
       pengurusId: z.number().int().positive().optional(),
       bidangId: z.number().int().positive().optional(),
       nama: z.string().trim().min(2).max(150).optional(),
