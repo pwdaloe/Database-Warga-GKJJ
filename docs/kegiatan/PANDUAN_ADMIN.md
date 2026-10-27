@@ -1,6 +1,6 @@
 # Panduan Admin dan Sekretariat: kegiatan.gkjjakarta.org
 
-Peran **Admin** dan **Sekretariat** mengelola master, akun, dan membuka/menutup pengajuan. **Majelis** hanya melihat. **Koordinator bidang** melihat program bidangnya. **Pengurus UPK** hanya mengisi program unitnya.
+Peran **Admin** dan **Sekretariat** mengelola master, akun, dan membuka/menutup pengajuan. **Penatua**, **LP4WG**, **Kepala Kantor**, dan **Ministerium** hanya melihat semua unit. **Ketua Bidang** melihat program bidangnya. **Pengurus UPK** (Ketua, Sekretaris, Bendahara unit) mengisi program unitnya.
 
 ## Siklus pengajuan
 1. **Persiapan**: master diperiksa, akun dikirim, uji dengan satu UPK. Status pengajuan: *Belum dibuka*.
@@ -11,7 +11,8 @@ Peran **Admin** dan **Sekretariat** mengelola master, akun, dan membuka/menutup 
 Tanggal rencana buka/tutup, pra-muker, dan muker hanya informasi; **yang menentukan adalah status pengajuan**.
 
 ## Master (semua dapat diubah, tanpa kode)
-- **Unit & pagu**: nama resmi, singkatan, nama lain (alias), bidang, pagu per tahun. Pos non-UPK (mis. Penatalayanan) berjenis *Pos*.
+- **Struktur & anggaran**: satu layar untuk memindah unit antar bidang, mengisi pagu per unit, melihat subtotal bidang dan total, serta menambah bidang. Pagu bidang adalah jumlah pagu unitnya.
+- **Detail unit**: nama resmi, singkatan, nama lain (alias), status aktif, dan tambah unit/pos. Pos non-UPK (Penatalayanan, Ministerium, Kemajelisan) berjenis *Pos*.
 - **Pengurus (BPH)**: Ketua, Sekretaris, Bendahara per unit dengan nama, WhatsApp, email.
 - **Visi & misi**: hierarki per tahun; menjadi pilihan "Acuan visi dan misi" di formulir.
 - **Satuan** dan **Kategori biaya**: saran pada RAB dan dasar rekap.

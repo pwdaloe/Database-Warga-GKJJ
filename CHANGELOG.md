@@ -3,6 +3,20 @@
 
 ---
 
+## [2026-10-27 WIB] — Kegiatan: Struktur & anggaran, peran pengawas, dipasang di produksi | ✅ DONE, dideploy (`58efda4`, skrip `ffc5bd5`)
+
+**Project**: Database Warga GKJJ (`kegiatan.gkjjakarta.org`)
+
+- Layar master **Struktur & anggaran**: unit dikelompokkan per bidang, pindah bidang dari baris unit, pagu per unit, subtotal bidang dan total, tambah bidang; endpoint `POST/PUT /master/bidang`. Pagu bidang = jumlah pagu unitnya.
+- Seed: 7 bidang (tambah Ministerium dan Kemajelisan), 14 UPK + 6 pos (Biaya Hidup Pendeta dan Karyawan, Biaya Operasional Kantor, Biaya Pemeliharaan Rumah Tangga, Kesekretariatan, Ministerium, Kemajelisan); Komisi Pemuda memakai nama panjang.
+- Peran baru LP4WG, Kepala Kantor, Ministerium (hanya lihat semua unit); Majelis berlabel Penatua; Koordinator berlabel Ketua Bidang. Seed akun contoh (lokal): Ketua/Sekretaris/Bendahara tiap unit, Ketua Bidang, pengawas. `/program/baru` ditolak bagi peran hanya-lihat.
+- Diuji di lokal pada lebar HP 390 px (Struktur & anggaran, daftar program, formulir, dashboard; 8 akun): tanpa scroll horizontal; tes API 188, web 27.
+- **Dipasang di VPS 27 Okt**: database dan pengguna DB sendiri, `.env`, deploy (`3-deploy-kegiatan.sh`), blok Nginx baru menggantikan landing; `nginx -t` lulus (peringatan `http2` pada `[::]:443` tidak berbahaya); `/health`, login, dan jalur `/api` berfungsi; `jemaat`, `api`, `my`, `majelis` tidak berubah.
+- Perbaikan skrip deploy (`ffc5bd5`): pemeriksaan placeholder `.env` mengabaikan baris komentar (komentar templat memuat kata "GANTI" dan menggagalkan deploy).
+- Berikutnya: isi master di produksi, pilot satu UPK, buka pengajuan 2 Nov. Titik lanjut: `docs/kegiatan/LANJUTAN.md`.
+
+---
+
 ## [2026-10-24 WIB] — Sprint K1: aplikasi Kegiatan (RKA 2027) | ✅ DONE di lokal, belum dipasang di VPS
 
 **Project**: Database Warga GKJJ (produk baru `kegiatan.gkjjakarta.org`)

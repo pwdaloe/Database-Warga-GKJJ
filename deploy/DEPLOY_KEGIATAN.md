@@ -47,7 +47,7 @@ grep -c GANTI apps/kegiatan-api/.env          # harus 0
 bash deploy/3-deploy-kegiatan.sh
 ```
 
-Yang terjadi: pull, install, backup DB kegiatan, `db push` (database kosong → membuat semua tabel), seed master (16 unit, pagu, BPH, visi-misi, 46 program 2026), build API dan web, PM2 `gkjj-kegiatan-api` dan `gkjj-kegiatan-web`. Tempel keluaran bagian akhir. Cek lokal:
+Yang terjadi: pull, install, backup DB kegiatan, `db push` (database kosong → membuat semua tabel), seed master (7 bidang, 20 unit = 14 UPK + 6 pos, pagu, BPH, visi-misi, 46 program 2026), build API dan web, PM2 `gkjj-kegiatan-api` dan `gkjj-kegiatan-web`. Tempel keluaran bagian akhir. Cek lokal:
 
 ```bash
 curl -s http://127.0.0.1:4200/health; echo
@@ -80,15 +80,25 @@ Hasil: `health` ok, login 200, dan domain lain tetap normal. Buka `https://kegia
 
 ## 5. Langkah pertama sebagai admin
 
-1. Masuk dengan username `admin` dan `SEED_ADMIN_PASSWORD`; sistem meminta password baru.
-2. **Master → Tahun & jendela**: periksa tanggal; status pengajuan masih **Belum dibuka**.
-3. **Master → Unit & pagu**: periksa 14 UPK + 2 pos, bidang tiap unit (pemetaan awal adalah usulan), dan pagu (sementara = angka 2026). Isi pagu pos Penatalayanan.
-4. **Master → Visi & misi**: periksa; ganti bila ada dokumen misi/renstra.
-5. **Master → Pengurus (BPH)**: ganti nama contoh dengan Ketua, Sekretaris, Bendahara sebenarnya (nama, WhatsApp, email).
-6. **Akun**: buat akun untuk tiap pengurus yang akan mengisi; kirim password sementara lewat WhatsApp (muncul sekali). Buat juga akun Majelis dan Koordinator bidang bila perlu.
-7. Uji dengan satu UPK dahulu (pilot), baru **buka pengajuan** pada tanggal yang disepakati (Master → Tahun & jendela → Status: Dibuka).
+Dari browser (HP juga bisa). **Jangan jalankan `db:seed:contoh` di produksi**; akun dibuat dari layar Akun.
 
-Hapus `SEED_ADMIN_PASSWORD` dari `apps/kegiatan-api/.env` setelah seed pertama (tidak dipakai lagi, tidak menimpa admin yang sudah ada).
+1. Masuk dengan username `admin` dan `SEED_ADMIN_PASSWORD`; sistem meminta password baru.
+2. **Master → Tahun & jendela**: periksa tanggal; status pengajuan tetap **Belum dibuka** sampai pilot selesai.
+3. **Master → Struktur & anggaran**: periksa posisi tiap unit di dalam bidangnya (ubah lewat pilihan Bidang pada baris unit) dan isi **pagu 2027 per unit**. Pagu bidang adalah jumlah pagu unitnya, dan total tampil di atas layar. Ada 7 bidang: Peribadahan, Pembinaan 1, Pembinaan 2, Kesaksian & Pelayanan, Penatalayanan, Ministerium, Kemajelisan.
+   - UPK: pagu sementara = angka 2026 (total Rp300.000.000); sesuaikan.
+   - Pos Penatalayanan (4): Biaya Hidup Pendeta dan Karyawan, Biaya Operasional Kantor, Biaya Pemeliharaan Rumah Tangga, Kesekretariatan.
+   - Pos Ministerium dan Kemajelisan: satu pos untuk masing-masing bidang.
+   - Simpan dengan tombol di bagian bawah layar. Bidang baru ditambah dari kartu "Tambah bidang". Tab **Detail unit** untuk nama, singkatan, alias, dan status aktif.
+4. **Master → Pengurus (BPH)**: ganti nama contoh dengan Ketua, Sekretaris, Bendahara sebenarnya (nama, WhatsApp, email).
+5. **Master → Visi & misi**: periksa; ganti bila ada dokumen misi/renstra.
+6. **Akun**: buat akun lalu kirim password sementara lewat WhatsApp (muncul **sekali**).
+   - Entry data: tiap Ketua, Sekretaris, dan Bendahara unit (peran Pengurus UPK) melihat dan mengisi program unitnya, daftar program, dan dashboard unitnya.
+   - Pengawas (hanya lihat semua unit): **Penatua** (peran Majelis), **LP4WG**, **Kepala Kantor**, **Ministerium**.
+   - **Ketua Bidang** (peran Koordinator bidang): hanya melihat program dan dashboard bidangnya.
+7. Pilot dengan satu UPK, lalu **buka pengajuan** pada tanggal yang disepakati (Master → Tahun & jendela → Status: Dibuka).
+8. Hapus `SEED_ADMIN_PASSWORD` dari `apps/kegiatan-api/.env`, lalu `pm2 restart gkjj-kegiatan-api` (tidak dipakai lagi dan tidak menimpa admin yang sudah ada).
+
+Cadangan dan `pm2 save` sudah dilakukan skrip deploy. Peringatan `protocol options redefined for [::]:443` saat `nginx -t` tidak berbahaya: blok baru memakai `http2` pada soket yang sama dengan blok landing.
 
 ## Pembaruan berikutnya
 
