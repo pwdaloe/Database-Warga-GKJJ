@@ -24,7 +24,7 @@ error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 cd "$APP_DIR"
 [ -f "$API_DIR/.env" ] || error "$API_DIR/.env belum ada. Salin dari deploy/env.kegiatan-api.production dan isi."
 [ -f "$WEB_DIR/.env.local" ] || error "$WEB_DIR/.env.local belum ada. Isi: echo 'NEXT_PUBLIC_API_URL=https://kegiatan.gkjjakarta.org/api' > $WEB_DIR/.env.local"
-grep -q "GANTI" "$API_DIR/.env" && error "$API_DIR/.env masih berisi nilai GANTI."
+grep -v '^[[:space:]]*#' "$API_DIR/.env" | grep -q "GANTI" && error "$API_DIR/.env masih berisi nilai GANTI."
 
 # ── 1. Kode terbaru ───────────────────────────────────────────
 info "Pull kode terbaru..."
