@@ -2,11 +2,14 @@
 
 *Diperbarui 27 Okt 2026 (siang). Baca ini dulu saat melanjutkan pekerjaan.*
 
-## Update 10 Nov 2026 (K4, di lokal, belum dideploy)
-Alur anggaran direvisi (lihat `REVISI_ALUR_ANGGARAN_2027.md`). **K4 (v0.4.0) selesai di lokal**: pagu bidang, alokasi indikatif, proyeksi Kas Jemaat, tahap siklus (pra-muker/muker/ditetapkan), potret Usulan, dashboard berbasis dana Gereja, halaman Alokasi ketua bidang. **K5** (sebelum muker 23 Nov): Rumusan/Disetujui berdampingan, riwayat revisi beralasan, realokasi, kolaborasi antar-unit dengan persetujuan mitra, "Kunci dan tetapkan". Pra-muker 16 Nov dan muker 23 Nov (di produksi; DB lokal masih 15/22 Nov). Deploy K4 butuh `deploy/sql/k4-pagu-bidang-siklus.sql` manual dulu.
+## Update 14 Nov 2026 (K4 sudah dideploy ke produksi)
+K4 (v0.4.0, `3289e73`) live di produksi sejak 14 Nov malam: SQL `deploy/sql/k4-pagu-bidang-siklus.sql` dijalankan manual lebih dulu (lalu `ALTER OWNER` ke `gkjj_kegiatan`, lihat `DEPLOY.md`), baru `3-deploy-kegiatan.sh`. Sisa: centang "Tahun aktif" di Master > Tahun (di produksi `aktif=f`, dashboard 404), isi proyeksi Kas Jemaat, dan seragamkan tanggal pra-muker/muker (database: 23 dan 30 Nov; dokumen ini: 16 dan 23 Nov).
+
+## Update 10 Nov 2026 (K4 selesai di lokal)
+Alur anggaran direvisi (lihat `REVISI_ALUR_ANGGARAN_2027.md`). **K4 (v0.4.0) selesai**: pagu bidang, alokasi indikatif, proyeksi Kas Jemaat, tahap siklus (pra-muker/muker/ditetapkan), potret Usulan, dashboard berbasis dana Gereja, halaman Alokasi ketua bidang. **K5** (sebelum muker 23 Nov): Rumusan/Disetujui berdampingan, riwayat revisi beralasan, realokasi, kolaborasi antar-unit dengan persetujuan mitra, "Kunci dan tetapkan". Pra-muker 16 Nov dan muker 23 Nov (di produksi; DB lokal masih 15/22 Nov). Deploy K4 butuh `deploy/sql/k4-pagu-bidang-siklus.sql` manual dulu.
 
 ## Posisi sekarang
-- **Aplikasi Kegiatan sudah live di produksi sejak 27 Okt 2026** (`kegiatan.gkjjakarta.org`, kini v0.2.0 / `97fb897`; sebelumnya `58efda4`). Database `gkjj_kegiatan` dan pengguna DB sendiri; PM2 `gkjj-kegiatan-api` (:4200) dan `gkjj-kegiatan-web` (:3200); blok Nginx baru aktif, domain `jemaat`, `api`, `my`, `majelis` tidak berubah.
+- **Aplikasi Kegiatan sudah live di produksi sejak 27 Okt 2026** (`kegiatan.gkjjakarta.org`, kini v0.4.0 / `3289e73`). Database `gkjj_kegiatan` dan pengguna DB sendiri; PM2 `gkjj-kegiatan-api` (:4200) dan `gkjj-kegiatan-web` (:3200); blok Nginx baru aktif, domain `jemaat`, `api`, `my`, `majelis` tidak berubah.
 - **Pengajuan masih "Belum dibuka".** Admin sudah dapat masuk; master (pagu, BPH, akun) belum diisi di produksi.
 - Tanggal: gerbang go/no-go **Jum 30 Okt**; jendela pengisian UPK **2–9 Nov**; pengajuan ditutup **10 Nov**; pra-muker **15 Nov**; muker **22 Nov 2026**.
 - Rencana dan keputusan: `RENCANA_MVP_MUKER_2026.md`. Hasil sprint: `../../sprints/sprint_k1.md`. Latar jangka menengah: `BRIEF_MODUL_KEGIATAN.md`. Langkah pemasangan: `../../deploy/DEPLOY_KEGIATAN.md`.

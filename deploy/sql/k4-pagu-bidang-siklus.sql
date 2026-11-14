@@ -44,3 +44,15 @@ ALTER TABLE "pagu_bidang" ADD CONSTRAINT "pagu_bidang_tahun_id_fkey" FOREIGN KEY
 ALTER TABLE "pagu_bidang" ADD CONSTRAINT "pagu_bidang_bidang_id_fkey" FOREIGN KEY ("bidang_id") REFERENCES "bidang"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 -- AddForeignKey
 ALTER TABLE "program_versi" ADD CONSTRAINT "program_versi_program_id_fkey" FOREIGN KEY ("program_id") REFERENCES "program_kerja"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- Kepemilikan: dijalankan sebagai postgres, objek baru jadi milik postgres sehingga pengguna aplikasi (dan pg_dump di
+-- skrip deploy) ditolak ("permission denied for table pagu_bidang"). Samakan pemilik dengan tabel lama.
+DO $$
+DECLARE o text;
+BEGIN
+  SELECT tableowner INTO o FROM pg_tables WHERE tablename = 'pengguna';
+  EXECUTE format('ALTER TABLE pagu_bidang OWNER TO %I', o);
+  EXECUTE format('ALTER TABLE program_versi OWNER TO %I', o);
+  EXECUTE format('ALTER SEQUENCE pagu_bidang_id_seq OWNER TO %I', o);
+  EXECUTE format('ALTER SEQUENCE program_versi_id_seq OWNER TO %I', o);
+  EXECUTE format('ALTER TYPE tahap_versi_enum OWNER TO %I', o);
+END $$;
