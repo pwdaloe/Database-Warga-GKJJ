@@ -24,14 +24,14 @@ export function BannerPengajuan({ tahun }: { tahun: Pick<Tahun, 'statusPengajuan
     return <Pemberitahuan nada="kuning" judul="Tahap muker">Perubahan hanya dilakukan admin atau sekretariat{tahun.mukerTanggal ? ` (muker ${formatTanggal(tahun.mukerTanggal)})` : ''}.</Pemberitahuan>
   }
   if (tahun.statusPengajuan === 'DITETAPKAN') {
-    return <Pemberitahuan nada="hijau" judul="Anggaran sudah ditetapkan">Seluruh pagu dan program dikunci; tidak ada perubahan lagi.</Pemberitahuan>
+    return <Pemberitahuan nada="hijau" judul="Anggaran sudah ditetapkan">Seluruh pagu dan kegiatan dikunci; tidak ada perubahan lagi.</Pemberitahuan>
   }
   if (tahun.statusPengajuan === 'DITUTUP') {
-    return <Pemberitahuan nada="kuning" judul="Pengajuan sudah ditutup">Program tidak dapat diubah. Hubungi sekretariat bila ada perbaikan mendesak.</Pemberitahuan>
+    return <Pemberitahuan nada="kuning" judul="Pengajuan sudah ditutup">Kegiatan tidak dapat diubah. Hubungi sekretariat bila ada perbaikan mendesak.</Pemberitahuan>
   }
   return (
     <Pemberitahuan nada="biru" judul="Pengajuan belum dibuka">
-      {tahun.rencanaBuka ? `Rencana dibuka ${formatTanggal(tahun.rencanaBuka)}. ` : ''}Anda sudah dapat melihat daftar program; pengisian dimulai setelah dibuka oleh sekretariat.
+      {tahun.rencanaBuka ? `Rencana dibuka ${formatTanggal(tahun.rencanaBuka)}. ` : ''}Anda sudah dapat melihat daftar kegiatan; pengisian dimulai setelah dibuka oleh sekretariat.
     </Pemberitahuan>
   )
 }

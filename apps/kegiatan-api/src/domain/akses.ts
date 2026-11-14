@@ -18,7 +18,7 @@ export const PERAN_KELOLA: readonly PeranPengguna[] = ['ADMIN', 'SEKRETARIAT']
 
 export const bolehKelola = (p: Pelaku): boolean => PERAN_KELOLA.includes(p.peran)
 
-/** Peran yang melihat seluruh program dan dashboard semua unit (supervisor, hanya-lihat kecuali admin/sekretariat). */
+/** Peran yang melihat seluruh kegiatan dan dashboard semua unit (supervisor, hanya-lihat kecuali admin/sekretariat). */
 const PERAN_LIHAT_SEMUA: readonly PeranPengguna[] = ['ADMIN', 'SEKRETARIAT', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM']
 
 export function bolehLihatProgram(p: Pelaku, prog: ProgramRingkas): boolean {
@@ -51,7 +51,7 @@ const tolak = (alasan: string, kode: 403 | 409 = 403): Keputusan => ({ boleh: fa
 /**
  * Siklus anggaran (StatusPengajuan):
  *  - BELUM_DIBUKA, DIBUKA, DITUTUP: penyusunan oleh UPK. Mengubah hanya pada DRAFT; pengurus UPK hanya saat DIBUKA.
- *  - PRA_MUKER: ketua bidang (bidangnya) dan admin/sekretariat mengubah program berstatus apa pun; pengurus UPK tidak.
+ *  - PRA_MUKER: ketua bidang (bidangnya) dan admin/sekretariat mengubah kegiatan berstatus apa pun; pengurus UPK tidak.
  *  - MUKER: hanya admin/sekretariat.
  *  - DITETAPKAN: dikunci untuk semua.
  */
@@ -63,17 +63,17 @@ const adalahKetuaBidangDari = (p: Pelaku, prog: ProgramRingkas): boolean =>
 
 /** Membuat program baru atau mengubah isi. Admin/sekretariat boleh atas nama unit mana pun. */
 export function bolehUbahProgram(p: Pelaku, prog: ProgramRingkas, statusPengajuan: StatusPengajuan): Keputusan {
-  if (statusPengajuan === 'DITETAPKAN') return tolak('Anggaran sudah ditetapkan; program tidak dapat diubah.', 409)
+  if (statusPengajuan === 'DITETAPKAN') return tolak('Anggaran sudah ditetapkan; kegiatan tidak dapat diubah.', 409)
   if (statusPengajuan === 'MUKER') return bolehKelola(p) ? ya : tolak('Sedang tahap muker; perubahan hanya oleh admin atau sekretariat.', 409)
   if (statusPengajuan === 'PRA_MUKER') {
     if (bolehKelola(p) || adalahKetuaBidangDari(p, prog)) return ya
     if (p.peran === 'PENGURUS_UPK') return tolak('Sedang tahap pra-muker; perubahan oleh ketua bidang. Hubungi ketua bidang Anda.', 409)
-    return tolak('Tidak memiliki izin untuk mengubah program unit ini.')
+    return tolak('Tidak memiliki izin untuk mengubah kegiatan unit ini.')
   }
-  if (prog.status !== 'DRAFT') return tolak('Program sudah diajukan. Tarik kembali ke draft untuk mengubahnya.', 409)
+  if (prog.status !== 'DRAFT') return tolak('Kegiatan sudah diajukan. Tarik kembali ke draft untuk mengubahnya.', 409)
   if (bolehKelola(p)) return ya
   if (p.peran !== 'PENGURUS_UPK' || p.unitId === null || prog.unitId !== p.unitId) {
-    return tolak('Tidak memiliki izin untuk mengubah program unit ini.')
+    return tolak('Tidak memiliki izin untuk mengubah kegiatan unit ini.')
   }
   if (statusPengajuan !== 'DIBUKA') return tolak('Pengajuan sedang tidak dibuka.', 409)
   return ya
@@ -81,18 +81,18 @@ export function bolehUbahProgram(p: Pelaku, prog: ProgramRingkas, statusPengajua
 
 /** Mengajukan = mengunci program pada penyusunan UPK; syarat peran dan jendela sama dengan mengubah. */
 export function bolehAjukanProgram(p: Pelaku, prog: ProgramRingkas, statusPengajuan: StatusPengajuan): Keputusan {
-  if (prog.status !== 'DRAFT') return tolak('Program sudah diajukan.', 409)
+  if (prog.status !== 'DRAFT') return tolak('Kegiatan sudah diajukan.', 409)
   return bolehUbahProgram(p, prog, statusPengajuan)
 }
 
 export function bolehTarikProgram(p: Pelaku, prog: ProgramRingkas, statusPengajuan: StatusPengajuan): Keputusan {
-  if (prog.status !== 'DIAJUKAN') return tolak('Program belum diajukan.', 409)
-  if (sudahRumusan(statusPengajuan)) return tolak('Tahap pra-muker dan sesudahnya: ubah isi program langsung, tidak perlu menarik kembali.', 409)
+  if (prog.status !== 'DIAJUKAN') return tolak('Kegiatan belum diajukan.', 409)
+  if (sudahRumusan(statusPengajuan)) return tolak('Tahap pra-muker dan sesudahnya: ubah isi kegiatan langsung, tidak perlu menarik kembali.', 409)
   if (bolehKelola(p)) return ya
   if (p.peran !== 'PENGURUS_UPK' || p.unitId === null || prog.unitId !== p.unitId) {
-    return tolak('Tidak memiliki izin untuk menarik program unit ini.')
+    return tolak('Tidak memiliki izin untuk menarik kegiatan unit ini.')
   }
-  if (statusPengajuan !== 'DIBUKA') return tolak('Pengajuan sudah ditutup; hubungi sekretariat untuk menarik program.', 409)
+  if (statusPengajuan !== 'DIBUKA') return tolak('Pengajuan sudah ditutup; hubungi sekretariat untuk menarik kegiatan.', 409)
   return ya
 }
 

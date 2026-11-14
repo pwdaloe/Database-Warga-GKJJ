@@ -1,4 +1,4 @@
-// Pesan satu kali yang harus bertahan melewati pemasangan ulang komponen/navigasi (mis. "Program berhasil diajukan").
+// Pesan satu kali yang harus bertahan melewati pemasangan ulang komponen/navigasi (mis. "Kegiatan berhasil diajukan").
 let pesan = ''
 
 export function setPesanKilat(teks: string): void {

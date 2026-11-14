@@ -88,7 +88,7 @@ describe('ProgramForm', () => {
     render(<ProgramForm master={master('DITUTUP')} awal={program({ tahun: { id: 1, tahun: 2027, nama: 'RKA 2027', statusPengajuan: 'DITUTUP' }, izin: { ...IZIN_KUNCI, alasanUbah: 'Pengajuan sedang tidak dibuka.' } })} />)
     expect(screen.queryByRole('button', { name: 'Simpan draft' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Ajukan' })).toBeNull()
-    expect(screen.getByText('Program tidak dapat diubah')).toBeTruthy()
+    expect(screen.getByText('Kegiatan tidak dapat diubah')).toBeTruthy()
   })
 
   it('program unit lain: terkunci untuk pengurus', () => {
@@ -97,11 +97,11 @@ describe('ProgramForm', () => {
     expect(screen.queryByRole('button', { name: 'Ajukan' })).toBeNull()
   })
 
-  it('program sudah diajukan: hanya tombol tarik; isian terkunci', () => {
+  it('kegiatan sudah diajukan: hanya tombol tarik; isian terkunci', () => {
     render(<ProgramForm master={master()} awal={program({ status: 'DIAJUKAN', izin: IZIN_TARIK })} />)
     expect(screen.queryByRole('button', { name: 'Ajukan' })).toBeNull()
     expect(screen.getByRole('button', { name: /Tarik kembali ke draft/ })).toBeTruthy()
-    expect(screen.getByText('Program sudah diajukan')).toBeTruthy()
+    expect(screen.getByText('Kegiatan sudah diajukan')).toBeTruthy()
   })
 
   it('pengajuan sudah ditutup: pengurus tidak boleh menarik, sekretariat boleh', () => {
@@ -116,10 +116,10 @@ describe('ProgramForm', () => {
 
   it('ajukan: menyimpan dahulu lalu mengajukan; daftar masalah dari server ditampilkan', async () => {
     aksi.simpan.mutateAsync.mockResolvedValue(program())
-    aksi.ajukan.mutateAsync.mockRejectedValue({ response: { data: { error: 'Program belum lengkap untuk diajukan.', details: { masalah: ['Daftar periksa belum lengkap (2 butir belum dicentang).'] } } } })
+    aksi.ajukan.mutateAsync.mockRejectedValue({ response: { data: { error: 'Kegiatan belum lengkap untuk diajukan.', details: { masalah: ['Daftar periksa belum lengkap (2 butir belum dicentang).'] } } } })
     render(<ProgramForm master={master()} awal={program()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Ajukan' }))
-    await waitFor(() => expect(screen.getByText('Program belum lengkap untuk diajukan')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('Kegiatan belum lengkap untuk diajukan')).toBeTruthy())
     expect(aksi.simpan.mutateAsync).toHaveBeenCalledTimes(1)
     expect(aksi.ajukan.mutateAsync).toHaveBeenCalledWith(10)
     // muncul di daftar masalah server dan di petunjuk lokal
@@ -148,7 +148,7 @@ describe('ProgramForm', () => {
   it('judul terlalu pendek ditolak di sisi klien', async () => {
     render(<ProgramForm master={master()} awal={null} unitIdBaru={5} />)
     fireEvent.click(screen.getByRole('button', { name: 'Simpan draft' }))
-    await waitFor(() => expect(screen.getByText(/Judul program minimal 3 karakter/)).toBeTruthy())
+    await waitFor(() => expect(screen.getByText(/Judul kegiatan minimal 3 karakter/)).toBeTruthy())
     expect(aksi.buat.mutateAsync).not.toHaveBeenCalled()
   })
 

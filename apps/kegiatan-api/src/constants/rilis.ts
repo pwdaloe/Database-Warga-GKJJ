@@ -15,6 +15,15 @@ export interface Rilis {
 
 export const RILIS: readonly Rilis[] = [
   {
+    versi: '0.4.1',
+    tanggal: '2026-11-14',
+    judul: 'Istilah "program" menjadi "kegiatan"',
+    perubahan: [
+      { jenis: 'PEMBARUAN', teks: 'Seluruh layar dan pesan kini memakai istilah "kegiatan" (menu, daftar, formulir, dashboard, dan pesan kesalahan), menggantikan "program" atau "program kerja".' },
+      { jenis: 'PEMBARUAN', teks: 'Butir rincian di dalam formulir kini disebut "aktivitas" (Nama aktivitas, Rencana aktivitas dan jadwal) agar tidak sama dengan nama kegiatan.' },
+    ],
+  },
+  {
     versi: '0.4.0',
     tanggal: '2026-11-10',
     judul: 'Pagu bidang, dana Gereja, dan tahap pra-muker',

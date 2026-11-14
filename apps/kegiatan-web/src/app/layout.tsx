@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: 'Kegiatan GKJ Jakarta',
-  description: 'Perencanaan program kerja dan anggaran UPK GKJ Jakarta',
+  description: 'Perencanaan kegiatan dan anggaran UPK GKJ Jakarta',
   robots: { index: false, follow: false },
   icons: { icon: '/logo-gkj.jpg', apple: '/logo-gkj.jpg' },
 }

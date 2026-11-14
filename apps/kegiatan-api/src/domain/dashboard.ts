@@ -99,7 +99,7 @@ export interface BarisDashboardUnit extends RincianDana {
   bidangId: number
   /** Pos: pagu pos. UPK: alokasi indikatif (panduan, bukan batas keras). */
   pagu: number
-  /** Total RAB seluruh program diajukan (semua sumber dana). */
+  /** Total RAB seluruh kegiatan diajukan (semua sumber dana). */
   pengajuan: number
   draft: number
   tersedia: number
@@ -220,7 +220,7 @@ export function susunDashboard(m: MasukanDashboard) {
       nama: a.nama,
       jenis: a.jenis,
       jumlahProgram: terkait.length,
-      // Program yang menaut ke beberapa acuan terhitung penuh pada tiap acuan (bukan dibagi).
+      // Kegiatan yang menaut ke beberapa acuan terhitung penuh pada tiap acuan (bukan dibagi).
       totalRabTerkait: terkait.reduce((n, p) => n + p.totalRab, 0),
     }
   })

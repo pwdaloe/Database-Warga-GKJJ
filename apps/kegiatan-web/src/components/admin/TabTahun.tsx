@@ -9,12 +9,12 @@ import { Bidang, Input, Kartu, Lencana, Pemberitahuan, Select, Tombol } from '..
 
 const dateVal = (v: string | null): string => (v ? v.slice(0, 10) : '')
 const TINDAKAN_TAHAP: Record<Tahun['statusPengajuan'], string> = {
-  BELUM_DIBUKA: 'mengembalikan ke penetapan pagu: pengurus UPK tidak dapat mengubah program',
-  DIBUKA: 'membuka penyusunan: pengurus UPK dapat mengisi dan mengajukan program',
-  DITUTUP: 'menutup penyusunan: pengurus UPK tidak dapat mengubah atau menarik program lagi',
-  PRA_MUKER: 'memulai pra-muker: penyusunan UPK dikunci, angka Usulan UPK dipotret dan tidak berubah lagi, lalu ketua bidang dan admin yang mengubah program dan alokasi',
+  BELUM_DIBUKA: 'mengembalikan ke penetapan pagu: pengurus UPK tidak dapat mengubah kegiatan',
+  DIBUKA: 'membuka penyusunan: pengurus UPK dapat mengisi dan mengajukan kegiatan',
+  DITUTUP: 'menutup penyusunan: pengurus UPK tidak dapat mengubah atau menarik kegiatan lagi',
+  PRA_MUKER: 'memulai pra-muker: penyusunan UPK dikunci, angka Usulan UPK dipotret dan tidak berubah lagi, lalu ketua bidang dan admin yang mengubah kegiatan dan alokasi',
   MUKER: 'memulai muker: perubahan hanya oleh admin atau sekretariat',
-  DITETAPKAN: 'menetapkan anggaran: pagu, alokasi, dan seluruh program dikunci untuk semua orang (hanya admin yang dapat membukanya kembali)',
+  DITETAPKAN: 'menetapkan anggaran: pagu, alokasi, dan seluruh kegiatan dikunci untuk semua orang (hanya admin yang dapat membukanya kembali)',
 }
 
 function FormTahun({ t }: { t: Tahun }) {

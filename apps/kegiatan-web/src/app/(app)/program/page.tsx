@@ -34,12 +34,12 @@ export default function DaftarProgram() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg font-bold text-marine-900 sm:text-xl">{adalah('PENGURUS_UPK') ? 'Program kerja saya' : 'Program kerja'}</h1>
+          <h1 className="text-lg font-bold text-marine-900 sm:text-xl">{adalah('PENGURUS_UPK') ? 'Kegiatan saya' : 'Kegiatan'}</h1>
           <p className="text-sm text-gray-500">{m.tahun.nama}</p>
         </div>
         {bisaBuat && (
           <Link href="/program/baru">
-            <Tombol><Plus size={18} /> Program baru</Tombol>
+            <Tombol><Plus size={18} /> Kegiatan baru</Tombol>
           </Link>
         )}
       </div>
@@ -59,11 +59,11 @@ export default function DaftarProgram() {
       )}
 
       {daftar.isLoading ? <Memuat /> : daftar.isError ? (
-        <Pemberitahuan nada="merah">Tidak dapat memuat daftar program.</Pemberitahuan>
+        <Pemberitahuan nada="merah">Tidak dapat memuat daftar kegiatan.</Pemberitahuan>
       ) : daftar.data && daftar.data.length === 0 ? (
         <Kartu>
           <p className="py-6 text-center text-sm text-gray-500">
-            Belum ada program.{bisaBuat ? ' Mulai dengan menekan "Program baru".' : ''}
+            Belum ada kegiatan.{bisaBuat ? ' Mulai dengan menekan "Kegiatan baru".' : ''}
           </p>
         </Kartu>
       ) : (

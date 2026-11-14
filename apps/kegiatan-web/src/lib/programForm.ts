@@ -15,9 +15,9 @@ export const LABEL_WAKTU: Record<KategoriWaktu, string> = {
   TAHUN: 'Sepanjang tahun',
 }
 export const LABEL_JENIS_PROGRAM: Record<JenisProgram, string> = {
-  BARU: 'Program baru',
-  LANJUTAN: 'Lanjutan program 2026',
-  GABUNGAN: 'Gabungan beberapa program',
+  BARU: 'Kegiatan baru',
+  LANJUTAN: 'Lanjutan kegiatan 2026',
+  GABUNGAN: 'Gabungan beberapa kegiatan',
 }
 
 let urutanUid = 0
@@ -169,13 +169,13 @@ export function masalahLokal(f: FormProgram, kodeChecklist: string[]): string[] 
   const kosong = (s: string): boolean => s.trim() === ''
   if (kosong(f.latarBelakang)) m.push('Latar belakang belum diisi.')
   if (kosong(f.kebutuhan)) m.push('Rumusan kebutuhan belum diisi.')
-  if (kosong(f.tujuan)) m.push('Tujuan program belum diisi.')
+  if (kosong(f.tujuan)) m.push('Tujuan kegiatan belum diisi.')
   if (kosong(f.sasaranPenerima)) m.push('Sasaran atau penerima manfaat belum diisi.')
   if (kosong(f.evaluasi)) m.push('Rencana evaluasi dan pelaporan belum diisi.')
   if (kosong(f.picNama)) m.push('Nama penanggung jawab (PIC) belum diisi.')
   if (kosong(f.picWhatsapp)) m.push('Nomor WhatsApp PIC belum diisi.')
   if (f.acuanIds.length === 0) m.push('Pilih minimal satu acuan visi-misi.')
-  if (!f.jadwal.some(jadwalTerisi)) m.push('Tambahkan minimal satu kegiatan pada rencana kegiatan dan jadwal.')
+  if (!f.jadwal.some(jadwalTerisi)) m.push('Tambahkan minimal satu aktivitas pada rencana aktivitas dan jadwal.')
   if (!f.indikator.some(indikatorTerisi)) m.push('Tambahkan minimal satu indikator keberhasilan.')
   const baris = f.rab.filter(rabTerisi)
   if (baris.length === 0) m.push('Tambahkan minimal satu baris rencana anggaran biaya.')

@@ -21,7 +21,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const wa = tautanDukungan(master.data?.dukungan, { nama: user.nama, unit: user.unit?.nama ?? null })
 
   const menu = [
-    { href: '/program', label: 'Program', ikon: ClipboardList, tampil: true },
+    { href: '/program', label: 'Kegiatan', ikon: ClipboardList, tampil: true },
     { href: '/dashboard', label: 'Dashboard', ikon: BarChart3, tampil: true },
     { href: '/alokasi', label: 'Alokasi', ikon: Wallet, tampil: adalah('KOORDINATOR_BIDANG') },
     { href: '/admin/master', label: 'Master', ikon: Settings, tampil: adalah('ADMIN', 'SEKRETARIAT') },

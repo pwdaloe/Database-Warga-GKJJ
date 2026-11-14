@@ -54,7 +54,7 @@ export const sumberDanaSchema = z.object({
 /** Masukan simpan (draft): bentuk harus benar, kelengkapan baru diperiksa saat mengajukan. */
 export const simpanProgramSchema = z
   .object({
-    judul: teks(200).min(3, 'Judul program minimal 3 karakter'),
+    judul: teks(200).min(3, 'Judul kegiatan minimal 3 karakter'),
     jenisProgram: z.enum(JENIS_PROGRAM).default('BARU'),
     program2026Id: z.number().int().positive().nullish(),
     latarBelakang: teksOpsional(5000),
@@ -108,14 +108,14 @@ export function periksaKelengkapan(p: SimpanProgram): string[] {
 
   if (kosong(p.latarBelakang)) masalah.push('Latar belakang belum diisi.')
   if (kosong(p.kebutuhan)) masalah.push('Rumusan kebutuhan belum diisi.')
-  if (kosong(p.tujuan)) masalah.push('Tujuan program belum diisi.')
+  if (kosong(p.tujuan)) masalah.push('Tujuan kegiatan belum diisi.')
   if (kosong(p.sasaranPenerima)) masalah.push('Sasaran atau penerima manfaat belum diisi.')
   if (kosong(p.evaluasi)) masalah.push('Rencana evaluasi dan pelaporan belum diisi.')
   if (kosong(p.picNama)) masalah.push('Nama penanggung jawab (PIC) belum diisi.')
   if (kosong(p.picWhatsapp) || !normalizeWa(p.picWhatsapp)) masalah.push('Nomor WhatsApp PIC belum diisi atau tidak valid.')
   if (p.acuanIds.length === 0) masalah.push('Pilih minimal satu acuan visi-misi.')
 
-  if (p.jadwal.length === 0) masalah.push('Tambahkan minimal satu kegiatan pada rencana kegiatan dan jadwal.')
+  if (p.jadwal.length === 0) masalah.push('Tambahkan minimal satu aktivitas pada rencana aktivitas dan jadwal.')
   p.jadwal.forEach((j, i) => {
     const nama = `Kegiatan ${i + 1}`
     if (j.kategoriWaktu === 'SEKALI' && !j.tanggalMulai) masalah.push(`${nama}: tanggal pelaksanaan belum diisi.`)

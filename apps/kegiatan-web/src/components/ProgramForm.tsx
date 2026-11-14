@@ -63,7 +63,7 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
   const ketuaBidang = adalah('KOORDINATOR_BIDANG')
   const milikUnit = adalah('PENGURUS_UPK') && user?.unitId === unitId
   const rumusan = tahun.statusPengajuan === 'PRA_MUKER' || tahun.statusPengajuan === 'MUKER' || tahun.statusPengajuan === 'DITETAPKAN'
-  // Program yang sudah ada: hak dihitung server (izin). Program baru: aturan yang sama, dinilai dari tahap dan peran.
+  // Program yang sudah ada: hak dihitung server (izin). Kegiatan baru: aturan yang sama, dinilai dari tahap dan peran.
   const bolehUbah = awal
     ? awal.izin.ubah
     : tahun.statusPengajuan !== 'DITETAPKAN' && (kelola || (ketuaBidang && tahun.statusPengajuan === 'PRA_MUKER') || (milikUnit && tahun.statusPengajuan === 'DIBUKA'))
@@ -105,7 +105,7 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
     setGalat('')
     setMasalahServer([])
     setInfo('')
-    if (f.judul.trim().length < 3) { setGalat('Judul program minimal 3 karakter.'); return null }
+    if (f.judul.trim().length < 3) { setGalat('Judul kegiatan minimal 3 karakter.'); return null }
     if (!awal && !unitId) { setGalat('Pilih unit pengusul terlebih dahulu.'); return null }
     const hasil = keApi(f)
     if (!hasil.ok) { setGalat(hasil.galat.join(' ')); return null }
@@ -140,7 +140,7 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
     const id = await simpan()
     if (id === null) { setSibuk(''); return }
     try {
-      setPesanKilat('Program berhasil diajukan.')
+      setPesanKilat('Kegiatan berhasil diajukan.')
       await aksi.ajukan.mutateAsync(id)
       if (!awal) router.replace(`/program/${id}`)
     } catch (e) {
@@ -155,10 +155,10 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
   }
 
   async function klikTarik() {
-    if (!awal || !window.confirm('Tarik program ini kembali menjadi draft? Anda perlu mengajukannya lagi setelah selesai diubah.')) return
+    if (!awal || !window.confirm('Tarik kegiatan ini kembali menjadi draft? Anda perlu mengajukannya lagi setelah selesai diubah.')) return
     setSibuk('tarik')
     try {
-      setPesanKilat('Program ditarik kembali menjadi draft.')
+      setPesanKilat('Kegiatan ditarik kembali menjadi draft.')
       await aksi.tarik.mutateAsync(awal.id)
     } catch (e) {
       setPesanKilat('')
@@ -185,7 +185,7 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
     <div className="space-y-4 pb-36 sm:pb-24">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-lg font-bold text-marine-900 sm:text-xl">{awal ? 'Program kerja' : 'Program kerja baru'}</h1>
+          <h1 className="text-lg font-bold text-marine-900 sm:text-xl">{awal ? 'Kegiatan' : 'Kegiatan baru'}</h1>
           <p className="text-sm text-gray-500">
             {tahun.nama}{unit ? ` · ${unit.nama}` : ''}{awal?.nomor ? ` · ${awal.nomor}` : ''}
           </p>
@@ -202,31 +202,31 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
       </div>
 
       {diajukan && !ubahLangsung && (
-        <Pemberitahuan nada="hijau" judul="Program sudah diajukan">
-          {bolehTarik ? 'Untuk mengubahnya, tarik kembali menjadi draft terlebih dahulu.' : (awal?.izin.alasanUbah ?? (tahun.statusPengajuan === 'DITUTUP' ? 'Pengajuan sudah ditutup; hubungi sekretariat bila perlu perubahan.' : 'Isi program ini terkunci.'))}
+        <Pemberitahuan nada="hijau" judul="Kegiatan sudah diajukan">
+          {bolehTarik ? 'Untuk mengubahnya, tarik kembali menjadi draft terlebih dahulu.' : (awal?.izin.alasanUbah ?? (tahun.statusPengajuan === 'DITUTUP' ? 'Pengajuan sudah ditutup; hubungi sekretariat bila perlu perubahan.' : 'Isi kegiatan ini terkunci.'))}
         </Pemberitahuan>
       )}
       {ubahLangsung && rumusan && (
         <Pemberitahuan nada="biru" judul={tahun.statusPengajuan === 'PRA_MUKER' ? 'Tahap pra-muker' : 'Tahap muker'}>
-          Anda dapat mengubah isi program ini langsung. Angka usulan UPK semula tetap tersimpan sebagai pembanding.
+          Anda dapat mengubah isi kegiatan ini langsung. Angka usulan UPK semula tetap tersimpan sebagai pembanding.
         </Pemberitahuan>
       )}
       {!diajukan && !bolehUbah && (
-        <Pemberitahuan nada="kuning" judul="Program tidak dapat diubah">
-          {awal?.izin.alasanUbah ?? (tahun.statusPengajuan !== 'DIBUKA' ? 'Pengajuan sedang tidak dibuka.' : 'Anda tidak memiliki izin mengubah program unit ini.')}
+        <Pemberitahuan nada="kuning" judul="Kegiatan tidak dapat diubah">
+          {awal?.izin.alasanUbah ?? (tahun.statusPengajuan !== 'DIBUKA' ? 'Pengajuan sedang tidak dibuka.' : 'Anda tidak memiliki izin mengubah kegiatan unit ini.')}
         </Pemberitahuan>
       )}
       {info && <Pemberitahuan nada="hijau">{info}</Pemberitahuan>}
       {galat && <Pemberitahuan nada="merah">{galat}</Pemberitahuan>}
       {masalahServer.length > 0 && (
-        <Pemberitahuan nada="merah" judul="Program belum lengkap untuk diajukan">
+        <Pemberitahuan nada="merah" judul="Kegiatan belum lengkap untuk diajukan">
           <ul className="list-disc space-y-0.5 pl-5">{masalahServer.map((m) => <li key={m}>{m}</li>)}</ul>
         </Pemberitahuan>
       )}
 
       <fieldset disabled={!bolehUbah || sibuk !== ''} className="space-y-4 disabled:opacity-90">
         {/* 1. Identitas */}
-        <Bagian no={1} judul="Identitas program">
+        <Bagian no={1} judul="Identitas kegiatan">
           {!awal && (kelola ? (
             <Bidang label="Unit pengusul" wajib>
               <Select value={unitId ?? ''} onChange={(e) => setUnitId(e.target.value ? Number(e.target.value) : undefined)}>
@@ -242,16 +242,16 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
               </Select>
             </Bidang>
           ) : null)}
-          <Bidang label="Nama program" petunjuk="Satu program = satu hasil utama yang jelas." wajib>
+          <Bidang label="Nama kegiatan" petunjuk="Satu kegiatan = satu hasil utama yang jelas." wajib>
             <Input value={f.judul} onChange={(e) => ubah('judul', e.target.value)} maxLength={200} />
           </Bidang>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Bidang label="Jenis program">
+            <Bidang label="Jenis kegiatan">
               <Select value={f.jenisProgram} onChange={(e) => ubah('jenisProgram', e.target.value as FormProgram['jenisProgram'])}>
                 {master.enum.jenisProgram.map((j) => <option key={j} value={j}>{LABEL_JENIS_PROGRAM[j]}</option>)}
               </Select>
             </Bidang>
-            <Bidang label="Rujukan program 2026" petunjuk="Bila lanjutan atau perbaikan program yang sudah ada.">
+            <Bidang label="Rujukan kegiatan 2026" petunjuk="Bila lanjutan atau perbaikan kegiatan yang sudah ada.">
               <Select value={f.program2026Id ?? ''} onChange={(e) => ubah('program2026Id', e.target.value ? Number(e.target.value) : null)}>
                 <option value="">— tidak ada —</option>
                 {program2026Unit.map((p) => <option key={p.id} value={p.id}>{p.nama} ({p.kategori}{p.bersyarat ? '*' : ''})</option>)}
@@ -270,7 +270,7 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
         </Bagian>
 
         {/* 2. Acuan visi-misi */}
-        <Bagian no={2} judul="Acuan visi dan misi" petunjuk="Uji sederhana: jika program ini berhasil, bagian mana dari visi gereja yang menjadi lebih nyata?">
+        <Bagian no={2} judul="Acuan visi dan misi" petunjuk="Uji sederhana: jika kegiatan ini berhasil, bagian mana dari visi gereja yang menjadi lebih nyata?">
           {visi?.deskripsi && <blockquote className="rounded-lg bg-marine-50 p-3 text-sm italic text-marine-900">“{visi.deskripsi}”</blockquote>}
           <div className="space-y-2" role="group" aria-label="Acuan visi-misi">
             {acuanPilihan.map((a) => (
@@ -286,12 +286,12 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
 
         {/* 3-5. Latar belakang, kebutuhan, tujuan */}
         <Bagian no={3} judul="Latar belakang dan kebutuhan">
-          <Bidang label="Latar belakang" petunjuk="Data, masukan, atau evaluasi yang mendasari program." wajib><Textarea rows={4} value={f.latarBelakang} onChange={(e) => ubah('latarBelakang', e.target.value)} maxLength={5000} /></Bidang>
+          <Bidang label="Latar belakang" petunjuk="Data, masukan, atau evaluasi yang mendasari kegiatan." wajib><Textarea rows={4} value={f.latarBelakang} onChange={(e) => ubah('latarBelakang', e.target.value)} maxLength={5000} /></Bidang>
           <Bidang label="Rumusan kebutuhan" petunjuk="Kebutuhan nyata yang hendak dijawab, bukan hanya keinginan." wajib><Textarea rows={3} value={f.kebutuhan} onChange={(e) => ubah('kebutuhan', e.target.value)} maxLength={5000} /></Bidang>
         </Bagian>
 
         <Bagian no={4} judul="Tujuan dan sasaran">
-          <Bidang label="Tujuan program" petunjuk="Perubahan atau manfaat yang diharapkan, bukan hanya aktivitas." wajib><Textarea rows={3} value={f.tujuan} onChange={(e) => ubah('tujuan', e.target.value)} maxLength={5000} /></Bidang>
+          <Bidang label="Tujuan kegiatan" petunjuk="Perubahan atau manfaat yang diharapkan, bukan hanya aktivitas." wajib><Textarea rows={3} value={f.tujuan} onChange={(e) => ubah('tujuan', e.target.value)} maxLength={5000} /></Bidang>
           <div className="grid gap-4 sm:grid-cols-3">
             <Bidang label="Sasaran / penerima manfaat" petunjuk="Siapa yang dilayani." wajib className="sm:col-span-2"><Textarea rows={2} value={f.sasaranPenerima} onChange={(e) => ubah('sasaranPenerima', e.target.value)} maxLength={2000} /></Bidang>
             <Bidang label="Target jumlah peserta"><Input type="number" inputMode="numeric" min={0} value={f.targetPeserta} onChange={(e) => ubah('targetPeserta', e.target.value)} /></Bidang>
@@ -299,15 +299,15 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
         </Bagian>
 
         {/* 6. Jadwal */}
-        <Bagian no={5} judul="Rencana kegiatan dan jadwal" petunjuk="Tambahkan setiap kegiatan yang termasuk dalam program ini.">
+        <Bagian no={5} judul="Rencana aktivitas dan jadwal" petunjuk="Tambahkan setiap aktivitas yang termasuk dalam kegiatan ini.">
           {f.jadwal.map((j, i) => {
             const set = (patch: Partial<typeof j>) => ubah('jadwal', f.jadwal.map((x) => (x.uid === j.uid ? { ...x, ...patch } : x)))
             return (
               <div key={j.uid} className="space-y-3 rounded-lg border bg-gray-50/60 p-3">
-                <div className="flex items-center justify-between"><p className="text-sm font-medium">Kegiatan {i + 1}</p>
-                  {f.jadwal.length > 1 && <button type="button" aria-label={`Hapus kegiatan ${i + 1}`} className="flex min-h-[44px] min-w-[44px] items-center justify-center text-red-600" onClick={() => ubah('jadwal', f.jadwal.filter((x) => x.uid !== j.uid))}><Trash2 size={18} /></button>}
+                <div className="flex items-center justify-between"><p className="text-sm font-medium">Aktivitas {i + 1}</p>
+                  {f.jadwal.length > 1 && <button type="button" aria-label={`Hapus aktivitas ${i + 1}`} className="flex min-h-[44px] min-w-[44px] items-center justify-center text-red-600" onClick={() => ubah('jadwal', f.jadwal.filter((x) => x.uid !== j.uid))}><Trash2 size={18} /></button>}
                 </div>
-                <Bidang label="Nama kegiatan" wajib><Input value={j.nama} onChange={(e) => set({ nama: e.target.value })} maxLength={200} /></Bidang>
+                <Bidang label="Nama aktivitas" wajib><Input value={j.nama} onChange={(e) => set({ nama: e.target.value })} maxLength={200} /></Bidang>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <Bidang label="Kategori waktu" wajib>
                     <Select value={j.kategoriWaktu} onChange={(e) => set({ kategoriWaktu: e.target.value as KategoriWaktu })}>
@@ -325,11 +325,11 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
               </div>
             )
           })}
-          <Tombol type="button" varian="sekunder" onClick={() => ubah('jadwal', [...f.jadwal, jadwalKosong()])}><Plus size={16} /> Tambah kegiatan</Tombol>
+          <Tombol type="button" varian="sekunder" onClick={() => ubah('jadwal', [...f.jadwal, jadwalKosong()])}><Plus size={16} /> Tambah aktivitas</Tombol>
         </Bagian>
 
         {/* 7. Indikator */}
-        <Bagian no={6} judul="Indikator keberhasilan" petunjuk="Ukur hasil, bukan hanya kegiatan: berapa, seberapa baik, dan bukti apa.">
+        <Bagian no={6} judul="Indikator keberhasilan" petunjuk="Ukur hasil, bukan hanya aktivitas: berapa, seberapa baik, dan bukti apa.">
           {f.indikator.map((x, i) => {
             const set = (patch: Partial<typeof x>) => ubah('indikator', f.indikator.map((y) => (y.uid === x.uid ? { ...y, ...patch } : y)))
             return (

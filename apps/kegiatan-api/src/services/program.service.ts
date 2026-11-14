@@ -104,7 +104,7 @@ export function keBentukSimpan(p: ProgramDb): SimpanProgram {
   }
 }
 
-/** Hak pengguna pada program ini, dihitung server agar layar tidak menduplikasi aturan akses. */
+/** Hak pengguna pada kegiatan ini, dihitung server agar layar tidak menduplikasi aturan akses. */
 export function izinProgram(user: PenggunaLogin, p: ProgramDb) {
   const ringkas = { unitId: p.unitId, status: p.status, unit: p.unit }
   const tahap = p.tahun.statusPengajuan
@@ -122,14 +122,14 @@ export const denganIzin = (user: PenggunaLogin, p: ProgramDb) => ({ ...serialisa
 
 async function muatProgram(id: number): Promise<ProgramDb> {
   const p = await prisma.programKerja.findUnique({ where: { id }, include: sertakan })
-  if (!p) throw new AppError(404, 'Program tidak ditemukan')
+  if (!p) throw new AppError(404, 'Kegiatan tidak ditemukan')
   return p
 }
 
 /** 404 (bukan 403) bila tidak boleh melihat, agar keberadaan program unit lain tidak terbongkar. */
 async function muatProgramDilihat(user: PenggunaLogin, id: number): Promise<ProgramDb> {
   const p = await muatProgram(id)
-  if (!bolehLihatProgram(user, { unitId: p.unitId, status: p.status, unit: p.unit })) throw new AppError(404, 'Program tidak ditemukan')
+  if (!bolehLihatProgram(user, { unitId: p.unitId, status: p.status, unit: p.unit })) throw new AppError(404, 'Kegiatan tidak ditemukan')
   return p
 }
 
@@ -180,7 +180,7 @@ async function periksaRujukan(tx: Prisma.TransactionClient, tahunId: number, uni
   }
   if (d.program2026Id) {
     const lama = await tx.program2026.findUnique({ where: { id: d.program2026Id }, select: { unitId: true } })
-    if (!lama || lama.unitId !== unitId) throw new AppError(400, 'Program 2026 yang dirujuk tidak ditemukan pada unit ini.')
+    if (!lama || lama.unitId !== unitId) throw new AppError(400, 'Kegiatan 2026 yang dirujuk tidak ditemukan pada unit ini.')
   }
 }
 
@@ -285,7 +285,7 @@ export async function ajukanProgram(user: PenggunaLogin, id: number, ip: string 
 
   // Kelengkapan diperiksa dari DATA TERSIMPAN, bukan dari kiriman klien.
   const masalah = periksaKelengkapan(keBentukSimpan(p))
-  if (masalah.length > 0) throw new AppError(400, 'Program belum lengkap untuk diajukan.', { masalah })
+  if (masalah.length > 0) throw new AppError(400, 'Kegiatan belum lengkap untuk diajukan.', { masalah })
 
   await prisma.$transaction(async (tx) => {
     await tx.programKerja.update({ where: { id }, data: { status: 'DIAJUKAN', diajukanPada: new Date(), diajukanOleh: user.id, diubahOleh: user.id } })

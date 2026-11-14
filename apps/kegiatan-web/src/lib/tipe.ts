@@ -5,7 +5,7 @@ export const PERAN_LABEL: Record<Peran, string> = {
   MAJELIS: 'Penatua', LP4WG: 'LP4WG', KEPALA_KANTOR: 'Kepala Kantor', MINISTERIUM: 'Ministerium',
 }
 
-/** Peran yang melihat seluruh program dan dashboard (sama dengan sisi API). */
+/** Peran yang melihat seluruh kegiatan dan dashboard (sama dengan sisi API). */
 export const PERAN_LIHAT_SEMUA: readonly Peran[] = ['ADMIN', 'SEKRETARIAT', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM']
 export type StatusPengajuan = 'BELUM_DIBUKA' | 'DIBUKA' | 'DITUTUP' | 'PRA_MUKER' | 'MUKER' | 'DITETAPKAN'
 export const URUTAN_TAHAP: readonly StatusPengajuan[] = ['BELUM_DIBUKA', 'DIBUKA', 'DITUTUP', 'PRA_MUKER', 'MUKER', 'DITETAPKAN']
@@ -166,7 +166,7 @@ export interface ProgramDetail {
   diajukanPada: string | null
   isContoh: boolean
   updatedAt: string
-  /** Hak pengguna pada program ini, dihitung server. */
+  /** Hak pengguna pada kegiatan ini, dihitung server. */
   izin: { ubah: boolean; ajukan: boolean; tarik: boolean; hapus: boolean; alasanUbah: string | null }
   acuanIds: number[]
   jadwal: Array<{ id: number; nama: string; kategoriWaktu: KategoriWaktu; tanggalMulai: string | null; tanggalSelesai: string | null; keteranganPeriode: string | null; lokasi: string | null; hasilLangsung: string | null }>

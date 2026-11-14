@@ -258,7 +258,7 @@ masterRouter.put('/acuan/:id', kelola, async (req, res) => {
 masterRouter.delete('/acuan/:id', kelola, async (req, res) => {
   const id = idParam(req.params['id'])
   const dipakai = await prisma.programAcuan.count({ where: { acuanId: id } })
-  if (dipakai > 0) throw new AppError(409, `Acuan dipakai ${dipakai} program. Nonaktifkan saja, jangan dihapus.`)
+  if (dipakai > 0) throw new AppError(409, `Acuan dipakai ${dipakai} kegiatan. Nonaktifkan saja, jangan dihapus.`)
   const anak = await prisma.acuanStrategis.count({ where: { parentId: id } })
   if (anak > 0) throw new AppError(409, 'Acuan masih memiliki turunan. Pindahkan atau hapus turunannya dulu.')
   await prisma.acuanStrategis.delete({ where: { id } })

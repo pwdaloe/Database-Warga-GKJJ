@@ -12,7 +12,7 @@ export default function DetailProgram({ params }: { params: Promise<{ id: string
   const master = useMaster(program.data?.tahun.id)
 
   if (program.isLoading) return <Memuat />
-  if (program.isError || !program.data) return <Pemberitahuan nada="merah">{pesanGalat(program.error, 'Program tidak ditemukan.')}</Pemberitahuan>
+  if (program.isError || !program.data) return <Pemberitahuan nada="merah">{pesanGalat(program.error, 'Kegiatan tidak ditemukan.')}</Pemberitahuan>
   if (master.isLoading || !master.data) return <Memuat />
   // key: formulir dipasang ulang saat status berubah (diajukan/ditarik); simpan biasa tidak memasang ulang
   return <ProgramForm key={`${program.data.id}-${program.data.status}`} master={master.data} awal={program.data} />

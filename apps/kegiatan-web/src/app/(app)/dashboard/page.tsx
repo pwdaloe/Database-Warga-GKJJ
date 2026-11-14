@@ -39,12 +39,12 @@ export default function HalamanDashboard() {
       {master.data && <BannerPengajuan tahun={master.data.tahun} />}
       <div>
         <h1 className="text-lg font-bold text-marine-900 sm:text-xl">Pagu dan pengajuan</h1>
-        <p className="text-sm text-gray-500">{d.tahun.nama}. Pagu dibandingkan dengan <strong>dana Gereja (Kas Jemaat)</strong> yang diminta; biaya yang ditutup swadaya, penggalangan, atau donasi tidak memakai pagu. Hanya program <strong>Diajukan</strong> dihitung.</p>
+        <p className="text-sm text-gray-500">{d.tahun.nama}. Pagu dibandingkan dengan <strong>dana Gereja (Kas Jemaat)</strong> yang diminta; biaya yang ditutup swadaya, penggalangan, atau donasi tidak memakai pagu. Hanya kegiatan <strong>Diajukan</strong> dihitung.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Ringkas label={semua ? 'Total pagu' : 'Pagu'} nilai={formatRupiah(t.pagu)} {...(semua && t.proyeksiKasJemaat ? { sub: `proyeksi Kas Jemaat ${formatRupiah(t.proyeksiKasJemaat)}` } : {})} />
-        <Ringkas label="Dana Gereja diminta" nilai={formatRupiah(t.gereja)} sub={`${t.jumlahDiajukan} program diajukan${t.jumlahDraft ? `, ${t.jumlahDraft} draft` : ''}`} />
+        <Ringkas label="Dana Gereja diminta" nilai={formatRupiah(t.gereja)} sub={`${t.jumlahDiajukan} kegiatan diajukan${t.jumlahDraft ? `, ${t.jumlahDraft} draft` : ''}`} />
         <Ringkas label={t.tersedia >= 0 ? 'Pagu tersedia' : 'Melebihi pagu'} nilai={formatRupiah(Math.abs(t.tersedia))} nada={t.tersedia >= 0 ? 'hijau' : 'merah'} />
         <Ringkas label="Dana mandiri" nilai={formatRupiah(t.mandiri)} {...(t.rasioKemandirian === null ? {} : { sub: `${Math.round(t.rasioKemandirian * 100)}% dari seluruh pendanaan` })} />
       </div>
@@ -61,9 +61,9 @@ export default function HalamanDashboard() {
           <Lencana nada="kuning">Campuran: {t.program.campuran}</Lencana>
           <Lencana nada="biru">Bergantung Kas Jemaat: {t.program.bergantungKas}</Lencana>
         </div>
-        <p className="mb-3 text-sm text-gray-500">Program <strong>mandiri penuh</strong> tertutup seluruhnya oleh swadaya (kas UPK), penggalangan dana, atau donasi, tanpa dana Gereja. Nilainya {formatRupiah(t.rabTanpaKas)}.</p>
+        <p className="mb-3 text-sm text-gray-500">Kegiatan <strong>mandiri penuh</strong> tertutup seluruhnya oleh swadaya (kas UPK), penggalangan dana, atau donasi, tanpa dana Gereja. Nilainya {formatRupiah(t.rabTanpaKas)}.</p>
         {tanpaKas.length === 0 ? (
-          <p className="text-sm text-gray-500">Belum ada program yang berjalan tanpa dana Gereja.</p>
+          <p className="text-sm text-gray-500">Belum ada kegiatan yang berjalan tanpa dana Gereja.</p>
         ) : (
           <ul className="space-y-2">
             {tanpaKas.map((u) => (
@@ -162,12 +162,12 @@ export default function HalamanDashboard() {
 
       {d.acuan.length > 0 && (
         <Kartu judul="Keselarasan dengan visi dan misi">
-          <p className="mb-3 text-sm text-gray-500">Program yang menaut ke beberapa acuan terhitung penuh pada tiap acuan (jumlahnya tidak boleh dijumlahkan). Acuan tanpa program menandakan celah.</p>
+          <p className="mb-3 text-sm text-gray-500">Kegiatan yang menaut ke beberapa acuan terhitung penuh pada tiap acuan (jumlahnya tidak boleh dijumlahkan). Acuan tanpa kegiatan menandakan celah.</p>
           <ul className="space-y-2">
             {d.acuan.filter((a) => a.jenis !== 'VISI').map((a) => (
               <li key={a.acuanId} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm">
                 <span className="font-medium">{a.nama}</span>
-                <span className="text-gray-600">{a.jumlahProgram} program · {formatRupiah(a.totalRabTerkait)} <span className="text-xs text-gray-400">({persen(a.totalRabTerkait, t.pengajuan)} dari pengajuan)</span></span>
+                <span className="text-gray-600">{a.jumlahProgram} kegiatan · {formatRupiah(a.totalRabTerkait)} <span className="text-xs text-gray-400">({persen(a.totalRabTerkait, t.pengajuan)} dari pengajuan)</span></span>
               </li>
             ))}
           </ul>

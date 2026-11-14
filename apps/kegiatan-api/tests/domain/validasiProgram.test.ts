@@ -53,7 +53,7 @@ describe('periksaKelengkapan', () => {
 
   it('tanpa acuan visi-misi, jadwal, indikator, atau RAB → masalah masing-masing', () => {
     expect(periksaKelengkapan(lengkap({ acuanIds: [] })).some((x) => x.includes('acuan'))).toBe(true)
-    expect(periksaKelengkapan(lengkap({ jadwal: [] })).some((x) => x.includes('kegiatan'))).toBe(true)
+    expect(periksaKelengkapan(lengkap({ jadwal: [] })).some((x) => x.includes('aktivitas'))).toBe(true)
     expect(periksaKelengkapan(lengkap({ indikator: [] })).some((x) => x.includes('indikator'))).toBe(true)
     expect(periksaKelengkapan(lengkap({ rab: [], sumberDana: [] })).some((x) => x.includes('anggaran biaya'))).toBe(true)
   })

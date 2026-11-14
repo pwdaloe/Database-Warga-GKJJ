@@ -38,7 +38,7 @@ export default function HalamanLogin() {
         <div className="mb-5 flex flex-col items-center text-center text-white">
           <Logo ukuran={80} className="mb-3 p-1" />
           <h1 className="text-xl font-bold">Kegiatan GKJ Jakarta</h1>
-          <p className="mt-1 text-sm text-marine-100">Pengajuan program kerja dan anggaran UPK</p>
+          <p className="mt-1 text-sm text-marine-100">Pengajuan kegiatan dan anggaran UPK</p>
         </div>
         <Kartu>
           <form onSubmit={kirim} className="space-y-4">

@@ -23,7 +23,7 @@ export default function Ringkasan({ params }: { params: Promise<{ id: string }> 
   const program = useProgram(Number(id))
   const master = useMaster(program.data?.tahun.id)
   if (program.isLoading || master.isLoading) return <Memuat />
-  if (!program.data || !master.data) return <Pemberitahuan nada="merah">Program tidak ditemukan.</Pemberitahuan>
+  if (!program.data || !master.data) return <Pemberitahuan nada="merah">Kegiatan tidak ditemukan.</Pemberitahuan>
 
   const p = program.data
   const acuan = master.data.acuan.filter((a) => p.acuanIds.includes(a.id)).map((a) => a.nama).join('; ')
@@ -32,7 +32,7 @@ export default function Ringkasan({ params }: { params: Promise<{ id: string }> 
   return (
     <article className="space-y-5 bg-white p-4 sm:p-8">
       <div className="tanpa-cetak flex flex-wrap items-center justify-between gap-2">
-        <Link href={`/program/${p.id}`} className="inline-flex min-h-[44px] items-center gap-1.5 text-sm text-marine-700"><ArrowLeft size={16} /> Kembali ke program</Link>
+        <Link href={`/program/${p.id}`} className="inline-flex min-h-[44px] items-center gap-1.5 text-sm text-marine-700"><ArrowLeft size={16} /> Kembali ke kegiatan</Link>
         <Tombol onClick={() => window.print()}><Printer size={16} /> Cetak / simpan PDF</Tombol>
       </div>
 
@@ -50,7 +50,7 @@ export default function Ringkasan({ params }: { params: Promise<{ id: string }> 
             <Baris k="Kebutuhan" v={p.kebutuhan} />
             <Baris k="Acuan visi–misi" v={acuan} />
             <Baris k="Tujuan" v={p.tujuan} />
-            <Baris k="Kegiatan" v={kegiatan} />
+            <Baris k="Aktivitas" v={kegiatan} />
             <Baris k="Anggaran" v={<strong>{formatRupiah(p.totalRab)}</strong>} />
           </tbody>
         </table>
@@ -60,7 +60,7 @@ export default function Ringkasan({ params }: { params: Promise<{ id: string }> 
         <h2 className="mb-2 font-semibold">1. Identitas</h2>
         <table className="w-full border text-left"><tbody>
           <Baris k="UPK / pos" v={p.unit.nama} />
-          <Baris k="Jenis program" v={LABEL_JENIS_PROGRAM[p.jenisProgram]} />
+          <Baris k="Jenis kegiatan" v={LABEL_JENIS_PROGRAM[p.jenisProgram]} />
           <Baris k="Penanggung jawab" v={[p.picNama, p.picWhatsapp].filter(Boolean).join(' · ')} />
           <Baris k="Sasaran / penerima" v={p.sasaranPenerima} />
           <Baris k="Target peserta" v={p.targetPeserta != null ? `${p.targetPeserta} orang` : ''} />
@@ -76,9 +76,9 @@ export default function Ringkasan({ params }: { params: Promise<{ id: string }> 
       </section>
 
       <section>
-        <h2 className="mb-2 font-semibold">4. Rencana kegiatan dan jadwal</h2>
+        <h2 className="mb-2 font-semibold">4. Rencana aktivitas dan jadwal</h2>
         <div className="overflow-x-auto"><table className="w-full border text-sm">
-          <thead className="bg-gray-50"><tr><th className="px-3 py-2 text-left">Kegiatan</th><th className="px-3 py-2 text-left">Waktu</th><th className="px-3 py-2 text-left">Hasil langsung</th></tr></thead>
+          <thead className="bg-gray-50"><tr><th className="px-3 py-2 text-left">Aktivitas</th><th className="px-3 py-2 text-left">Waktu</th><th className="px-3 py-2 text-left">Hasil langsung</th></tr></thead>
           <tbody>{p.jadwal.map((j) => (
             <tr key={j.id} className="border-t align-top">
               <td className="px-3 py-2">{j.nama}{j.lokasi ? <span className="block text-xs text-gray-500">{j.lokasi}</span> : null}</td>

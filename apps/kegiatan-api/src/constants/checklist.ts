@@ -1,6 +1,6 @@
 // Daftar periksa sebelum mengajukan (Arahan Penyusunan RKA 2027, slide 14). Satu sumber untuk API dan web.
 export const CHECKLIST_AJUKAN = [
-  { kode: 'identitas', label: 'Nama program dan UPK penanggung jawab jelas.' },
+  { kode: 'identitas', label: 'Nama kegiatan dan UPK penanggung jawab jelas.' },
   { kode: 'kebutuhan', label: 'Latar belakang menjelaskan kebutuhan, bukan hanya keinginan.' },
   { kode: 'selaras', label: 'Tujuan selaras dengan visi–misi dan mandat bidang.' },
   { kode: 'sasaran', label: 'Sasaran/penerima manfaat teridentifikasi.' },

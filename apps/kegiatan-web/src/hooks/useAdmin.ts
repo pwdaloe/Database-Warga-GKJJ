@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Peran } from '@/lib/tipe'
 
-/** Penulisan master: kirim lalu segarkan master, dashboard, dan daftar program. */
+/** Penulisan master: kirim lalu segarkan master, dashboard, dan daftar kegiatan. */
 export function useKirimMaster() {
   const qc = useQueryClient()
   return useMutation({
