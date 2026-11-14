@@ -3,7 +3,35 @@
 
 ---
 
-## [2026-10-27 WIB] — Kegiatan v0.2.0: logo, versi aplikasi, bantuan WhatsApp, batas login | ✅ DONE di lokal, belum dideploy
+## [2026-11-10 WIB] — Kegiatan v0.4.0 (Sprint K4): pagu bidang, dana Gereja, tahap pra-muker | ✅ DONE di lokal, belum dideploy
+
+**Project**: Database Warga GKJJ (`kegiatan.gkjjakarta.org`). Rujukan keputusan: `docs/kegiatan/REVISI_ALUR_ANGGARAN_2027.md`.
+
+- **Pagu**: tabel `pagu_bidang` (batas keras dana Gereja bidang berisi UPK); `pagu_unit` kini alokasi indikatif per UPK (panduan) dan pagu per pos untuk Penatalayanan, Ministerium, Kemajelisan. `tahun_anggaran.proyeksi_kas_jemaat`. Endpoint `PUT /master/pagu-bidang`; `PUT /master/pagu` mencatat nilai lama dan baru di audit.
+- **Siklus**: `StatusPengajuan` menjadi BELUM_DIBUKA, DIBUKA, DITUTUP, PRA_MUKER, MUKER, DITETAPKAN. Pra-muker: ketua bidang (bidangnya) dan admin/sekretariat mengubah program berstatus apa pun, pengurus UPK tidak; muker: hanya admin/sekretariat; ditetapkan: dikunci, hanya admin yang dapat membuka kembali. Alokasi UPK oleh ketua bidang hanya pada PRA_MUKER.
+- **Potret Usulan**: masuk PRA_MUKER memotret program DIAJUKAN ke `program_versi` (tahap USULAN); tidak pernah menimpa potret yang ada.
+- **Dashboard**: pagu dibandingkan dengan dana Gereja; klasifikasi Mandiri penuh / Campuran / Bergantung Kas Jemaat; rincian swadaya, penggalangan, donasi; baris per bidang (pagu bidang, dialokasikan, tersedia); selisih terhadap proyeksi Kas Jemaat (hanya peran yang melihat seluruh pagu).
+- **Web**: halaman Alokasi (ketua bidang), tahap siklus dan proyeksi di Master > Tahun, pagu bidang di Struktur & anggaran, `izin` dihitung server untuk tombol di formulir program, banner tiap tahap.
+- **Uji**: API 327, web 59 lulus. Diverifikasi di browser pada 390 px (ketua bidang, pengurus UPK, Penatua, admin): tanpa scroll horizontal dan tanpa galat konsol; alur data lewat API (potret Usulan, hak per peran, audit).
+- **Belum**: Rumusan dan Disetujui berdampingan, riwayat revisi beralasan, realokasi, kolaborasi antar-unit dengan persetujuan mitra, "Kunci dan tetapkan" (K5, sebelum muker 23 Nov).
+- **Deploy**: butuh `deploy/sql/k4-pagu-bidang-siklus.sql` manual lebih dulu (ALTER TYPE), cadangan database, jadwal sepi, dan konfirmasi Daru. Tidak di-commit.
+
+---
+
+
+## [2026-10-27 WIB] — Kegiatan v0.3.0: pemberitahuan saat aplikasi diperbarui | ✅ DONE di lokal, belum dideploy
+
+**Project**: Database Warga GKJJ (`kegiatan.gkjjakarta.org`)
+
+- **Bar pemberitahuan** di semua halaman (termasuk halaman masuk), meniru `UpdateBanner` aplikasi jemaat: kuning "Aplikasi sedang diperbarui. Simpan pekerjaan Anda… muat ulang halaman" selama deploy; biru "Versi baru tersedia" + tombol Muat ulang setelah deploy (commit di server ≠ commit tertanam di bundle) atau saat file JS lama gagal dimuat. Polling 60 detik dan saat tab aktif kembali; gagal fetch tidak menampilkan apa pun; header sticky turun di bawah bar.
+- API: `GET /api/versi` menambah `pemeliharaan {aktif, pesan}` dari penanda `.deploy/kegiatan-maintenance` (penanda >30 menit dianggap basi).
+- Skrip deploy: menulis penanda sejak awal (dihapus otomatis lewat `trap`, juga bila gagal), menanam `NEXT_PUBLIC_APP_VERSION` ke bundle web, dan menulis `kegiatan-version` SETELAH aplikasi siap, sehingga tab lama melihat urutan "diperbarui" → "versi baru" dan Muat ulang tidak mendapat 502.
+- Tes: API 282, web 55; mutation check 2 dari 2 tertangkap. Dicoba di browser HP 390 px: bar tampil di login dan aplikasi, header tidak tertimpa, bar hilang sendiri ±60 detik setelah penanda dihapus.
+- **Catatan pemasangan**: berlaku penuh mulai deploy BERIKUTNYA. Deploy yang memasang v0.3.0 sendiri berjalan dengan skrip lama (bash membaca skrip sebelum `git pull`), dan tab yang sudah terbuka belum memuat kode bar ini; pengguna melihat bar mulai setelah memuat ulang sekali.
+
+---
+
+## [2026-10-27 WIB] — Kegiatan v0.2.0: logo, versi aplikasi, bantuan WhatsApp, batas login | ✅ DONE, dideploy ke produksi (`97fb897`)
 
 **Project**: Database Warga GKJJ (`kegiatan.gkjjakarta.org`)
 
@@ -13,6 +41,7 @@
 - **Bantuan WhatsApp**: tabel baru `pengaturan` (kunci-nilai), `PUT /master/dukungan`, tab Master "Dukungan" (aktif, nomor, pesan awal dengan `{nama}`/`{unit}`), ikon di kanan atas sebelum tombol keluar; `dukungan` ikut payload `GET /master`.
 - **Tes peran baru dan endpoint baru** (menutup blocker HIGH retro): peran LP4WG, Kepala Kantor, Ministerium pada tes akses dan penolakan tulis di seluruh route master; tes `/master/bidang` dan `/master/dukungan`; tes `/api/versi`; tes batas login (gagal dan berhasil). Mutation check 3 dari 3 tertangkap. API 188 → 277, web 27 → 36.
 - Dicoba di browser pada lebar HP 390 px: login, header (judul tidak terpotong), versi, tab Dukungan (validasi aktif-tanpa-nomor), tautan WhatsApp berisi nama dan unit akun.
+- **Dideploy 27 Okt (`97fb897`)**: `db push` membuat tabel `pengaturan`, seed menambah 3 baris, build lancar, PM2 reload tanpa menyentuh jemaat; `/api/versi` menjawab 0.2.0. `commit` awalnya null karena bash membaca skrip deploy lama sebelum `git pull` (baris penulis `kegiatan-version` belum ada); diisi manual, dan deploy berikutnya menulisnya sendiri. Belum diverifikasi: ikon WhatsApp dan login berbarengan dari satu jaringan di produksi.
 - **Pemasangan**: tabel baru saja (`db push` aman), seed menambah 3 baris pengaturan, skrip deploy menulis `kegiatan-version`. Notifikasi (pengumuman + kejadian) ditunda setelah pilot.
 
 ---

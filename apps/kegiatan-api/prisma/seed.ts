@@ -113,6 +113,18 @@ async function seedMaster(): Promise<void> {
     }
   }
 
+  // Pagu bidang (batas keras dana Gereja) untuk bidang berisi UPK: sementara = jumlah alokasi UPK (angka 2026). Admin menggantinya
+  // dengan angka keuangan lewat Master; tidak menimpa isian admin.
+  for (const [kodeBidang, id] of bidangId) {
+    const upk = semua.filter((u) => u.bidang === kodeBidang && u.jenis === 'UPK')
+    if (upk.length === 0) continue
+    await prisma.paguBidang.upsert({
+      where: { tahunId_bidangId: { tahunId: tahun.id, bidangId: id } },
+      update: {},
+      create: { tahunId: tahun.id, bidangId: id, nilai: BigInt(upk.reduce((n, u) => n + u.pagu, 0)), catatan: 'Sementara = jumlah alokasi 2026' },
+    })
+  }
+
   const visi = await prisma.acuanStrategis.upsert({
     where: { tahunId_kode: { tahunId: tahun.id, kode: 'VISI' } },
     update: {},
@@ -223,8 +235,9 @@ async function seedContoh(): Promise<void> {
   // Angka di bawah hanya ILUSTRASI untuk menguji tampilan; bukan data gereja.
   await buat('KOMAN', '(CONTOH) Ibadah Minggu Anak', 'DIAJUKAN', [{ uraian: 'Konsumsi', volume: 40, satuan: 'Orang', harga: 25_000 }, { uraian: 'Bahan peraga', volume: 10, satuan: 'Sesi', harga: 150_000 }], { GEREJA: 2_000_000, SWADAYA: 500_000 }, true)
   await buat('KOREM', '(CONTOH) Retreat Remaja', 'DIAJUKAN', [{ uraian: 'Akomodasi', volume: 30, satuan: 'Orang', harga: 600_000 }, { uraian: 'Narasumber', volume: 3, satuan: 'Sesi', harga: 1_000_000 }], { GEREJA: 14_000_000, SWADAYA: 7_000_000 }, true)
+  await buat('KPA', '(CONTOH) Bazar Buku Rohani', 'DIAJUKAN', [{ uraian: 'Stan dan perlengkapan', volume: 4, satuan: 'Paket', harga: 500_000 }, { uraian: 'Publikasi', volume: 1, satuan: 'Paket', harga: 300_000 }], { PENGGALANGAN: 1_800_000, DONASI: 500_000 }, true)
   await buat('PEJ', '(CONTOH) Mentoring Usaha', 'DRAFT', [{ uraian: 'Modul', volume: 20, satuan: 'Eksemplar', harga: 50_000 }], { GEREJA: 500_000 }, false)
-  console.log('  ✓ akun contoh (sekretariat, penatua, lp4wg, kepala kantor, ministerium, ketua bidang, ketua/sekretaris/bendahara per unit) dan 3 program contoh')
+  console.log('  ✓ akun contoh (sekretariat, penatua, lp4wg, kepala kantor, ministerium, ketua bidang, ketua/sekretaris/bendahara per unit) dan 4 program contoh')
 }
 
 async function main(): Promise<void> {

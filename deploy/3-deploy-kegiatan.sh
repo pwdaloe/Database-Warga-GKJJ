@@ -26,6 +26,13 @@ cd "$APP_DIR"
 [ -f "$WEB_DIR/.env.local" ] || error "$WEB_DIR/.env.local belum ada. Isi: echo 'NEXT_PUBLIC_API_URL=https://kegiatan.gkjjakarta.org/api' > $WEB_DIR/.env.local"
 grep -v '^[[:space:]]*#' "$API_DIR/.env" | grep -q "GANTI" && error "$API_DIR/.env masih berisi nilai GANTI."
 
+# Penanda "pembaruan sedang berlangsung": dibaca GET /api/versi dan ditampilkan sebagai bar kuning di aplikasi.
+# Dihapus otomatis saat skrip selesai (juga bila gagal); penanda yang basi >30 menit diabaikan API.
+STATE_DIR="$APP_DIR/.deploy"
+install -d -m 755 "$STATE_DIR"
+echo "Deploy dimulai $(date '+%Y-%m-%d %H:%M:%S')" > "$STATE_DIR/kegiatan-maintenance"
+trap 'rm -f "$STATE_DIR/kegiatan-maintenance"' EXIT
+
 # ── 1. Kode terbaru ───────────────────────────────────────────
 info "Pull kode terbaru..."
 chown -R "$APP_USER:$APP_USER" "$APP_DIR/.git"
@@ -74,7 +81,8 @@ for d in "$API_DIR/dist" "$WEB_DIR/.next"; do [ -e "$d" ] && chown -R "$APP_USER
 sudo -u "$APP_USER" npm run build
 info "Build web (Next.js)..."
 cd "$WEB_DIR"
-sudo -u "$APP_USER" env NODE_OPTIONS="--max-old-space-size=1400" npm run build
+# NEXT_PUBLIC_APP_VERSION ditanam ke bundle web; dibandingkan dengan commit di GET /api/versi (bar "Versi baru tersedia")
+sudo -u "$APP_USER" env NODE_OPTIONS="--max-old-space-size=1400" NEXT_PUBLIC_APP_VERSION="$VERSI" npm run build
 
 # ── 7. PM2 (hanya proses kegiatan) ───────────────────────────
 cd "$APP_DIR"
@@ -86,16 +94,17 @@ else
 fi
 pm2 save
 
-# Versi yang berjalan (dibaca GET /api/versi untuk ditampilkan di aplikasi)
-install -d -m 755 "$APP_DIR/.deploy"
-echo "$VERSI" > "$APP_DIR/.deploy/kegiatan-version"
-
 tunggu() {
   for _ in $(seq 1 30); do curl -fs -o /dev/null "$1" && return 0; sleep 1; done
   warn "$2 belum merespons setelah 30 detik (cek: pm2 logs $3)"
 }
 tunggu "http://127.0.0.1:4200/health" "API kegiatan" gkjj-kegiatan-api
 tunggu "http://127.0.0.1:3200/login" "Web kegiatan" gkjj-kegiatan-web
+
+# Versi ditulis SETELAH aplikasi siap dan penanda dihapus: tab lama melihat urutan
+# "pembaruan berlangsung" → "versi baru tersedia", dan "Muat ulang" tidak mendapat 502.
+echo "$VERSI" > "$STATE_DIR/kegiatan-version"
+rm -f "$STATE_DIR/kegiatan-maintenance"
 
 echo ""
 echo -e "${GREEN}✅ Deploy kegiatan selesai (versi $VERSI)${NC}"

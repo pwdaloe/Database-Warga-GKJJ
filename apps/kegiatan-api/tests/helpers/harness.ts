@@ -28,8 +28,10 @@ export function masuk(prisma: { pengguna: { findUnique: ReturnType<typeof vi.fn>
   return { Authorization: `Bearer ${tokenUntuk(u.id)}` }
 }
 
-export const tahunDb = (statusPengajuan: 'BELUM_DIBUKA' | 'DIBUKA' | 'DITUTUP' = 'DIBUKA') => ({
-  id: 1, tahun: 2027, nama: 'RKA 2027', statusPengajuan, aktif: true,
+export type TahapUji = 'BELUM_DIBUKA' | 'DIBUKA' | 'DITUTUP' | 'PRA_MUKER' | 'MUKER' | 'DITETAPKAN'
+
+export const tahunDb = (statusPengajuan: TahapUji = 'DIBUKA') => ({
+  id: 1, tahun: 2027, nama: 'RKA 2027', statusPengajuan, aktif: true, proyeksiKasJemaat: 0n,
 })
 
 /** Baris program seperti dikembalikan Prisma (dengan relasi) */
@@ -56,10 +58,12 @@ export function buatPrisma() {
   const prisma: any = {
     pengguna: m('findUnique', 'findFirst', 'findMany', 'create', 'update'),
     pengurus: m('findUnique', 'update'),
-    unit: m('findUnique', 'findMany', 'create', 'update'),
+    unit: m('findUnique', 'findMany', 'create', 'update', 'count'),
     bidang: m('findMany', 'create', 'update'),
     pengaturan: m('findMany', 'upsert'),
-    paguUnit: m('findMany', 'upsert', 'createMany'),
+    paguUnit: m('findMany', 'findUnique', 'upsert', 'createMany'),
+    paguBidang: m('findMany', 'findUnique', 'upsert', 'createMany'),
+    programVersi: m('create'),
     tahunAnggaran: m('findUnique', 'findFirst', 'findMany', 'create', 'update', 'updateMany'),
     acuanStrategis: m('findMany', 'count', 'create', 'update', 'delete'),
     satuan: m('findMany', 'create', 'update'),

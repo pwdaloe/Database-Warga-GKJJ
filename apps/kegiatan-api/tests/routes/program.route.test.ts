@@ -1,7 +1,7 @@
 import 'express-async-errors'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import request from 'supertest'
-import { buatPrisma, masuk, pengguna, programDb, tahunDb, type PenggunaUji } from '../helpers/harness.js'
+import { buatPrisma, masuk, pengguna, programDb, tahunDb, type PenggunaUji, type TahapUji } from '../helpers/harness.js'
 import { KODE_CHECKLIST } from '../../src/constants/checklist.js'
 
 const prisma = buatPrisma()
@@ -26,9 +26,9 @@ const bodyLengkap = (ubah: Record<string, unknown> = {}) => ({
   ...ubah,
 })
 
-function siapBuat(status: 'BELUM_DIBUKA' | 'DIBUKA' | 'DITUTUP' = 'DIBUKA') {
+function siapBuat(status: TahapUji = 'DIBUKA') {
   prisma.tahunAnggaran.findFirst.mockResolvedValue(tahunDb(status))
-  prisma.unit.findUnique.mockImplementation(async ({ where }: { where: { id: number } }) => ({ id: where.id, kode: `U${where.id}`, aktif: true }))
+  prisma.unit.findUnique.mockImplementation(async ({ where }: { where: { id: number } }) => ({ id: where.id, kode: `U${where.id}`, aktif: true, bidangId: 1 }))
   prisma.acuanStrategis.count.mockResolvedValue(1)
   prisma.programKerja.create.mockResolvedValue({ id: 10 })
   prisma.programKerja.update.mockResolvedValue({})
@@ -326,5 +326,63 @@ describe('matriks peran untuk mengubah program', () => {
     expect((await request(app).post('/api/program/10/tarik').set(h)).status).toBe(403)
     expect(prisma.programKerja.update).not.toHaveBeenCalled()
     expect(prisma.programKerja.delete).not.toHaveBeenCalled()
+  })
+})
+
+describe('siklus anggaran: pra-muker, muker, ditetapkan', () => {
+  const diajukanDb = (tahap: TahapUji) => programDb({ status: 'DIAJUKAN', tahun: tahunDb(tahap) })
+
+  it('izin pada respons detail dihitung server: pengurus saat DIBUKA boleh ubah draft, saat PRA_MUKER tidak', async () => {
+    prisma.programKerja.findUnique.mockResolvedValue(programDb())
+    const a = await request(app).get('/api/program/10').set(masuk(prisma, pengurus))
+    expect(a.body.data.izin).toMatchObject({ ubah: true, ajukan: true, hapus: true, tarik: false, alasanUbah: null })
+    prisma.programKerja.findUnique.mockResolvedValue(programDb({ tahun: tahunDb('PRA_MUKER') }))
+    const b = await request(app).get('/api/program/10').set(masuk(prisma, pengurus))
+    expect(b.body.data.izin).toMatchObject({ ubah: false, ajukan: false, hapus: false })
+    expect(b.body.data.izin.alasanUbah).toMatch(/pra-muker/)
+  })
+
+  it('PRA_MUKER: ketua bidang mengubah program DIAJUKAN di bidangnya; status tetap DIAJUKAN', async () => {
+    siapBuat('PRA_MUKER')
+    prisma.programKerja.findUnique.mockResolvedValue(diajukanDb('PRA_MUKER'))
+    const res = await request(app).put('/api/program/10').set(masuk(prisma, pengguna('KOORDINATOR_BIDANG'))).send(bodyLengkap({ judul: 'Hasil rumusan pra-muker' }))
+    expect(res.status).toBe(200)
+    const data = prisma.programKerja.update.mock.calls[0]![0].data
+    expect(data.judul).toBe('Hasil rumusan pra-muker')
+    expect(data.status).toBeUndefined()
+    expect(res.body.data.izin.ubah).toBe(true)
+  })
+
+  it('PRA_MUKER: ketua bidang lain (bidang berbeda) → 403; pengurus UPK → 409', async () => {
+    siapBuat('PRA_MUKER')
+    prisma.programKerja.findUnique.mockResolvedValue(diajukanDb('PRA_MUKER'))
+    const lain = await request(app).put('/api/program/10').set(masuk(prisma, pengguna('KOORDINATOR_BIDANG', { bidangId: 2 }))).send(bodyLengkap())
+    expect(lain.status).toBe(404) // program di luar bidangnya tidak terlihat sama sekali
+    const upk = await request(app).put('/api/program/10').set(masuk(prisma, pengurus)).send(bodyLengkap())
+    expect(upk.status).toBe(409)
+    expect(prisma.programKerja.update).not.toHaveBeenCalled()
+  })
+
+  it('PRA_MUKER: ketua bidang membuat program baru untuk UPK di bidangnya', async () => {
+    siapBuat('PRA_MUKER')
+    const res = await request(app).post('/api/program').set(masuk(prisma, pengguna('KOORDINATOR_BIDANG'))).send({ unitId: 5, ...bodyLengkap() })
+    expect(res.status).toBe(201)
+  })
+
+  it('MUKER: ketua bidang → 409, sekretariat boleh; DITETAPKAN: admin pun 409', async () => {
+    siapBuat('MUKER')
+    prisma.programKerja.findUnique.mockResolvedValue(diajukanDb('MUKER'))
+    expect((await request(app).put('/api/program/10').set(masuk(prisma, pengguna('KOORDINATOR_BIDANG'))).send(bodyLengkap())).status).toBe(409)
+    expect((await request(app).put('/api/program/10').set(masuk(prisma, pengguna('SEKRETARIAT'))).send(bodyLengkap())).status).toBe(200)
+    prisma.programKerja.update.mockClear()
+    prisma.programKerja.findUnique.mockResolvedValue(diajukanDb('DITETAPKAN'))
+    expect((await request(app).put('/api/program/10').set(masuk(prisma, pengguna('ADMIN'))).send(bodyLengkap())).status).toBe(409)
+    expect(prisma.programKerja.update).not.toHaveBeenCalled()
+  })
+
+  it('sejak PRA_MUKER program tidak ditarik kembali (409)', async () => {
+    siapBuat('PRA_MUKER')
+    prisma.programKerja.findUnique.mockResolvedValue(diajukanDb('PRA_MUKER'))
+    expect((await request(app).post('/api/program/10/tarik').set(masuk(prisma, pengguna('ADMIN')))).status).toBe(409)
   })
 })

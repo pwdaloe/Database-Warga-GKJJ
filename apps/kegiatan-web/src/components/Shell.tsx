@@ -3,7 +3,7 @@
 import clsx from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, ClipboardList, LogOut, MessageCircle, Settings, Users } from 'lucide-react'
+import { BarChart3, ClipboardList, LogOut, MessageCircle, Settings, Users, Wallet } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaster, useVersi } from '@/hooks/useData'
 import { tautanDukungan } from '@/lib/dukungan'
@@ -23,13 +23,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const menu = [
     { href: '/program', label: 'Program', ikon: ClipboardList, tampil: true },
     { href: '/dashboard', label: 'Dashboard', ikon: BarChart3, tampil: true },
+    { href: '/alokasi', label: 'Alokasi', ikon: Wallet, tampil: adalah('KOORDINATOR_BIDANG') },
     { href: '/admin/master', label: 'Master', ikon: Settings, tampil: adalah('ADMIN', 'SEKRETARIAT') },
     { href: '/admin/pengguna', label: 'Akun', ikon: Users, tampil: adalah('ADMIN', 'SEKRETARIAT') },
   ].filter((m) => m.tampil)
 
   return (
     <div className="min-h-screen pb-20 sm:pb-0">
-      <header className="tanpa-cetak sticky top-0 z-30 border-b bg-marine-700 text-white">
+      <header className="tanpa-cetak sticky z-30 border-b bg-marine-700 text-white" style={{ top: 'var(--banner-h, 0px)' }}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <Logo ukuran={38} />

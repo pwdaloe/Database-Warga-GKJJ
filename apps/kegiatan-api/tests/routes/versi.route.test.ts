@@ -1,7 +1,7 @@
 import 'express-async-errors'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import request from 'supertest'
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, rmSync, utimesSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { buatPrisma } from '../helpers/harness.js'
@@ -50,3 +50,42 @@ describe('GET /api/versi (publik)', () => {
     expect(prisma.pengguna.findUnique).not.toHaveBeenCalled()
   })
 })
+
+describe('GET /api/versi: penanda pemeliharaan (deploy sedang berlangsung)', () => {
+  const siapkan = (isi?: string, umurMs = 0) => {
+    dir = mkdtempSync(path.join(tmpdir(), 'versi-'))
+    process.env['DEPLOY_STATE_DIR'] = dir
+    if (isi !== undefined) {
+      const berkas = path.join(dir, 'kegiatan-maintenance')
+      writeFileSync(berkas, isi)
+      const t = new Date(Date.now() - umurMs)
+      utimesSync(berkas, t, t)
+    }
+  }
+
+  it('tanpa penanda → tidak sedang pemeliharaan', async () => {
+    siapkan()
+    expect((await request(app).get('/api/versi')).body.data.pemeliharaan).toEqual({ aktif: false, pesan: null })
+  })
+
+  it('penanda ada → aktif, dengan pesan dari isi berkas', async () => {
+    siapkan('Deploy dimulai 2026-10-28 10:00:00\n')
+    expect((await request(app).get('/api/versi')).body.data.pemeliharaan).toEqual({ aktif: true, pesan: 'Deploy dimulai 2026-10-28 10:00:00' })
+  })
+
+  it('penanda basi (deploy mati mendadak, >30 menit) diabaikan', async () => {
+    siapkan('Deploy dimulai', 31 * 60 * 1000)
+    expect((await request(app).get('/api/versi')).body.data.pemeliharaan.aktif).toBe(false)
+  })
+
+  it('penanda 29 menit masih dianggap berlangsung', async () => {
+    siapkan('Deploy dimulai', 29 * 60 * 1000)
+    expect((await request(app).get('/api/versi')).body.data.pemeliharaan.aktif).toBe(true)
+  })
+
+  it('pesan dipotong 200 karakter', async () => {
+    siapkan('x'.repeat(500))
+    expect((await request(app).get('/api/versi')).body.data.pemeliharaan.pesan).toHaveLength(200)
+  })
+})
+

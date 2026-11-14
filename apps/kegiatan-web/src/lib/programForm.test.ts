@@ -103,6 +103,7 @@ describe('dariApi', () => {
     id: 1, nomor: 'N', tahun: { id: 1, tahun: 2027, nama: 'RKA', statusPengajuan: 'DIBUKA' }, unit: { id: 1, kode: 'U', nama: 'U', singkatan: null, bidangId: 1, jenis: 'UPK' },
     judul: 'J', jenisProgram: 'LANJUTAN', program2026Id: 4, latarBelakang: null, kebutuhan: 'K', tujuan: null, sasaranPenerima: null, targetPeserta: 0, evaluasi: null, picNama: null, picWhatsapp: null,
     checklist: { a: true }, status: 'DRAFT', diajukanPada: null, isContoh: false, updatedAt: '', acuanIds: [3],
+    izin: { ubah: true, ajukan: true, tarik: false, hapus: true, alasanUbah: null },
     jadwal: [], indikator: [], rab: [{ id: 1, kategoriId: 2, kategori: 'x', uraian: 'U', perhitungan: null, volume: 3, satuan: 'Orang', hargaSatuan: 10_000, jumlah: 30_000 }],
     sumberDana: [{ jenis: 'GEREJA', nilai: 30_000, keterangan: null }], totalRab: 30_000, totalSumberDana: 30_000, selisih: 0, gereja: 30_000, mandiri: 0,
   })

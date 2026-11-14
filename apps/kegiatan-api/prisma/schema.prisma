@@ -51,10 +51,14 @@ enum JenisAcuan {
   @@map("jenis_acuan_enum")
 }
 
+// Tahap siklus anggaran: penyusunan UPK -> pra-muker (ketua bidang) -> muker (admin/sekretariat) -> ditetapkan.
 enum StatusPengajuan {
   BELUM_DIBUKA
   DIBUKA
   DITUTUP
+  PRA_MUKER
+  MUKER
+  DITETAPKAN
 
   @@map("status_pengajuan_enum")
 }
@@ -113,10 +117,13 @@ model TahunAnggaran {
   praMukerTanggal  DateTime?       @map("pra_muker_tanggal") @db.Date
   mukerTanggal     DateTime?       @map("muker_tanggal") @db.Date
   aktif            Boolean         @default(false)
+  // Proyeksi penerimaan Kas Jemaat (persembahan) tahun ini; pembanding total pagu.
+  proyeksiKasJemaat BigInt         @default(0) @map("proyeksi_kas_jemaat")
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @updatedAt @map("updated_at")
 
-  pagu     PaguUnit[]
+  pagu       PaguUnit[]
+  paguBidang PaguBidang[]
   acuan    AcuanStrategis[]
   programs ProgramKerja[]
 
@@ -139,8 +146,9 @@ model Bidang {
   nama   String @db.VarChar(100)
   urutan Int    @default(0)
 
-  units    Unit[]
-  pengguna Pengguna[]
+  units      Unit[]
+  pengguna   Pengguna[]
+  paguBidang PaguBidang[]
 
   @@map("bidang")
 }
@@ -168,6 +176,24 @@ model Unit {
   @@map("unit")
 }
 
+// Pagu bidang = batas keras dana Gereja (Kas Jemaat) untuk bidang berisi UPK. Untuk bidang yang hanya berisi pos
+// (Penatalayanan, Ministerium, Kemajelisan), pagu bidang = jumlah pagu pos di PaguUnit dan baris ini tidak dipakai.
+model PaguBidang {
+  id        Int      @id @default(autoincrement())
+  tahunId   Int      @map("tahun_id")
+  bidangId  Int      @map("bidang_id")
+  nilai     BigInt   @default(0)
+  catatan   String?  @db.VarChar(255)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tahun  TahunAnggaran @relation(fields: [tahunId], references: [id])
+  bidang Bidang        @relation(fields: [bidangId], references: [id])
+
+  @@unique([tahunId, bidangId])
+  @@map("pagu_bidang")
+}
+
+// Untuk UPK, `nilai` hanyalah alokasi indikatif (panduan ketua bidang); untuk pos, `nilai` adalah pagu pos.
 model PaguUnit {
   id        Int      @id @default(autoincrement())
   tahunId   Int      @map("tahun_id")
@@ -318,6 +344,7 @@ model ProgramKerja {
   program2026 Program2026?    @relation(fields: [program2026Id], references: [id])
   acuan       ProgramAcuan[]
   jadwal      KegiatanJadwal[]
+  versi       ProgramVersi[]
   indikator   Indikator[]
   rab         RabItem[]
   sumberDana  SumberDana[]
@@ -325,6 +352,31 @@ model ProgramKerja {
   @@index([tahunId, unitId])
   @@index([status])
   @@map("program_kerja")
+}
+
+enum TahapVersi {
+  USULAN
+  RUMUSAN
+  DISETUJUI
+
+  @@map("tahap_versi_enum")
+}
+
+// Potret program pada satu tahap (Usulan UPK saat penyusunan dikunci, Rumusan pra-muker, Disetujui muker).
+model ProgramVersi {
+  id         Int        @id @default(autoincrement())
+  programId  Int        @map("program_id")
+  tahap      TahapVersi
+  data       Json
+  totalRab   BigInt     @map("total_rab")
+  danaGereja BigInt     @map("dana_gereja")
+  dibuatOleh Int?       @map("dibuat_oleh")
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  program ProgramKerja @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([programId, tahap])
+  @@map("program_versi")
 }
 
 model ProgramAcuan {

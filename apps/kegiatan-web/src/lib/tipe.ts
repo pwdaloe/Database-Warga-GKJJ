@@ -7,12 +7,18 @@ export const PERAN_LABEL: Record<Peran, string> = {
 
 /** Peran yang melihat seluruh program dan dashboard (sama dengan sisi API). */
 export const PERAN_LIHAT_SEMUA: readonly Peran[] = ['ADMIN', 'SEKRETARIAT', 'MAJELIS', 'LP4WG', 'KEPALA_KANTOR', 'MINISTERIUM']
-export type StatusPengajuan = 'BELUM_DIBUKA' | 'DIBUKA' | 'DITUTUP'
+export type StatusPengajuan = 'BELUM_DIBUKA' | 'DIBUKA' | 'DITUTUP' | 'PRA_MUKER' | 'MUKER' | 'DITETAPKAN'
+export const URUTAN_TAHAP: readonly StatusPengajuan[] = ['BELUM_DIBUKA', 'DIBUKA', 'DITUTUP', 'PRA_MUKER', 'MUKER', 'DITETAPKAN']
+export const LABEL_TAHAP: Record<StatusPengajuan, string> = {
+  BELUM_DIBUKA: 'Penetapan pagu (belum dibuka)', DIBUKA: 'Penyusunan UPK (dibuka)', DITUTUP: 'Penyusunan ditutup',
+  PRA_MUKER: 'Pra-muker (ketua bidang)', MUKER: 'Muker (admin/sekretariat)', DITETAPKAN: 'Ditetapkan (dikunci)',
+}
 export type StatusProgram = 'DRAFT' | 'DIAJUKAN'
 export type KategoriWaktu = 'SEKALI' | 'PERIODE' | 'RENTANG' | 'TAHUN'
 export type JenisSumberDana = 'GEREJA' | 'SWADAYA' | 'PENGGALANGAN' | 'DONASI'
 export type JenisProgram = 'BARU' | 'LANJUTAN' | 'GABUNGAN'
-export type StatusPagu = 'BELUM_MENGAJUKAN' | 'UNDER' | 'OVER' | 'SESUAI'
+export type StatusPagu = 'BELUM_MENGAJUKAN' | 'MANDIRI' | 'UNDER' | 'OVER' | 'SESUAI'
+export type KlasifikasiPendanaan = 'MANDIRI_PENUH' | 'CAMPURAN' | 'BERGANTUNG_KAS'
 
 export interface UnitRingkas {
   id: number
@@ -47,6 +53,8 @@ export interface Tahun {
   praMukerTanggal: string | null
   mukerTanggal: string | null
   aktif: boolean
+  /** Hanya untuk peran yang melihat seluruh pagu; selain itu null. */
+  proyeksiKasJemaat: number | null
 }
 
 export interface PengurusBph {
@@ -108,6 +116,8 @@ export interface Master {
   tahun: Tahun
   tahunList: Tahun[]
   dukungan: Dukungan
+  paguBidang: Array<{ bidangId: number; nilai: number; catatan: string | null }>
+  izin: { ubahPagu: boolean; alokasiBidangIds: number[] }
   bidang: Array<{ id: number; kode: string; nama: string; urutan: number }>
   unit: UnitMaster[]
   satuan: Array<{ id: number; nama: string; urutan: number; aktif: boolean }>
@@ -156,6 +166,8 @@ export interface ProgramDetail {
   diajukanPada: string | null
   isContoh: boolean
   updatedAt: string
+  /** Hak pengguna pada program ini, dihitung server. */
+  izin: { ubah: boolean; ajukan: boolean; tarik: boolean; hapus: boolean; alasanUbah: string | null }
   acuanIds: number[]
   jadwal: Array<{ id: number; nama: string; kategoriWaktu: KategoriWaktu; tanggalMulai: string | null; tanggalSelesai: string | null; keteranganPeriode: string | null; lokasi: string | null; hasilLangsung: string | null }>
   indikator: Array<{ id: number; indikator: string; target: string; bukti: string }>
@@ -168,29 +180,54 @@ export interface ProgramDetail {
   mandiri: number
 }
 
-export interface BarisDashboardUnit {
+export interface RincianDana { gereja: number; swadaya: number; penggalangan: number; donasi: number; mandiri: number }
+export interface CacahKlasifikasi { mandiriPenuh: number; campuran: number; bergantungKas: number }
+
+export interface BarisDashboardUnit extends RincianDana {
   unitId: number
   kode: string
   nama: string
   singkatan: string | null
   jenis: 'UPK' | 'POS'
   bidangId: number
+  /** Pos: pagu pos. UPK: alokasi indikatif (panduan). */
   pagu: number
+  /** Total RAB program diajukan (semua sumber dana). */
   pengajuan: number
   draft: number
   tersedia: number
   status: StatusPagu
   jumlahDiajukan: number
   jumlahDraft: number
-  gereja: number
-  mandiri: number
+  klasifikasi: KlasifikasiPendanaan | null
+  program: CacahKlasifikasi
+  rabTanpaKas: number
+}
+
+export interface BarisDashboardBidang extends RincianDana {
+  bidangId: number
+  kode: string
+  nama: string
+  jumlahUnit: number
+  pagu: number
+  alokasiTerbagi: number
+  belumDialokasikan: number
+  pengajuan: number
+  tersedia: number
+  status: StatusPagu
+  jumlahDiajukan: number
+  program: CacahKlasifikasi
+  rabTanpaKas: number
 }
 
 export interface Dashboard {
   tahun: Pick<Tahun, 'id' | 'tahun' | 'nama' | 'statusPengajuan'>
   unit: BarisDashboardUnit[]
-  bidang: Array<{ bidangId: number; kode: string; nama: string; jumlahUnit: number; pagu: number; pengajuan: number; tersedia: number; gereja: number; mandiri: number }>
+  bidang: BarisDashboardBidang[]
   acuan: Array<{ acuanId: number; kode: string; nama: string; jenis: string; jumlahProgram: number; totalRabTerkait: number }>
-  total: { pagu: number; pengajuan: number; draft: number; gereja: number; mandiri: number; jumlahDiajukan: number; jumlahDraft: number; tersedia: number; rasioKemandirian: number | null }
+  total: RincianDana & {
+    pagu: number; pengajuan: number; draft: number; jumlahDiajukan: number; jumlahDraft: number; tersedia: number; rasioKemandirian: number | null
+    proyeksiKasJemaat: number | null; selisihProyeksi: number | null; program: CacahKlasifikasi; rabTanpaKas: number
+  }
   ringkasStatus: Record<StatusPagu, number>
 }

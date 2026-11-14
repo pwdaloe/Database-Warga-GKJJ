@@ -17,10 +17,11 @@ export async function dashboardPagu(user: PenggunaLogin, tahunId?: number) {
     : cak.jenis === 'bidang' ? { aktif: true, bidangId: cak.bidangId }
     : { id: -1 }
 
-  const [units, bidang, pagu, programs, acuan] = await Promise.all([
+  const [units, bidang, pagu, paguBidang, programs, acuan] = await Promise.all([
     prisma.unit.findMany({ where: whereUnit, select: { id: true, kode: true, nama: true, singkatan: true, jenis: true, bidangId: true, urutan: true } }),
     prisma.bidang.findMany({ select: { id: true, kode: true, nama: true, urutan: true } }),
     prisma.paguUnit.findMany({ where: { tahunId: tahun.id } }),
+    prisma.paguBidang.findMany({ where: { tahunId: tahun.id } }),
     prisma.programKerja.findMany({
       where: { tahunId: tahun.id, unit: whereUnit },
       select: { id: true, unitId: true, status: true, rab: { select: { jumlah: true } }, sumberDana: { select: { jenis: true, nilai: true } }, acuan: { select: { acuanId: true } } },
@@ -43,11 +44,19 @@ export async function dashboardPagu(user: PenggunaLogin, tahunId?: number) {
     units: units as Array<(typeof units)[number] & { jenis: 'UPK' | 'POS' }>,
     bidang,
     pagu: new Map(pagu.map((p) => [p.unitId, Number(p.nilai)])),
+    // Pengurus UPK hanya melihat unitnya: pagu bidang (cakupan lebih luas) tidak dipakai agar total tidak menyesatkan.
+    paguBidang: cak.jenis === 'unit' ? new Map() : new Map(paguBidang.map((p) => [p.bidangId, Number(p.nilai)])),
     programs: masukanProgram,
     acuan,
+    proyeksiKasJemaat: cak.jenis === 'semua' ? Number(tahun.proyeksiKasJemaat) : 0,
   })
 
-  // Bidang tanpa unit dalam cakupan tidak ditampilkan bagi pengurus/koordinator.
-  const bidangTampil = cak.jenis === 'semua' ? hasil.bidang : hasil.bidang.filter((b) => b.jumlahUnit > 0)
-  return { tahun: { id: tahun.id, tahun: tahun.tahun, nama: tahun.nama, statusPengajuan: tahun.statusPengajuan }, ...hasil, bidang: bidangTampil }
+  // Baris bidang: semua bidang bagi pengawas; bidangnya sendiri bagi ketua bidang; tidak ada bagi pengurus UPK.
+  const bidangTampil = cak.jenis === 'semua' ? hasil.bidang : cak.jenis === 'bidang' ? hasil.bidang.filter((b) => b.jumlahUnit > 0) : []
+  return {
+    tahun: { id: tahun.id, tahun: tahun.tahun, nama: tahun.nama, statusPengajuan: tahun.statusPengajuan },
+    ...hasil,
+    bidang: bidangTampil,
+    total: cak.jenis === 'semua' ? hasil.total : { ...hasil.total, proyeksiKasJemaat: null, selisihProyeksi: null },
+  }
 }

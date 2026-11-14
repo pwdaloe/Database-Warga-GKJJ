@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma.js'
 import { AppError } from '../middleware/errorHandler.js'
 import type { PenggunaLogin } from '../middleware/auth.js'
-import { bolehKelola, cakupanDari } from '../domain/akses.js'
+import { bolehKelola, bolehUbahAlokasi, bolehUbahPagu, cakupanDari } from '../domain/akses.js'
 import { CHECKLIST_AJUKAN } from '../constants/checklist.js'
 import { ambilDukungan } from './pengaturan.service.js'
 import { KATEGORI_WAKTU, JENIS_SUMBER_DANA, JENIS_PROGRAM } from '../domain/validasiProgram.js'
@@ -15,7 +15,7 @@ export async function ambilMaster(user: PenggunaLogin, tahunId?: number) {
   const cak = cakupanDari(user)
   const kelola = bolehKelola(user)
 
-  const [bidang, units, satuan, kategoriBiaya, acuan, pagu, program2026] = await Promise.all([
+  const [bidang, units, satuan, kategoriBiaya, acuan, pagu, paguBidangDb, program2026] = await Promise.all([
     prisma.bidang.findMany({ orderBy: { urutan: 'asc' } }),
     prisma.unit.findMany({
       orderBy: [{ urutan: 'asc' }, { nama: 'asc' }],
@@ -25,6 +25,7 @@ export async function ambilMaster(user: PenggunaLogin, tahunId?: number) {
     prisma.kategoriBiaya.findMany({ where: kelola ? {} : { aktif: true }, orderBy: [{ urutan: 'asc' }, { nama: 'asc' }] }),
     prisma.acuanStrategis.findMany({ where: { tahunId: tahun.id, ...(kelola ? {} : { aktif: true }) }, orderBy: [{ jenis: 'asc' }, { urutan: 'asc' }] }),
     prisma.paguUnit.findMany({ where: { tahunId: tahun.id } }),
+    prisma.paguBidang.findMany({ where: { tahunId: tahun.id } }),
     prisma.program2026.findMany({
       where: cak.jenis === 'unit' ? { unitId: cak.unitId } : cak.jenis === 'bidang' ? { unit: { bidangId: cak.bidangId } } : cak.jenis === 'semua' ? {} : { id: -1 },
       orderBy: [{ unitId: 'asc' }, { id: 'asc' }],
@@ -36,9 +37,19 @@ export async function ambilMaster(user: PenggunaLogin, tahunId?: number) {
   const bolehLihatPagu = (unitId: number): boolean =>
     cak.jenis === 'semua' || (cak.jenis === 'unit' && cak.unitId === unitId) || (cak.jenis === 'bidang' && units.find((u) => u.id === unitId)?.bidangId === cak.bidangId)
 
+  const lihatSemua = cak.jenis === 'semua'
+  const bolehLihatBidang = (bidangId: number): boolean => lihatSemua || (cak.jenis === 'bidang' && cak.bidangId === bidangId)
+  // Proyeksi Kas Jemaat hanya untuk yang melihat seluruh pagu.
+  const tahunTampil = (t: typeof tahun) => ({ ...t, proyeksiKasJemaat: lihatSemua ? Number(t.proyeksiKasJemaat) : null })
+
   return {
-    tahun,
-    tahunList,
+    tahun: tahunTampil(tahun),
+    tahunList: tahunList.map(tahunTampil),
+    paguBidang: paguBidangDb.filter((p) => bolehLihatBidang(p.bidangId)).map((p) => ({ bidangId: p.bidangId, nilai: Number(p.nilai), catatan: p.catatan })),
+    izin: {
+      ubahPagu: bolehUbahPagu(user, tahun.statusPengajuan).boleh,
+      alokasiBidangIds: bidang.filter((b) => bolehUbahAlokasi(user, b.id, tahun.statusPengajuan).boleh).map((b) => b.id),
+    },
     dukungan,
     bidang,
     unit: units.map((u) => ({ ...u, pagu: bolehLihatPagu(u.id) ? (paguMap.get(u.id) ?? 0) : null })),

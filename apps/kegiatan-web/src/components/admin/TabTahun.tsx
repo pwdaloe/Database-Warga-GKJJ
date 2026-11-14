@@ -3,27 +3,36 @@
 import { useState } from 'react'
 import { useKirimMaster } from '@/hooks/useAdmin'
 import { pesanGalat } from '@/lib/api'
-import type { Master, Tahun } from '@/lib/tipe'
+import { formatKetikRupiah } from '@/lib/format'
+import { LABEL_TAHAP, URUTAN_TAHAP, type Master, type Tahun } from '@/lib/tipe'
 import { Bidang, Input, Kartu, Lencana, Pemberitahuan, Select, Tombol } from '../ui'
 
 const dateVal = (v: string | null): string => (v ? v.slice(0, 10) : '')
-const LABEL_STATUS = { BELUM_DIBUKA: 'Belum dibuka', DIBUKA: 'Dibuka', DITUTUP: 'Ditutup' } as const
+const TINDAKAN_TAHAP: Record<Tahun['statusPengajuan'], string> = {
+  BELUM_DIBUKA: 'mengembalikan ke penetapan pagu: pengurus UPK tidak dapat mengubah program',
+  DIBUKA: 'membuka penyusunan: pengurus UPK dapat mengisi dan mengajukan program',
+  DITUTUP: 'menutup penyusunan: pengurus UPK tidak dapat mengubah atau menarik program lagi',
+  PRA_MUKER: 'memulai pra-muker: penyusunan UPK dikunci, angka Usulan UPK dipotret dan tidak berubah lagi, lalu ketua bidang dan admin yang mengubah program dan alokasi',
+  MUKER: 'memulai muker: perubahan hanya oleh admin atau sekretariat',
+  DITETAPKAN: 'menetapkan anggaran: pagu, alokasi, dan seluruh program dikunci untuk semua orang (hanya admin yang dapat membukanya kembali)',
+}
 
 function FormTahun({ t }: { t: Tahun }) {
   const kirim = useKirimMaster()
   const [v, setV] = useState({
     nama: t.nama, statusPengajuan: t.statusPengajuan, rencanaBuka: dateVal(t.rencanaBuka), rencanaTutup: dateVal(t.rencanaTutup),
     praMukerTanggal: dateVal(t.praMukerTanggal), mukerTanggal: dateVal(t.mukerTanggal), aktif: t.aktif,
+    proyeksi: String(t.proyeksiKasJemaat ?? 0),
   })
   const [pesan, setPesan] = useState<{ nada: 'hijau' | 'merah'; teks: string } | null>(null)
 
   async function simpan() {
     if (v.statusPengajuan !== t.statusPengajuan) {
-      const tindakan = { DIBUKA: 'membuka pengajuan: pengurus UPK dapat mulai mengisi dan mengajukan', DITUTUP: 'menutup pengajuan: pengurus UPK tidak dapat mengubah atau menarik program lagi', BELUM_DIBUKA: 'mengembalikan ke belum dibuka: pengurus UPK tidak dapat mengubah program' }[v.statusPengajuan]
+      const tindakan = TINDAKAN_TAHAP[v.statusPengajuan]
       if (!window.confirm(`Anda akan ${tindakan}. Lanjutkan?`)) return
     }
     try {
-      await kirim.mutateAsync({ method: 'put', url: `/master/tahun/${t.id}`, body: { nama: v.nama, statusPengajuan: v.statusPengajuan, rencanaBuka: v.rencanaBuka || null, rencanaTutup: v.rencanaTutup || null, praMukerTanggal: v.praMukerTanggal || null, mukerTanggal: v.mukerTanggal || null, aktif: v.aktif } })
+      await kirim.mutateAsync({ method: 'put', url: `/master/tahun/${t.id}`, body: { nama: v.nama, statusPengajuan: v.statusPengajuan, rencanaBuka: v.rencanaBuka || null, rencanaTutup: v.rencanaTutup || null, praMukerTanggal: v.praMukerTanggal || null, mukerTanggal: v.mukerTanggal || null, aktif: v.aktif, proyeksiKasJemaat: Number(v.proyeksi || 0) } })
       setPesan({ nada: 'hijau', teks: 'Tersimpan.' })
     } catch (e) {
       setPesan({ nada: 'merah', teks: pesanGalat(e) })
@@ -34,10 +43,13 @@ function FormTahun({ t }: { t: Tahun }) {
     <Kartu judul={<span>{t.nama} {t.aktif && <Lencana nada="hijau">Aktif</Lencana>}</span>}>
       <div className="grid gap-4 sm:grid-cols-2">
         <Bidang label="Nama"><Input value={v.nama} onChange={(e) => setV({ ...v, nama: e.target.value })} /></Bidang>
-        <Bidang label="Status pengajuan" petunjuk="Menentukan apakah pengurus UPK boleh mengisi dan mengajukan.">
+        <Bidang label="Tahap siklus anggaran" petunjuk="Menentukan siapa yang boleh mengubah: UPK (dibuka), ketua bidang dan admin (pra-muker), admin/sekretariat (muker), dikunci (ditetapkan).">
           <Select value={v.statusPengajuan} onChange={(e) => setV({ ...v, statusPengajuan: e.target.value as Tahun['statusPengajuan'] })}>
-            {Object.entries(LABEL_STATUS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            {URUTAN_TAHAP.map((k) => <option key={k} value={k}>{LABEL_TAHAP[k]}</option>)}
           </Select>
+        </Bidang>
+        <Bidang label="Proyeksi Kas Jemaat (Rp)" petunjuk="Perkiraan penerimaan persembahan tahun ini; pembanding total pagu di dashboard.">
+          <Input inputMode="numeric" className="text-right" value={formatKetikRupiah(v.proyeksi)} onChange={(e) => setV({ ...v, proyeksi: e.target.value.replace(/\D/g, '') })} />
         </Bidang>
         <Bidang label="Rencana buka pengajuan"><Input type="date" value={v.rencanaBuka} onChange={(e) => setV({ ...v, rencanaBuka: e.target.value })} /></Bidang>
         <Bidang label="Rencana tutup pengajuan"><Input type="date" value={v.rencanaTutup} onChange={(e) => setV({ ...v, rencanaTutup: e.target.value })} /></Bidang>
@@ -45,7 +57,7 @@ function FormTahun({ t }: { t: Tahun }) {
         <Bidang label="Tanggal muker"><Input type="date" value={v.mukerTanggal} onChange={(e) => setV({ ...v, mukerTanggal: e.target.value })} /></Bidang>
       </div>
       <label className="mt-4 flex min-h-[44px] items-center gap-3 text-sm"><input type="checkbox" className="h-5 w-5" checked={v.aktif} onChange={(e) => setV({ ...v, aktif: e.target.checked })} /> Tahun aktif (dipakai sebagai bawaan; hanya satu yang aktif)</label>
-      <p className="mt-2 text-xs text-gray-500">Rencana buka dan tutup hanya informasi di layar pengurus; yang menentukan adalah <strong>status pengajuan</strong> di atas.</p>
+      <p className="mt-2 text-xs text-gray-500">Rencana buka dan tutup hanya informasi di layar pengurus; yang menentukan adalah <strong>tahap siklus</strong> di atas.</p>
       {pesan && <div className="mt-3"><Pemberitahuan nada={pesan.nada}>{pesan.teks}</Pemberitahuan></div>}
       <div className="mt-4"><Tombol onClick={simpan} sibuk={kirim.isPending}>Simpan</Tombol></div>
     </Kartu>

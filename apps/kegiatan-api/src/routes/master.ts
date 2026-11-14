@@ -9,6 +9,8 @@ import { created, ok } from '../utils/response.js'
 import { rupiah } from '../domain/rupiah.js'
 import { normalizeWa } from '../utils/waNumber.js'
 import { simpanDukungan, ambilDukungan } from '../services/pengaturan.service.js'
+import { bolehUbahAlokasi, bolehUbahPagu } from '../domain/akses.js'
+import { potretUsulanTahun } from '../services/versi.service.js'
 
 export const masterRouter = Router()
 
@@ -37,18 +39,28 @@ masterRouter.put('/tahun/:id', kelola, async (req, res) => {
   const d = z
     .object({
       nama: z.string().trim().min(1).max(100).optional(),
-      statusPengajuan: z.enum(['BELUM_DIBUKA', 'DIBUKA', 'DITUTUP']).optional(),
+      statusPengajuan: z.enum(['BELUM_DIBUKA', 'DIBUKA', 'DITUTUP', 'PRA_MUKER', 'MUKER', 'DITETAPKAN']).optional(),
+      proyeksiKasJemaat: rupiah.optional(),
       rencanaBuka: tanggal, rencanaTutup: tanggal, praMukerTanggal: tanggal, mukerTanggal: tanggal,
       aktif: z.boolean().optional(),
     })
     .parse(req.body)
+  const sebelum = await prisma.tahunAnggaran.findUnique({ where: { id }, select: { statusPengajuan: true, proyeksiKasJemaat: true } })
+  if (!sebelum) throw new AppError(404, 'Tahun anggaran tidak ditemukan')
+  const pelakuLogin = pelaku(req)
+  if (sebelum.statusPengajuan === 'DITETAPKAN' && d.statusPengajuan && d.statusPengajuan !== 'DITETAPKAN' && pelakuLogin.peran !== 'ADMIN') {
+    throw new AppError(403, 'Hanya admin yang dapat membuka kembali anggaran yang sudah ditetapkan.')
+  }
   const t = await prisma.$transaction(async (tx) => {
     if (d.aktif === true) await tx.tahunAnggaran.updateMany({ where: { id: { not: id } }, data: { aktif: false } })
+    // Masuk pra-muker = penyusunan UPK dikunci: potret angka Usulan sebelum ketua bidang mengubah apa pun.
+    if (d.statusPengajuan === 'PRA_MUKER' && sebelum.statusPengajuan !== 'PRA_MUKER') await potretUsulanTahun(tx, id, pelakuLogin.id)
     const hasil = await tx.tahunAnggaran.update({
       where: { id },
       data: {
         ...(d.nama !== undefined ? { nama: d.nama } : {}),
         ...(d.statusPengajuan ? { statusPengajuan: d.statusPengajuan } : {}),
+        ...(d.proyeksiKasJemaat !== undefined ? { proyeksiKasJemaat: BigInt(d.proyeksiKasJemaat) } : {}),
         ...(d.aktif !== undefined ? { aktif: d.aktif } : {}),
         ...(d.rencanaBuka !== undefined ? { rencanaBuka: keDate(d.rencanaBuka) } : {}),
         ...(d.rencanaTutup !== undefined ? { rencanaTutup: keDate(d.rencanaTutup) } : {}),
@@ -70,6 +82,8 @@ masterRouter.post('/tahun', kelola, async (req, res) => {
     if (d.salinDariId) {
       const pagu = await tx.paguUnit.findMany({ where: { tahunId: d.salinDariId } })
       await tx.paguUnit.createMany({ data: pagu.map((p) => ({ tahunId: baru.id, unitId: p.unitId, nilai: p.nilai, catatan: p.catatan })) })
+      const paguB = await tx.paguBidang.findMany({ where: { tahunId: d.salinDariId } })
+      await tx.paguBidang.createMany({ data: paguB.map((p) => ({ tahunId: baru.id, bidangId: p.bidangId, nilai: p.nilai, catatan: p.catatan })) })
       const acuan = await tx.acuanStrategis.findMany({ where: { tahunId: d.salinDariId }, orderBy: { id: 'asc' } })
       const peta = new Map<number, number>()
       for (const a of acuan) {
@@ -153,14 +167,46 @@ masterRouter.put('/unit/:id', kelola, async (req, res) => {
   ok(res, unit)
 })
 
-masterRouter.put('/pagu', kelola, async (req, res) => {
+/**
+ * Pagu pos (POS) atau alokasi indikatif UPK. Pos: admin/sekretariat. UPK: admin/sekretariat atau ketua bidangnya
+ * pada tahap pra-muker. Nilai lama dicatat di audit agar perubahan dapat ditelusuri.
+ */
+masterRouter.put('/pagu', authorize('ADMIN', 'SEKRETARIAT', 'KOORDINATOR_BIDANG'), async (req, res) => {
   const d = z.object({ tahunId: z.number().int().positive(), unitId: z.number().int().positive(), nilai: rupiah, catatan: z.string().trim().max(255).nullish() }).parse(req.body)
+  const [tahun, unit] = await Promise.all([
+    prisma.tahunAnggaran.findUnique({ where: { id: d.tahunId }, select: { statusPengajuan: true } }),
+    prisma.unit.findUnique({ where: { id: d.unitId }, select: { jenis: true, bidangId: true } }),
+  ])
+  if (!tahun) throw new AppError(404, 'Tahun anggaran tidak ditemukan')
+  if (!unit) throw new AppError(404, 'Unit tidak ditemukan')
+  const k = unit.jenis === 'POS' ? bolehUbahPagu(pelaku(req), tahun.statusPengajuan) : bolehUbahAlokasi(pelaku(req), unit.bidangId, tahun.statusPengajuan)
+  if (!k.boleh) throw new AppError(k.kode ?? 403, k.alasan ?? 'Tidak diizinkan')
+  const lama = await prisma.paguUnit.findUnique({ where: { tahunId_unitId: { tahunId: d.tahunId, unitId: d.unitId } }, select: { nilai: true } })
   const pagu = await prisma.paguUnit.upsert({
     where: { tahunId_unitId: { tahunId: d.tahunId, unitId: d.unitId } },
     create: { tahunId: d.tahunId, unitId: d.unitId, nilai: BigInt(d.nilai), catatan: d.catatan ?? null },
     update: { nilai: BigInt(d.nilai), catatan: d.catatan ?? null },
   })
-  await catatAudit({ penggunaId: pelaku(req).id, aksi: 'UBAH_PAGU', entitas: 'unit', entitasId: d.unitId, ringkasan: `tahun ${d.tahunId}: ${d.nilai}`, ipAddress: ip(req) })
+  await catatAudit({ penggunaId: pelaku(req).id, aksi: unit.jenis === 'POS' ? 'UBAH_PAGU' : 'UBAH_ALOKASI', entitas: 'unit', entitasId: d.unitId, ringkasan: `tahun ${d.tahunId}: ${lama?.nilai ?? 0} -> ${d.nilai}`, ipAddress: ip(req) })
+  ok(res, pagu)
+})
+
+/** Pagu bidang (batas keras dana Gereja) untuk bidang berisi UPK; hanya admin/sekretariat (keuangan). */
+masterRouter.put('/pagu-bidang', kelola, async (req, res) => {
+  const d = z.object({ tahunId: z.number().int().positive(), bidangId: z.number().int().positive(), nilai: rupiah, catatan: z.string().trim().max(255).nullish() }).parse(req.body)
+  const tahun = await prisma.tahunAnggaran.findUnique({ where: { id: d.tahunId }, select: { statusPengajuan: true } })
+  if (!tahun) throw new AppError(404, 'Tahun anggaran tidak ditemukan')
+  const k = bolehUbahPagu(pelaku(req), tahun.statusPengajuan)
+  if (!k.boleh) throw new AppError(k.kode ?? 403, k.alasan ?? 'Tidak diizinkan')
+  const upk = await prisma.unit.count({ where: { bidangId: d.bidangId, jenis: 'UPK' } })
+  if (upk === 0) throw new AppError(400, 'Bidang ini hanya berisi pos; isi pagu per pos, bukan pagu bidang.')
+  const lama = await prisma.paguBidang.findUnique({ where: { tahunId_bidangId: { tahunId: d.tahunId, bidangId: d.bidangId } }, select: { nilai: true } })
+  const pagu = await prisma.paguBidang.upsert({
+    where: { tahunId_bidangId: { tahunId: d.tahunId, bidangId: d.bidangId } },
+    create: { tahunId: d.tahunId, bidangId: d.bidangId, nilai: BigInt(d.nilai), catatan: d.catatan ?? null },
+    update: { nilai: BigInt(d.nilai), catatan: d.catatan ?? null },
+  })
+  await catatAudit({ penggunaId: pelaku(req).id, aksi: 'UBAH_PAGU_BIDANG', entitas: 'bidang', entitasId: d.bidangId, ringkasan: `tahun ${d.tahunId}: ${lama?.nilai ?? 0} -> ${d.nilai}`, ipAddress: ip(req) })
   ok(res, pagu)
 })
 

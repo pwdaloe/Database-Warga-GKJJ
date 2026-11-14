@@ -2,15 +2,18 @@
 
 *Diperbarui 27 Okt 2026 (siang). Baca ini dulu saat melanjutkan pekerjaan.*
 
+## Update 10 Nov 2026 (K4, di lokal, belum dideploy)
+Alur anggaran direvisi (lihat `REVISI_ALUR_ANGGARAN_2027.md`). **K4 (v0.4.0) selesai di lokal**: pagu bidang, alokasi indikatif, proyeksi Kas Jemaat, tahap siklus (pra-muker/muker/ditetapkan), potret Usulan, dashboard berbasis dana Gereja, halaman Alokasi ketua bidang. **K5** (sebelum muker 23 Nov): Rumusan/Disetujui berdampingan, riwayat revisi beralasan, realokasi, kolaborasi antar-unit dengan persetujuan mitra, "Kunci dan tetapkan". Pra-muker 16 Nov dan muker 23 Nov (di produksi; DB lokal masih 15/22 Nov). Deploy K4 butuh `deploy/sql/k4-pagu-bidang-siklus.sql` manual dulu.
+
 ## Posisi sekarang
-- **Aplikasi Kegiatan sudah live di produksi sejak 27 Okt 2026** (`kegiatan.gkjjakarta.org`, versi `58efda4`; skrip deploy diperbaiki di `ffc5bd5`). Database `gkjj_kegiatan` dan pengguna DB sendiri; PM2 `gkjj-kegiatan-api` (:4200) dan `gkjj-kegiatan-web` (:3200); blok Nginx baru aktif, domain `jemaat`, `api`, `my`, `majelis` tidak berubah.
+- **Aplikasi Kegiatan sudah live di produksi sejak 27 Okt 2026** (`kegiatan.gkjjakarta.org`, kini v0.2.0 / `97fb897`; sebelumnya `58efda4`). Database `gkjj_kegiatan` dan pengguna DB sendiri; PM2 `gkjj-kegiatan-api` (:4200) dan `gkjj-kegiatan-web` (:3200); blok Nginx baru aktif, domain `jemaat`, `api`, `my`, `majelis` tidak berubah.
 - **Pengajuan masih "Belum dibuka".** Admin sudah dapat masuk; master (pagu, BPH, akun) belum diisi di produksi.
 - Tanggal: gerbang go/no-go **Jum 30 Okt**; jendela pengisian UPK **2–9 Nov**; pengajuan ditutup **10 Nov**; pra-muker **15 Nov**; muker **22 Nov 2026**.
 - Rencana dan keputusan: `RENCANA_MVP_MUKER_2026.md`. Hasil sprint: `../../sprints/sprint_k1.md`. Latar jangka menengah: `BRIEF_MODUL_KEGIATAN.md`. Langkah pemasangan: `../../deploy/DEPLOY_KEGIATAN.md`.
 - Sudah ditambahkan setelah K1 (27 Okt): layar **Struktur & anggaran**, 7 bidang (termasuk Ministerium dan Kemajelisan), 6 pos biaya (4 di Penatalayanan), peran pengawas baru (LP4WG, Kepala Kantor, Ministerium; Penatua = peran Majelis; Ketua Bidang = Koordinator bidang), seed akun contoh per peran (hanya lokal).
 - Tampilan HP 390 px sudah diuji untuk Struktur & anggaran, daftar program, formulir, dan dashboard pada 8 akun: tanpa scroll horizontal, toolbar bawah berfungsi.
 
-## Sudah dikerjakan 27 Okt (v0.2.0, belum dideploy)
+## Sudah dikerjakan 27 Okt (v0.2.0, dideploy `97fb897`)
 Logo, versi aplikasi dan halaman Apa yang baru, bantuan WhatsApp (Master > Dukungan), perbaikan batas login. Lihat `CHANGELOG.md`. **Notifikasi** (keputusan Daru: gabungan pengumuman admin + notifikasi kejadian, dikerjakan setelah pilot) belum dimulai.
 
 ## Langkah berikutnya (urut)

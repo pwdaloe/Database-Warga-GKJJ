@@ -14,7 +14,7 @@ const tolakBila = (k: Keputusan): void => {
   if (!k.boleh) throw new AppError(k.kode ?? 403, k.alasan ?? 'Tidak diizinkan')
 }
 
-const sertakan = {
+export const sertakan = {
   unit: { select: { id: true, kode: true, nama: true, singkatan: true, bidangId: true, jenis: true } },
   tahun: { select: { id: true, tahun: true, nama: true, statusPengajuan: true } },
   acuan: { select: { acuanId: true } },
@@ -24,7 +24,7 @@ const sertakan = {
   sumberDana: true,
 } satisfies Prisma.ProgramKerjaInclude
 
-type ProgramDb = Prisma.ProgramKerjaGetPayload<{ include: typeof sertakan }>
+export type ProgramDb = Prisma.ProgramKerjaGetPayload<{ include: typeof sertakan }>
 
 const tgl = (d: Date | null): string | null => (d ? d.toISOString().slice(0, 10) : null)
 const num = (n: bigint): number => Number(n)
@@ -104,6 +104,22 @@ export function keBentukSimpan(p: ProgramDb): SimpanProgram {
   }
 }
 
+/** Hak pengguna pada program ini, dihitung server agar layar tidak menduplikasi aturan akses. */
+export function izinProgram(user: PenggunaLogin, p: ProgramDb) {
+  const ringkas = { unitId: p.unitId, status: p.status, unit: p.unit }
+  const tahap = p.tahun.statusPengajuan
+  const ubah = bolehUbahProgram(user, ringkas, tahap)
+  return {
+    ubah: ubah.boleh,
+    ajukan: bolehAjukanProgram(user, ringkas, tahap).boleh,
+    tarik: bolehTarikProgram(user, ringkas, tahap).boleh,
+    hapus: bolehHapusProgram(user, ringkas, tahap).boleh,
+    alasanUbah: ubah.boleh ? null : (ubah.alasan ?? null),
+  }
+}
+
+export const denganIzin = (user: PenggunaLogin, p: ProgramDb) => ({ ...serialisasiProgram(p), izin: izinProgram(user, p) })
+
 async function muatProgram(id: number): Promise<ProgramDb> {
   const p = await prisma.programKerja.findUnique({ where: { id }, include: sertakan })
   if (!p) throw new AppError(404, 'Program tidak ditemukan')
@@ -149,7 +165,7 @@ export async function daftarProgram(user: PenggunaLogin, f: FilterProgram) {
 }
 
 export async function detailProgram(user: PenggunaLogin, id: number) {
-  return serialisasiProgram(await muatProgramDilihat(user, id))
+  return denganIzin(user, await muatProgramDilihat(user, id))
 }
 
 /** Memastikan rujukan (acuan, kategori biaya, program 2026) ada dan sah, sebelum ditulis. */
@@ -225,10 +241,10 @@ export async function buatProgram(user: PenggunaLogin, unitIdMasukan: number | u
   const unitId = user.peran === 'PENGURUS_UPK' ? user.unitId : unitIdMasukan
   if (!unitId) throw new AppError(400, 'Unit pengusul wajib dipilih.')
   const tahun = await tahunUntuk(tahunId)
-  const unit = await prisma.unit.findUnique({ where: { id: unitId }, select: { id: true, kode: true, aktif: true } })
+  const unit = await prisma.unit.findUnique({ where: { id: unitId }, select: { id: true, kode: true, aktif: true, bidangId: true } })
   if (!unit || !unit.aktif) throw new AppError(400, 'Unit tidak ditemukan atau tidak aktif.')
 
-  tolakBila(bolehBuatProgram(user, unitId, tahun.statusPengajuan))
+  tolakBila(bolehBuatProgram(user, unitId, tahun.statusPengajuan, unit.bidangId))
 
   const id = await prisma.$transaction(async (tx) => {
     await periksaRujukan(tx, tahun.id, unitId, d)
@@ -240,7 +256,7 @@ export async function buatProgram(user: PenggunaLogin, unitIdMasukan: number | u
     await catatAudit({ penggunaId: user.id, aksi: 'BUAT_PROGRAM', entitas: 'program', entitasId: baru.id, ringkasan: d.judul, ipAddress: ip }, tx)
     return baru.id
   })
-  return serialisasiProgram(await muatProgram(id))
+  return denganIzin(user, await muatProgram(id))
 }
 
 export async function simpanProgram(user: PenggunaLogin, id: number, mentah: unknown, ip: string | null) {
@@ -260,7 +276,7 @@ export async function simpanProgram(user: PenggunaLogin, id: number, mentah: unk
     await tx.programKerja.update({ where: { id }, data: { ...skalar(d), diubahOleh: user.id, ...anakProgram(d) } })
     await catatAudit({ penggunaId: user.id, aksi: 'UBAH_PROGRAM', entitas: 'program', entitasId: id, ringkasan: d.judul, ipAddress: ip }, tx)
   })
-  return serialisasiProgram(await muatProgram(id))
+  return denganIzin(user, await muatProgram(id))
 }
 
 export async function ajukanProgram(user: PenggunaLogin, id: number, ip: string | null) {
@@ -275,7 +291,7 @@ export async function ajukanProgram(user: PenggunaLogin, id: number, ip: string 
     await tx.programKerja.update({ where: { id }, data: { status: 'DIAJUKAN', diajukanPada: new Date(), diajukanOleh: user.id, diubahOleh: user.id } })
     await catatAudit({ penggunaId: user.id, aksi: 'AJUKAN_PROGRAM', entitas: 'program', entitasId: id, ringkasan: p.judul, ipAddress: ip }, tx)
   })
-  return serialisasiProgram(await muatProgram(id))
+  return denganIzin(user, await muatProgram(id))
 }
 
 export async function tarikProgram(user: PenggunaLogin, id: number, ip: string | null) {
@@ -285,7 +301,7 @@ export async function tarikProgram(user: PenggunaLogin, id: number, ip: string |
     await tx.programKerja.update({ where: { id }, data: { status: 'DRAFT', diajukanPada: null, diajukanOleh: null, diubahOleh: user.id } })
     await catatAudit({ penggunaId: user.id, aksi: 'TARIK_PROGRAM', entitas: 'program', entitasId: id, ringkasan: p.judul, ipAddress: ip }, tx)
   })
-  return serialisasiProgram(await muatProgram(id))
+  return denganIzin(user, await muatProgram(id))
 }
 
 export async function hapusProgram(user: PenggunaLogin, id: number, ip: string | null) {

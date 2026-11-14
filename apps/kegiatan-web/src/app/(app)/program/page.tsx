@@ -20,7 +20,12 @@ export default function DaftarProgram() {
   if (master.isError || !master.data) return <Pemberitahuan nada="merah">Tidak dapat memuat data master.</Pemberitahuan>
 
   const m = master.data
-  const bisaBuat = adalah('PENGURUS_UPK', 'ADMIN', 'SEKRETARIAT') && (adalah('ADMIN', 'SEKRETARIAT') || m.tahun.statusPengajuan === 'DIBUKA')
+  const tahap = m.tahun.statusPengajuan
+  const bisaBuat = tahap !== 'DITETAPKAN' && (
+    (adalah('ADMIN', 'SEKRETARIAT')) ||
+    (adalah('PENGURUS_UPK') && tahap === 'DIBUKA') ||
+    (adalah('KOORDINATOR_BIDANG') && tahap === 'PRA_MUKER')
+  )
   const lihatBanyakUnit = !adalah('PENGURUS_UPK')
 
   return (

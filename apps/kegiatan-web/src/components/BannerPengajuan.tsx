@@ -13,6 +13,19 @@ export function BannerPengajuan({ tahun }: { tahun: Pick<Tahun, 'statusPengajuan
       </Pemberitahuan>
     )
   }
+  if (tahun.statusPengajuan === 'PRA_MUKER') {
+    return (
+      <Pemberitahuan nada="biru" judul="Tahap pra-muker">
+        Penyusunan UPK sudah ditutup. Ketua bidang dan admin merumuskan kegiatan dan biaya bersama UPK{tahun.praMukerTanggal ? ` (rapat ${formatTanggal(tahun.praMukerTanggal)})` : ''}; pengurus UPK dapat melihat hasilnya.
+      </Pemberitahuan>
+    )
+  }
+  if (tahun.statusPengajuan === 'MUKER') {
+    return <Pemberitahuan nada="kuning" judul="Tahap muker">Perubahan hanya dilakukan admin atau sekretariat{tahun.mukerTanggal ? ` (muker ${formatTanggal(tahun.mukerTanggal)})` : ''}.</Pemberitahuan>
+  }
+  if (tahun.statusPengajuan === 'DITETAPKAN') {
+    return <Pemberitahuan nada="hijau" judul="Anggaran sudah ditetapkan">Seluruh pagu dan program dikunci; tidak ada perubahan lagi.</Pemberitahuan>
+  }
   if (tahun.statusPengajuan === 'DITUTUP') {
     return <Pemberitahuan nada="kuning" judul="Pengajuan sudah ditutup">Program tidak dapat diubah. Hubungi sekretariat bila ada perbaikan mendesak.</Pemberitahuan>
   }

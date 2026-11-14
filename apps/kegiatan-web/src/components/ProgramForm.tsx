@@ -60,9 +60,17 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
 
   const diajukan = awal?.status === 'DIAJUKAN'
   const kelola = adalah('ADMIN', 'SEKRETARIAT')
+  const ketuaBidang = adalah('KOORDINATOR_BIDANG')
   const milikUnit = adalah('PENGURUS_UPK') && user?.unitId === unitId
-  const bolehUbah = !diajukan && (kelola || (milikUnit && tahun.statusPengajuan === 'DIBUKA'))
-  const bolehTarik = diajukan && (kelola || (milikUnit && tahun.statusPengajuan === 'DIBUKA'))
+  const rumusan = tahun.statusPengajuan === 'PRA_MUKER' || tahun.statusPengajuan === 'MUKER' || tahun.statusPengajuan === 'DITETAPKAN'
+  // Program yang sudah ada: hak dihitung server (izin). Program baru: aturan yang sama, dinilai dari tahap dan peran.
+  const bolehUbah = awal
+    ? awal.izin.ubah
+    : tahun.statusPengajuan !== 'DITETAPKAN' && (kelola || (ketuaBidang && tahun.statusPengajuan === 'PRA_MUKER') || (milikUnit && tahun.statusPengajuan === 'DIBUKA'))
+  const bolehTarik = awal ? awal.izin.tarik : false
+  const bolehAjukan = awal ? awal.izin.ajukan : bolehUbah
+  /** Pada pra-muker dan sesudahnya, program yang sudah diajukan diubah langsung (tidak perlu ditarik). */
+  const ubahLangsung = bolehUbah && diajukan
 
   useEffect(() => {
     if (!kotor) return
@@ -193,14 +201,19 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
         </div>
       </div>
 
-      {diajukan && (
+      {diajukan && !ubahLangsung && (
         <Pemberitahuan nada="hijau" judul="Program sudah diajukan">
-          {bolehTarik ? 'Untuk mengubahnya, tarik kembali menjadi draft terlebih dahulu.' : tahun.statusPengajuan === 'DITUTUP' ? 'Pengajuan sudah ditutup; hubungi sekretariat bila perlu perubahan.' : 'Isi program ini terkunci.'}
+          {bolehTarik ? 'Untuk mengubahnya, tarik kembali menjadi draft terlebih dahulu.' : (awal?.izin.alasanUbah ?? (tahun.statusPengajuan === 'DITUTUP' ? 'Pengajuan sudah ditutup; hubungi sekretariat bila perlu perubahan.' : 'Isi program ini terkunci.'))}
+        </Pemberitahuan>
+      )}
+      {ubahLangsung && rumusan && (
+        <Pemberitahuan nada="biru" judul={tahun.statusPengajuan === 'PRA_MUKER' ? 'Tahap pra-muker' : 'Tahap muker'}>
+          Anda dapat mengubah isi program ini langsung. Angka usulan UPK semula tetap tersimpan sebagai pembanding.
         </Pemberitahuan>
       )}
       {!diajukan && !bolehUbah && (
         <Pemberitahuan nada="kuning" judul="Program tidak dapat diubah">
-          {tahun.statusPengajuan !== 'DIBUKA' ? 'Pengajuan sedang tidak dibuka.' : 'Anda tidak memiliki izin mengubah program unit ini.'}
+          {awal?.izin.alasanUbah ?? (tahun.statusPengajuan !== 'DIBUKA' ? 'Pengajuan sedang tidak dibuka.' : 'Anda tidak memiliki izin mengubah program unit ini.')}
         </Pemberitahuan>
       )}
       {info && <Pemberitahuan nada="hijau">{info}</Pemberitahuan>}
@@ -219,6 +232,13 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
               <Select value={unitId ?? ''} onChange={(e) => setUnitId(e.target.value ? Number(e.target.value) : undefined)}>
                 <option value="">Pilih unit…</option>
                 {master.unit.filter((u) => u.aktif).map((u) => <option key={u.id} value={u.id}>{u.nama}{u.jenis === 'POS' ? ' (pos)' : ''}</option>)}
+              </Select>
+            </Bidang>
+          ) : ketuaBidang ? (
+            <Bidang label="Unit pengusul" wajib petunjuk="Unit di bidang Anda.">
+              <Select value={unitId ?? ''} onChange={(e) => setUnitId(e.target.value ? Number(e.target.value) : undefined)}>
+                <option value="">Pilih unit…</option>
+                {master.unit.filter((u) => u.aktif && u.bidangId === user?.bidangId).map((u) => <option key={u.id} value={u.id}>{u.nama}{u.jenis === 'POS' ? ' (pos)' : ''}</option>)}
               </Select>
             </Bidang>
           ) : null)}
@@ -426,9 +446,9 @@ export function ProgramForm({ master, awal, unitIdBaru }: Props) {
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
             <p className="hidden text-sm text-gray-600 sm:block">{kotor ? 'Ada perubahan yang belum disimpan.' : 'Tidak ada perubahan.'} Total anggaran <strong>{formatRupiah(rab)}</strong></p>
             <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
-              {bolehUbah && awal && <Tombol varian="hantu" onClick={klikHapus} sibuk={sibuk === 'hapus'} className="text-red-600"><Trash2 size={16} /> Hapus</Tombol>}
-              {bolehUbah && <Tombol varian="sekunder" onClick={klikSimpan} sibuk={sibuk === 'simpan'}>Simpan draft</Tombol>}
-              {bolehUbah && <Tombol onClick={klikAjukan} sibuk={sibuk === 'ajukan'}>Ajukan</Tombol>}
+              {awal && awal.izin.hapus && <Tombol varian="hantu" onClick={klikHapus} sibuk={sibuk === 'hapus'} className="text-red-600"><Trash2 size={16} /> Hapus</Tombol>}
+              {bolehUbah && <Tombol varian={bolehAjukan ? 'sekunder' : 'utama'} onClick={klikSimpan} sibuk={sibuk === 'simpan'}>{ubahLangsung ? 'Simpan perubahan' : 'Simpan draft'}</Tombol>}
+              {bolehAjukan && <Tombol onClick={klikAjukan} sibuk={sibuk === 'ajukan'}>Ajukan</Tombol>}
               {bolehTarik && <Tombol varian="sekunder" onClick={klikTarik} sibuk={sibuk === 'tarik'}><Undo2 size={16} /> Tarik kembali ke draft</Tombol>}
             </div>
           </div>

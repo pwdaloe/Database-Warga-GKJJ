@@ -48,8 +48,28 @@ export interface Keputusan {
 const ya: Keputusan = { boleh: true }
 const tolak = (alasan: string, kode: 403 | 409 = 403): Keputusan => ({ boleh: false, alasan, kode })
 
-/** Membuat program baru atau mengubah draft. Admin/sekretariat boleh atas nama unit mana pun. */
+/**
+ * Siklus anggaran (StatusPengajuan):
+ *  - BELUM_DIBUKA, DIBUKA, DITUTUP: penyusunan oleh UPK. Mengubah hanya pada DRAFT; pengurus UPK hanya saat DIBUKA.
+ *  - PRA_MUKER: ketua bidang (bidangnya) dan admin/sekretariat mengubah program berstatus apa pun; pengurus UPK tidak.
+ *  - MUKER: hanya admin/sekretariat.
+ *  - DITETAPKAN: dikunci untuk semua.
+ */
+export const TAHAP_RUMUSAN: readonly StatusPengajuan[] = ['PRA_MUKER', 'MUKER', 'DITETAPKAN']
+export const sudahRumusan = (s: StatusPengajuan): boolean => TAHAP_RUMUSAN.includes(s)
+
+const adalahKetuaBidangDari = (p: Pelaku, prog: ProgramRingkas): boolean =>
+  p.peran === 'KOORDINATOR_BIDANG' && p.bidangId !== null && prog.unit?.bidangId === p.bidangId
+
+/** Membuat program baru atau mengubah isi. Admin/sekretariat boleh atas nama unit mana pun. */
 export function bolehUbahProgram(p: Pelaku, prog: ProgramRingkas, statusPengajuan: StatusPengajuan): Keputusan {
+  if (statusPengajuan === 'DITETAPKAN') return tolak('Anggaran sudah ditetapkan; program tidak dapat diubah.', 409)
+  if (statusPengajuan === 'MUKER') return bolehKelola(p) ? ya : tolak('Sedang tahap muker; perubahan hanya oleh admin atau sekretariat.', 409)
+  if (statusPengajuan === 'PRA_MUKER') {
+    if (bolehKelola(p) || adalahKetuaBidangDari(p, prog)) return ya
+    if (p.peran === 'PENGURUS_UPK') return tolak('Sedang tahap pra-muker; perubahan oleh ketua bidang. Hubungi ketua bidang Anda.', 409)
+    return tolak('Tidak memiliki izin untuk mengubah program unit ini.')
+  }
   if (prog.status !== 'DRAFT') return tolak('Program sudah diajukan. Tarik kembali ke draft untuk mengubahnya.', 409)
   if (bolehKelola(p)) return ya
   if (p.peran !== 'PENGURUS_UPK' || p.unitId === null || prog.unitId !== p.unitId) {
@@ -59,11 +79,15 @@ export function bolehUbahProgram(p: Pelaku, prog: ProgramRingkas, statusPengajua
   return ya
 }
 
-/** Mengajukan = mengunci program; syarat peran dan jendela sama dengan mengubah. */
-export const bolehAjukanProgram = bolehUbahProgram
+/** Mengajukan = mengunci program pada penyusunan UPK; syarat peran dan jendela sama dengan mengubah. */
+export function bolehAjukanProgram(p: Pelaku, prog: ProgramRingkas, statusPengajuan: StatusPengajuan): Keputusan {
+  if (prog.status !== 'DRAFT') return tolak('Program sudah diajukan.', 409)
+  return bolehUbahProgram(p, prog, statusPengajuan)
+}
 
 export function bolehTarikProgram(p: Pelaku, prog: ProgramRingkas, statusPengajuan: StatusPengajuan): Keputusan {
   if (prog.status !== 'DIAJUKAN') return tolak('Program belum diajukan.', 409)
+  if (sudahRumusan(statusPengajuan)) return tolak('Tahap pra-muker dan sesudahnya: ubah isi program langsung, tidak perlu menarik kembali.', 409)
   if (bolehKelola(p)) return ya
   if (p.peran !== 'PENGURUS_UPK' || p.unitId === null || prog.unitId !== p.unitId) {
     return tolak('Tidak memiliki izin untuk menarik program unit ini.')
@@ -77,7 +101,24 @@ export function bolehHapusProgram(p: Pelaku, prog: ProgramRingkas, statusPengaju
   return bolehUbahProgram(p, prog, statusPengajuan)
 }
 
-/** Membuat draft baru pada unit tertentu. */
-export function bolehBuatProgram(p: Pelaku, unitId: number, statusPengajuan: StatusPengajuan): Keputusan {
-  return bolehUbahProgram(p, { unitId, status: 'DRAFT' }, statusPengajuan)
+/** Membuat draft baru pada unit tertentu (`bidangId` unit diperlukan agar ketua bidang dapat menilai haknya). */
+export function bolehBuatProgram(p: Pelaku, unitId: number, statusPengajuan: StatusPengajuan, bidangUnit?: number | null): Keputusan {
+  return bolehUbahProgram(p, { unitId, status: 'DRAFT', unit: bidangUnit == null ? null : { bidangId: bidangUnit } }, statusPengajuan)
+}
+
+/** Pagu bidang dan pagu pos (keuangan): admin/sekretariat sampai ditetapkan. */
+export function bolehUbahPagu(p: Pelaku, statusPengajuan: StatusPengajuan): Keputusan {
+  if (!bolehKelola(p)) return tolak('Pagu hanya dapat diubah oleh admin atau sekretariat.')
+  if (statusPengajuan === 'DITETAPKAN') return tolak('Anggaran sudah ditetapkan; pagu tidak dapat diubah.', 409)
+  return ya
+}
+
+/** Alokasi indikatif per UPK dalam bidang: admin/sekretariat (sampai ditetapkan) atau ketua bidang itu saat pra-muker. */
+export function bolehUbahAlokasi(p: Pelaku, bidangId: number, statusPengajuan: StatusPengajuan): Keputusan {
+  if (statusPengajuan === 'DITETAPKAN') return tolak('Anggaran sudah ditetapkan; alokasi tidak dapat diubah.', 409)
+  if (bolehKelola(p)) return ya
+  if (p.peran === 'KOORDINATOR_BIDANG' && p.bidangId === bidangId) {
+    return statusPengajuan === 'PRA_MUKER' ? ya : tolak('Alokasi per UPK dapat diubah ketua bidang pada tahap pra-muker.', 409)
+  }
+  return tolak('Tidak memiliki izin mengubah alokasi bidang ini.')
 }

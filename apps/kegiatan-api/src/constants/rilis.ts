@@ -15,6 +15,29 @@ export interface Rilis {
 
 export const RILIS: readonly Rilis[] = [
   {
+    versi: '0.4.0',
+    tanggal: '2026-11-10',
+    judul: 'Pagu bidang, dana Gereja, dan tahap pra-muker',
+    perubahan: [
+      { jenis: 'BARU', teks: 'Pagu ditetapkan per bidang (batas dana Gereja) dan per pos Penatalayanan, Ministerium, dan Kemajelisan. Alokasi per UPK kini hanya panduan yang dibagi ketua bidang saat pra-muker.' },
+      { jenis: 'BARU', teks: 'Proyeksi Kas Jemaat tahun anggaran sebagai pembanding total pagu di dashboard.' },
+      { jenis: 'BARU', teks: 'Tahap siklus anggaran: penyusunan UPK, pra-muker (ketua bidang dan admin), muker (admin dan sekretariat), lalu ditetapkan (dikunci). Angka Usulan UPK dipotret otomatis saat pra-muker dimulai.' },
+      { jenis: 'BARU', teks: 'Halaman Alokasi untuk ketua bidang: membagi pagu bidang ke UPK dan melihat usulan dana Gereja di samping alokasinya.' },
+      { jenis: 'PEMBARUAN', teks: 'Dashboard membandingkan pagu dengan dana Gereja yang diminta (bukan total anggaran), merinci swadaya, penggalangan, dan donasi, serta menandai program yang mandiri penuh, campuran, atau bergantung Kas Jemaat.' },
+      { jenis: 'PEMBARUAN', teks: 'Ketua bidang dapat membuat dan mengubah program di bidangnya pada tahap pra-muker; program yang sudah diajukan diubah langsung tanpa ditarik.' },
+      { jenis: 'PEMBARUAN', teks: 'Perubahan pagu dan alokasi mencatat nilai lama dan baru di jejak audit.' },
+    ],
+  },
+  {
+    versi: '0.3.0',
+    tanggal: '2026-10-27',
+    judul: 'Pemberitahuan saat aplikasi diperbarui',
+    perubahan: [
+      { jenis: 'BARU', teks: 'Bar kuning "Aplikasi sedang diperbarui" selama pembaruan berlangsung, meminta pengguna menyimpan pekerjaan dan memuat ulang halaman setelah selesai.' },
+      { jenis: 'BARU', teks: 'Bar biru "Versi baru tersedia" dengan tombol Muat ulang bila aplikasi sudah diperbarui, juga bila halaman lama gagal memuat berkas.' },
+    ],
+  },
+  {
     versi: '0.2.0',
     tanggal: '2026-10-27',
     judul: 'Logo, versi aplikasi, dan bantuan WhatsApp',
