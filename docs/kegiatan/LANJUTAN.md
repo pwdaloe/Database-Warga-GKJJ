@@ -3,15 +3,15 @@
 *Diperbarui 27 Okt 2026 (siang). Baca ini dulu saat melanjutkan pekerjaan.*
 
 ## Update 14 Nov 2026 (K4 sudah dideploy ke produksi)
-K4 (v0.4.0, `3289e73`) live di produksi sejak 14 Nov malam: SQL `deploy/sql/k4-pagu-bidang-siklus.sql` dijalankan manual lebih dulu (lalu `ALTER OWNER` ke `gkjj_kegiatan`, lihat `DEPLOY.md`), baru `3-deploy-kegiatan.sh`. Sisa: centang "Tahun aktif" di Master > Tahun (di produksi `aktif=f`, dashboard 404), isi proyeksi Kas Jemaat, dan seragamkan tanggal pra-muker/muker (database: 23 dan 30 Nov; dokumen ini: 16 dan 23 Nov).
+K4 (v0.4.0, `3289e73`) live di produksi sejak 14 Nov malam: SQL `deploy/sql/k4-pagu-bidang-siklus.sql` dijalankan manual lebih dulu (lalu `ALTER OWNER` ke `gkjj_kegiatan`, lihat `DEPLOY.md`), baru `3-deploy-kegiatan.sh`. Dashboard 404 diselesaikan dengan mencentang "Tahun aktif" dan mengisi proyeksi Kas Jemaat di Master > Tahun. **Tanggal resmi: pra-muker 23 Nov, muker 30 Nov 2026** (dikonfirmasi Daru 14 Nov). v0.4.1 (`e276dd0`): istilah "program" menjadi "kegiatan", butir jadwal menjadi "aktivitas".
 
 ## Update 10 Nov 2026 (K4 selesai di lokal)
-Alur anggaran direvisi (lihat `REVISI_ALUR_ANGGARAN_2027.md`). **K4 (v0.4.0) selesai**: pagu bidang, alokasi indikatif, proyeksi Kas Jemaat, tahap siklus (pra-muker/muker/ditetapkan), potret Usulan, dashboard berbasis dana Gereja, halaman Alokasi ketua bidang. **K5** (sebelum muker 23 Nov): Rumusan/Disetujui berdampingan, riwayat revisi beralasan, realokasi, kolaborasi antar-unit dengan persetujuan mitra, "Kunci dan tetapkan". Pra-muker 16 Nov dan muker 23 Nov (di produksi; DB lokal masih 15/22 Nov). Deploy K4 butuh `deploy/sql/k4-pagu-bidang-siklus.sql` manual dulu.
+Alur anggaran direvisi (lihat `REVISI_ALUR_ANGGARAN_2027.md`). **K4 (v0.4.0) selesai**: pagu bidang, alokasi indikatif, proyeksi Kas Jemaat, tahap siklus (pra-muker/muker/ditetapkan), potret Usulan, dashboard berbasis dana Gereja, halaman Alokasi ketua bidang. **K5** (sebelum muker 30 Nov): Rumusan/Disetujui berdampingan, riwayat revisi beralasan, realokasi, kolaborasi antar-unit dengan persetujuan mitra, "Kunci dan tetapkan". Pra-muker 23 Nov dan muker 30 Nov (sama di produksi). Deploy K4 butuh `deploy/sql/k4-pagu-bidang-siklus.sql` manual dulu.
 
 ## Posisi sekarang
 - **Aplikasi Kegiatan sudah live di produksi sejak 27 Okt 2026** (`kegiatan.gkjjakarta.org`, kini v0.4.0 / `3289e73`). Database `gkjj_kegiatan` dan pengguna DB sendiri; PM2 `gkjj-kegiatan-api` (:4200) dan `gkjj-kegiatan-web` (:3200); blok Nginx baru aktif, domain `jemaat`, `api`, `my`, `majelis` tidak berubah.
 - **Pengajuan masih "Belum dibuka".** Admin sudah dapat masuk; master (pagu, BPH, akun) belum diisi di produksi.
-- Tanggal: gerbang go/no-go **Jum 30 Okt**; jendela pengisian UPK **2–9 Nov**; pengajuan ditutup **10 Nov**; pra-muker **15 Nov**; muker **22 Nov 2026**.
+- Tanggal: gerbang go/no-go **Jum 30 Okt**; jendela pengisian UPK **2–9 Nov**; pengajuan ditutup **10 Nov**; pra-muker **23 Nov**; muker **30 Nov 2026** (tanggal awal 15/22 Nov sudah bergeser).
 - Rencana dan keputusan: `RENCANA_MVP_MUKER_2026.md`. Hasil sprint: `../../sprints/sprint_k1.md`. Latar jangka menengah: `BRIEF_MODUL_KEGIATAN.md`. Langkah pemasangan: `../../deploy/DEPLOY_KEGIATAN.md`.
 - Sudah ditambahkan setelah K1 (27 Okt): layar **Struktur & anggaran**, 7 bidang (termasuk Ministerium dan Kemajelisan), 6 pos biaya (4 di Penatalayanan), peran pengawas baru (LP4WG, Kepala Kantor, Ministerium; Penatua = peran Majelis; Ketua Bidang = Koordinator bidang), seed akun contoh per peran (hanya lokal).
 - Tampilan HP 390 px sudah diuji untuk Struktur & anggaran, daftar program, formulir, dan dashboard pada 8 akun: tanpa scroll horizontal, toolbar bawah berfungsi.
