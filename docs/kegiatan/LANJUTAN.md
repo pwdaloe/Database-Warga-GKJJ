@@ -1,9 +1,19 @@
 # Titik lanjut: aplikasi Kegiatan (RKA 2027)
 
-*Diperbarui 27 Okt 2026 (siang). Baca ini dulu saat melanjutkan pekerjaan.*
+*Diperbarui 14 Nov 2026 (malam). Baca ini dulu saat melanjutkan pekerjaan.*
 
-## Update 14 Nov 2026 (K4 sudah dideploy ke produksi)
-**v0.5.0 (di lokal, belum dideploy):** tombol WhatsApp per akun di Akun pengguna untuk mengirim akses. Roadmap template pesan: `ROADMAP_TEMPLATE_WHATSAPP.md`.
+## TODO besok (15 Nov 2026), urut prioritas
+Produksi sekarang **v0.5.0 / `17c7ed5`** (K4, istilah "kegiatan", kirim akses WhatsApp, edit nomor). Pra-muker **23 Nov**, muker **30 Nov**; status pengajuan RKA 2027 = DIBUKA.
+1. **Verifikasi v0.5.0 di produksi** (belum dicoba): Akun pengguna > tombol **Nomor** (simpan, kosongkan, nomor salah ditolak) dan tombol **WhatsApp** (uji dulu di akun sendiri; pada akun "Belum ganti password" tombol ini mereset password). Cek juga tampilan HP 390 px. Verifikasi label baru di `/program/baru`.
+2. **Kirim akses ke pengurus UPK**: isi nomor yang kosong lewat tombol Nomor, lalu kirim satu per satu. Catat siapa yang sudah.
+3. **Master produksi**: pagu bidang masih sementara (= jumlah alokasi 2026, total Rp300 juta); isi pagu resmi, pagu pos Penatalayanan/Ministerium/Kemajelisan, proyeksi Kas Jemaat (centang "Tahun aktif" sudah dibereskan).
+4. **K5 (sebelum 23 Nov untuk yang dibutuhkan pra-muker, sisanya sebelum 30 Nov)**: susun rencana dulu. Isi: Rumusan/Disetujui berdampingan, riwayat revisi beralasan, realokasi, kolaborasi antar-unit dengan persetujuan mitra, "Kunci dan tetapkan". Tentukan mana yang wajib untuk pra-muker.
+5. **Jangan lupa**: pindahkan status ke PRA_MUKER hanya saat jendela UPK benar-benar ditutup (potret Usulan otomatis, tidak bisa diulang). Hapus `SEED_ADMIN_PASSWORD` dari `.env` produksi + `pm2 restart gkjj-kegiatan-api`.
+6. **Keputusan terbuka** (`ROADMAP_TEMPLATE_WHATSAPP.md`): boleh pesan akses membawa password sementara selama Fase 1-2? Perlu Fase 2 (antrean dan catatan terkirim) sebelum muker?
+7. **Belum di-commit (sengaja)**: `AGENTS.md`, `.claude/skills/`, `docs/ANALISA_AGENDA_JEMAAT.md`; putuskan masuk repo atau tidak.
+
+## Update 14 Nov 2026 (K4 dan v0.5.0 sudah dideploy ke produksi)
+**v0.5.0 (`17c7ed5`, dideploy 14 Nov malam):** tombol WhatsApp per akun di Akun pengguna (pesan siap-akses atau pengingat, `wa.me`, tanpa WhatsApp Business karena berbayar) dan edit nomor WhatsApp akun. Tanpa perubahan skema. Roadmap template pesan: `ROADMAP_TEMPLATE_WHATSAPP.md`.
 
 K4 (v0.4.0, `3289e73`) live di produksi sejak 14 Nov malam: SQL `deploy/sql/k4-pagu-bidang-siklus.sql` dijalankan manual lebih dulu (lalu `ALTER OWNER` ke `gkjj_kegiatan`, lihat `DEPLOY.md`), baru `3-deploy-kegiatan.sh`. Dashboard 404 diselesaikan dengan mencentang "Tahun aktif" dan mengisi proyeksi Kas Jemaat di Master > Tahun. **Tanggal resmi: pra-muker 23 Nov, muker 30 Nov 2026** (dikonfirmasi Daru 14 Nov). v0.4.1 (`e276dd0`): istilah "program" menjadi "kegiatan", butir jadwal menjadi "aktivitas".
 
@@ -21,7 +31,7 @@ Alur anggaran direvisi (lihat `REVISI_ALUR_ANGGARAN_2027.md`). **K4 (v0.4.0) sel
 ## Sudah dikerjakan 27 Okt (v0.2.0, dideploy `97fb897`)
 Logo, versi aplikasi dan halaman Apa yang baru, bantuan WhatsApp (Master > Dukungan), perbaikan batas login. Lihat `CHANGELOG.md`. **Notifikasi** (keputusan Daru: gabungan pengumuman admin + notifikasi kejadian, dikerjakan setelah pilot) belum dimulai.
 
-## Langkah berikutnya (urut)
+## Langkah berikutnya (urut; daftar lama 27 Okt, yang aktif ada di "TODO besok" di atas)
 1. **Isi master di produksi** (layar Struktur & anggaran: pagu per unit dan pos; BPH; akun). Ini hambatan utama sebelum pilot.
 2. **Verifikasi yang belum**: tarik kembali dan hapus di browser, ringkasan cetak, tab master selain Tahun dan Struktur, buat akun + tombol WhatsApp.
 3. **Pilot satu UPK** sebelum membuka pengajuan; lalu admin ubah status pengajuan ke *Dibuka* (target ≤ 1 Nov, jendela 2 Nov).

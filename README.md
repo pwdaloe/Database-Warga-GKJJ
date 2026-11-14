@@ -368,7 +368,7 @@ Repositori ini menaungi beberapa aplikasi GKJ Jakarta. Peta lengkap (port, nama 
 |---|---|---|
 | `jemaat.gkjjakarta.org` · `api.gkjjakarta.org` | Database warga jemaat (`apps/web`, `apps/api`) | ✅ Produksi |
 | `my.gkjjakarta.org` | Portal jemaat: informasi publik, lalu area "Saya" (`apps/portal`, Sprint 14–17) | 🟡 Landing "sedang disiapkan" |
-| `kegiatan.gkjjakarta.org` | Pengajuan program kerja dan anggaran UPK (RKA), dashboard pagu vs pengajuan (`apps/kegiatan-web`, `apps/kegiatan-api`) | 🟢 Produksi sejak 27 Okt 2026 (`58efda4`); pengisian master dan pilot UPK berjalan (`deploy/DEPLOY_KEGIATAN.md`) |
+| `kegiatan.gkjjakarta.org` | Pengajuan program kerja dan anggaran UPK (RKA), dashboard pagu vs pengajuan (`apps/kegiatan-web`, `apps/kegiatan-api`) | 🟢 Produksi sejak 27 Okt 2026; per 14 Nov 2026 **v0.5.0** (`17c7ed5`); pengajuan RKA 2027 dibuka, pra-muker 23 Nov, muker 30 Nov (`deploy/DEPLOY_KEGIATAN.md`) |
 | `majelis.gkjjakarta.org` | Notula rapat MPH dan MPL | 🟡 Landing; dokumentasi menyusul |
 
 Halaman "sedang disiapkan" untuk tiga domain baru ada di `deploy/landing/` (satu templat HTML, teks per domain di `render.sh`), blok Nginx di `deploy/nginx-landing.prod.conf`, langkah pemasangan dan certbot di `deploy/LANDING_CERTBOT.md`. Semuanya statis (tanpa proses PM2 tambahan). Rencana `www.gkjjakarta.org/new` untuk portal dibatalkan; portal memakai `my.gkjjakarta.org`.
@@ -379,15 +379,17 @@ Login semua aplikasi direncanakan satu akun (SSO) dari `jemaat.gkjjakarta.org`; 
 
 ### Aplikasi Kegiatan (RKA) — `apps/kegiatan-api`, `apps/kegiatan-web`
 
-Pengurus UPK login dan mengajukan **Program Kerja** untuk RKA tahun berikutnya; sekretariat/majelis memantau **pagu vs pengajuan**. Dibangun cepat untuk pra-muker 15 Nov dan muker 22 Nov 2026.
+Pengurus UPK login dan mengajukan **Kegiatan** (sebelumnya disebut program kerja) untuk RKA tahun berikutnya; sekretariat/majelis memantau **pagu bidang vs dana Gereja yang diminta**. Dibangun untuk pra-muker 23 Nov dan muker 30 Nov 2026.
 
 - **Terpisah dari aplikasi jemaat**: database `gkjj_kegiatan`, login sendiri, JWT sendiri; tidak membaca data warga.
-- **Formulir 9 bagian** mengikuti Contoh Program Kerja UPK 2027: identitas, acuan visi-misi, latar belakang dan kebutuhan, tujuan dan sasaran, rencana kegiatan dan jadwal, indikator, **RAB** (volume × harga, total dihitung server), **sumber dana** (gereja, swadaya, penggalangan mandiri, donasi; harus sama dengan RAB), evaluasi, dan daftar periksa 9 butir.
+- **Formulir 9 bagian** mengikuti Contoh Program Kerja UPK 2027: identitas, acuan visi-misi, latar belakang dan kebutuhan, tujuan dan sasaran, rencana **aktivitas** dan jadwal, indikator, **RAB** (volume × harga, total dihitung server), **sumber dana** (gereja, swadaya, penggalangan mandiri, donasi; harus sama dengan RAB), evaluasi, dan daftar periksa 9 butir.
+- **Siklus anggaran (K4, v0.4.0)**: pagu per bidang (batas dana Gereja) dengan alokasi indikatif per UPK, proyeksi Kas Jemaat, tahap Dibuka → Ditutup → Pra-muker → Muker → Ditetapkan (potret Usulan UPK otomatis saat pra-muker), halaman Alokasi untuk ketua bidang. Skema baru dipasang dengan SQL manual lebih dulu (`deploy/sql/k4-pagu-bidang-siklus.sql`, lihat `DEPLOY.md`).
+- **Kirim akses lewat WhatsApp (v0.5.0)**: Akun pengguna > tombol WhatsApp menyiapkan pesan "aplikasi sudah dapat diakses" (username, alamat, password sementara; akun yang sudah ganti password mendapat pengingat tanpa password), dikirim lewat `wa.me` dari WhatsApp admin. Tombol Nomor mengubah nomor akun. Roadmap: `docs/kegiatan/ROADMAP_TEMPLATE_WHATSAPP.md`.
 - Alur: Draft → Diajukan (terkunci) → dapat ditarik kembali selama pengajuan **Dibuka**; admin membuka/menutup jendela.
 - Peran: Admin dan Sekretariat (master dan akun); Pengurus UPK (Ketua, Sekretaris, Bendahara; unit sendiri); Ketua Bidang (bidang sendiri, lihat); pengawas hanya lihat semua unit: Penatua, LP4WG, Kepala Kantor, Ministerium.
 - Master: 7 bidang (Peribadahan, Pembinaan 1, Pembinaan 2, Kesaksian & Pelayanan, Penatalayanan, Ministerium, Kemajelisan), 14 UPK + 6 pos biaya; layar **Struktur & anggaran** memindah unit antar bidang dan mengisi pagu per unit (pagu bidang = jumlah unitnya).
 - Dev: `npm run dev --workspace=apps/kegiatan-api` (:4200) dan `--workspace=apps/kegiatan-web` (:3200); `cp .env.example .env`, buat database `gkjj_kegiatan`, `npx prisma db push`, `npm run db:seed` (dan `db:seed:contoh` untuk akun/program contoh).
-- Dokumen: `docs/kegiatan/` (rencana MVP, brief, panduan pengurus UPK dan admin), pemasangan: `deploy/DEPLOY_KEGIATAN.md`.
+- Dokumen: `docs/kegiatan/` (rencana MVP, brief, revisi alur anggaran, roadmap template WhatsApp, panduan pengurus UPK dan admin, titik lanjut di `LANJUTAN.md`), pemasangan: `deploy/DEPLOY_KEGIATAN.md`.
 
 ---
 
