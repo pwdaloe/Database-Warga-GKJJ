@@ -15,6 +15,16 @@ export interface Rilis {
 
 export const RILIS: readonly Rilis[] = [
   {
+    versi: '0.5.0',
+    tanggal: '2026-11-14',
+    judul: 'Kirim akses lewat WhatsApp',
+    perubahan: [
+      { jenis: 'BARU', teks: 'Tombol WhatsApp pada Akun pengguna (admin dan sekretariat): menyiapkan pesan "aplikasi sudah dapat diakses" berisi alamat, username, dan password sementara, lalu membuka WhatsApp ke nomor pengguna.' },
+      { jenis: 'BARU', teks: 'Nomor WhatsApp akun dapat diubah atau dikosongkan dari layar Akun pengguna; nomor yang tidak valid ditolak.' },
+      { jenis: 'BARU', teks: 'Pengguna yang sudah mengganti password menerima pesan pengingat tanpa password, dan akunnya tidak diubah.' },
+    ],
+  },
+  {
     versi: '0.4.1',
     tanggal: '2026-11-14',
     judul: 'Istilah "program" menjadi "kegiatan"',

@@ -41,9 +41,14 @@ penggunaRouter.post('/:id/reset-password', async (req, res) => {
   ok(res, await svc.resetPassword(pelaku(req), idParam(req.params['id']), ip(req)))
 })
 
+penggunaRouter.post('/:id/notifikasi-akses', async (req, res) => {
+  ok(res, await svc.notifikasiAkses(pelaku(req), idParam(req.params['id']), ip(req)))
+})
+
 penggunaRouter.put('/:id', async (req, res) => {
   const d = z
     .object({ aktif: z.boolean().optional(), nama: z.string().trim().min(2).max(150).optional(), email: opsional(z.string().trim().email().max(150)), whatsapp: opsional(z.string().trim().max(20)) })
+    .refine((x) => !x.whatsapp || normalizeWa(x.whatsapp) !== null, { message: 'Nomor WhatsApp tidak valid', path: ['whatsapp'] })
     .parse(req.body)
   ok(res, await svc.ubahAkun(pelaku(req), idParam(req.params['id']), d, ip(req)))
 })

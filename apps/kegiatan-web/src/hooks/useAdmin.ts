@@ -37,7 +37,9 @@ export function useAkun() {
 }
 
 export interface Kredensial {
-  passwordSementara: string
+  /** Null pada notifikasi akses untuk akun yang sudah mengganti password (pesan pengingat tanpa password). */
+  passwordSementara: string | null
+  jenis?: 'DENGAN_PASSWORD' | 'TANPA_PASSWORD'
   pesanWhatsapp: string
   waLink: string | null
   pengguna?: AkunRow
@@ -53,6 +55,10 @@ export function useAksiAkun() {
     }),
     reset: useMutation({
       mutationFn: async (id: number) => (await api.post(`/pengguna/${id}/reset-password`)).data.data as Kredensial,
+      onSuccess: segarkan,
+    }),
+    notifikasiAkses: useMutation({
+      mutationFn: async (id: number) => (await api.post(`/pengguna/${id}/notifikasi-akses`)).data.data as Kredensial,
       onSuccess: segarkan,
     }),
     ubah: useMutation({

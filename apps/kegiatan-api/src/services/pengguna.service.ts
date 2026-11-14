@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma.js'
 import { AppError } from '../middleware/errorHandler.js'
 import type { PenggunaLogin } from '../middleware/auth.js'
 import { generatePassword } from '../utils/password.js'
-import { waLink } from '../utils/waNumber.js'
+import { normalizeWa, waLink } from '../utils/waNumber.js'
 import { catatAudit } from './audit.service.js'
 
 const PERAN_ISTIMEWA: readonly PeranPengguna[] = ['ADMIN', 'SEKRETARIAT']
@@ -28,6 +28,24 @@ function pesanAkun(nama: string, username: string, password: string, tautan: str
     `Shalom ${nama}, akun Anda di aplikasi Kegiatan GKJ Jakarta sudah dibuat.\n\n` +
     `Alamat: ${tautan}\nUsername: ${username}\nPassword sementara: ${password}\n\n` +
     'Anda akan diminta mengganti password saat masuk pertama kali. Jangan bagikan password ini kepada siapa pun.'
+  )
+}
+
+/** Template notifikasi "aplikasi sudah dapat diakses" (akun yang belum pernah mengganti password sementara). */
+export function pesanSiapAkses(nama: string, username: string, password: string, tautan: string): string {
+  return (
+    `Shalom ${nama}, aplikasi Kegiatan GKJ Jakarta sudah dapat Anda akses.\n\n` +
+    `Alamat: ${tautan}\nUsername: ${username}\nPassword sementara: ${password}\n\n` +
+    'Saat masuk pertama kali Anda akan diminta mengganti password. Jangan bagikan password ini kepada siapa pun. Bila ada kendala, balas pesan ini.'
+  )
+}
+
+/** Template pengingat untuk akun yang sudah mengganti password: tanpa password, tidak mengubah apa pun. */
+export function pesanInfoAkses(nama: string, username: string, tautan: string): string {
+  return (
+    `Shalom ${nama}, aplikasi Kegiatan GKJ Jakarta sudah dapat Anda akses.\n\n` +
+    `Alamat: ${tautan}\nUsername: ${username}\n\n` +
+    'Masuk dengan password yang telah Anda buat. Bila lupa password, hubungi admin untuk dibuatkan yang baru.'
   )
 }
 
@@ -125,4 +143,27 @@ export async function ubahAkun(pelaku: PenggunaLogin, id: number, d: { aktif?: b
   })
   await catatAudit({ penggunaId: pelaku.id, aksi: 'UBAH_AKUN', entitas: 'pengguna', entitasId: id, ringkasan: target.username, ipAddress: ip })
   return p
+}
+
+/**
+ * Menyusun pesan WhatsApp "aplikasi sudah dapat diakses" untuk satu akun.
+ * - Akun yang belum mengganti password sementara: password direset (yang lama tidak berlaku) dan password baru ikut di pesan.
+ * - Akun yang sudah mengganti password: pesan pengingat tanpa password; tidak ada yang diubah.
+ * Password hanya ada di respons ini (tidak disimpan, tidak masuk log).
+ */
+export async function notifikasiAkses(pelaku: PenggunaLogin, id: number, ip: string | null) {
+  const target = await prisma.pengguna.findUnique({ where: { id }, select: tampil })
+  if (!target) throw new AppError(404, 'Akun tidak ditemukan')
+  pastikanBolehKelolaPeran(pelaku, target.peran)
+  if (!target.aktif) throw new AppError(409, 'Akun nonaktif; aktifkan dulu sebelum mengirim akses.')
+  if (!normalizeWa(target.whatsapp)) throw new AppError(400, 'Nomor WhatsApp akun ini belum diisi atau tidak valid.')
+  const tautan = process.env['APP_URL'] ?? 'https://kegiatan.gkjjakarta.org'
+
+  let password: string | null = null
+  if (target.wajibGantiPassword) {
+    password = (await resetPassword(pelaku, id, ip)).passwordSementara
+  }
+  const pesan = password ? pesanSiapAkses(target.nama, target.username, password, tautan) : pesanInfoAkses(target.nama, target.username, tautan)
+  await catatAudit({ penggunaId: pelaku.id, aksi: 'NOTIF_AKSES_WA', entitas: 'pengguna', entitasId: id, ringkasan: `${target.username} (${password ? 'dengan password baru' : 'tanpa password'})`, ipAddress: ip })
+  return { jenis: password ? ('DENGAN_PASSWORD' as const) : ('TANPA_PASSWORD' as const), passwordSementara: password, pesanWhatsapp: pesan, waLink: waLink(target.whatsapp, pesan) }
 }

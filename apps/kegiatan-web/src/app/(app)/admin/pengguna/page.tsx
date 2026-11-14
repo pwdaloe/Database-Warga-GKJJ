@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Copy, KeyRound, MessageCircle } from 'lucide-react'
+import { Copy, KeyRound, MessageCircle, Pencil } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaster } from '@/hooks/useData'
 import { type Kredensial, useAkun, useAksiAkun } from '@/hooks/useAdmin'
@@ -15,15 +15,36 @@ const JABATAN: Record<string, string> = { KETUA: 'Ketua', SEKRETARIS: 'Sekretari
 function KotakKredensial({ k, nama, onTutup }: { k: Kredensial; nama: string; onTutup: () => void }) {
   const [tersalin, setTersalin] = useState(false)
   return (
-    <Pemberitahuan nada="kuning" judul={`Password sementara untuk ${nama}`}>
-      <p className="mb-2">Password ini <strong>hanya ditampilkan sekali</strong>. Salin atau kirim sekarang; pengguna akan diminta menggantinya saat masuk pertama.</p>
-      <p className="mb-3 rounded bg-white px-3 py-2 font-mono text-lg tracking-wider">{k.passwordSementara}</p>
+    <Pemberitahuan nada="kuning" judul={k.passwordSementara ? `Password sementara untuk ${nama}` : `Pesan akses untuk ${nama}`}>
+      {k.passwordSementara ? (
+        <>
+          <p className="mb-2">Password ini <strong>hanya ditampilkan sekali</strong>. Salin atau kirim sekarang; pengguna akan diminta menggantinya saat masuk pertama.</p>
+          <p className="mb-3 rounded bg-white px-3 py-2 font-mono text-lg tracking-wider">{k.passwordSementara}</p>
+        </>
+      ) : (
+        <p className="mb-3">{nama} sudah mengganti password, jadi pesan ini berisi username dan alamat saja (tanpa password). Tidak ada yang diubah pada akunnya.</p>
+      )}
       <div className="flex flex-wrap gap-2">
         <Tombol varian="sekunder" onClick={async () => { await navigator.clipboard.writeText(k.pesanWhatsapp); setTersalin(true) }}><Copy size={16} /> {tersalin ? 'Pesan tersalin' : 'Salin pesan'}</Tombol>
         {k.waLink ? <a href={k.waLink} target="_blank" rel="noreferrer"><Tombol><MessageCircle size={16} /> Kirim lewat WhatsApp</Tombol></a> : <span className="self-center text-xs">Nomor WhatsApp belum diisi, salin pesan saja.</span>}
         <Tombol varian="hantu" onClick={onTutup}>Selesai</Tombol>
       </div>
     </Pemberitahuan>
+  )
+}
+
+function UbahNomor({ awal, simpan, tutup }: { awal: string; simpan: (nomor: string) => Promise<void>; tutup: () => void }) {
+  const [nilai, setNilai] = useState(awal)
+  const [sibuk, setSibuk] = useState(false)
+  return (
+    <form
+      className="mt-2 flex w-full flex-wrap items-end gap-2"
+      onSubmit={async (e) => { e.preventDefault(); setSibuk(true); try { await simpan(nilai.trim()) } finally { setSibuk(false) } }}
+    >
+      <Bidang label="Nomor WhatsApp" petunjuk="Contoh 0812xxxxxxxx atau +62812xxxxxxxx. Kosongkan untuk menghapus."><Input type="tel" inputMode="tel" value={nilai} onChange={(e) => setNilai(e.target.value)} autoFocus /></Bidang>
+      <Tombol type="submit" sibuk={sibuk}>Simpan</Tombol>
+      <Tombol type="button" varian="hantu" onClick={tutup}>Batal</Tombol>
+    </form>
   )
 }
 
@@ -35,6 +56,7 @@ export default function HalamanPengguna() {
   const [form, setForm] = useState({ peran: 'PENGURUS_UPK' as Peran, username: '', pengurusId: '', bidangId: '', nama: '', whatsapp: '', email: '' })
   const [kred, setKred] = useState<{ k: Kredensial; nama: string } | null>(null)
   const [galat, setGalat] = useState('')
+  const [ubahNomorId, setUbahNomorId] = useState<number | null>(null)
 
   if (!adalah('ADMIN', 'SEKRETARIAT')) return <Pemberitahuan nada="merah">Halaman ini hanya untuk admin dan sekretariat.</Pemberitahuan>
   if (akun.isLoading || master.isLoading || !master.data) return <Memuat />
@@ -66,6 +88,27 @@ export default function HalamanPengguna() {
     if (!window.confirm(`Buat password sementara baru untuk ${nama}? Password lama tidak berlaku lagi.`)) return
     try {
       setKred({ k: await aksi.reset.mutateAsync(id), nama })
+    } catch (err) {
+      setGalat(pesanGalat(err))
+    }
+  }
+
+  async function kirimAkses(a: { id: number; nama: string; wajibGantiPassword: boolean }) {
+    if (a.wajibGantiPassword && !window.confirm(`Kirim akses ke ${a.nama}? Ini membuat password sementara BARU dan password lama tidak berlaku lagi.`)) return
+    setGalat('')
+    try {
+      setKred({ k: await aksi.notifikasiAkses.mutateAsync(a.id), nama: a.nama })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (err) {
+      setGalat(pesanGalat(err))
+    }
+  }
+
+  async function simpanNomor(id: number, nomor: string) {
+    setGalat('')
+    try {
+      await aksi.ubah.mutateAsync({ id, body: { whatsapp: nomor } })
+      setUbahNomorId(null)
     } catch (err) {
       setGalat(pesanGalat(err))
     }
@@ -122,13 +165,17 @@ export default function HalamanPengguna() {
                   {a.unit && <span>{a.unit.nama}{a.pengurus ? ` · ${JABATAN[a.pengurus.jabatan]}` : ''}</span>}
                   {!a.aktif && <Lencana nada="merah">Nonaktif</Lencana>}
                   {a.wajibGantiPassword && <Lencana nada="kuning">Belum ganti password</Lencana>}
+                  {a.whatsapp ? <span>WA {a.whatsapp}</span> : <Lencana nada="merah">Tanpa nomor WhatsApp</Lencana>}
                   {a.isContoh && <Lencana nada="kuning">Contoh</Lencana>}
                 </p>
               </div>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
+                <Tombol varian="hantu" onClick={() => setUbahNomorId(ubahNomorId === a.id ? null : a.id)} aria-label={`Ubah nomor WhatsApp ${a.nama}`}><Pencil size={16} /> Nomor</Tombol>
+                <Tombol varian="hantu" onClick={() => kirimAkses(a)} disabled={!a.whatsapp || !a.aktif || aksi.notifikasiAkses.isPending} title={!a.whatsapp ? 'Nomor WhatsApp belum diisi' : !a.aktif ? 'Akun nonaktif' : 'Kirim pesan: aplikasi sudah dapat diakses'} aria-label={`Kirim akses WhatsApp ke ${a.nama}`}><MessageCircle size={16} /> WhatsApp</Tombol>
                 <Tombol varian="hantu" onClick={() => reset(a.id, a.nama)} aria-label={`Reset password ${a.nama}`}><KeyRound size={16} /> Reset</Tombol>
                 <Tombol varian="hantu" className={a.aktif ? 'text-red-600' : ''} onClick={() => aktifkan(a.id, !a.aktif)}>{a.aktif ? 'Nonaktifkan' : 'Aktifkan'}</Tombol>
               </div>
+              {ubahNomorId === a.id && <UbahNomor awal={a.whatsapp ?? ''} simpan={(n) => simpanNomor(a.id, n)} tutup={() => setUbahNomorId(null)} />}
             </li>
           ))}
         </ul>

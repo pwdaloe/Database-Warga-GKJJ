@@ -3,6 +3,8 @@
 *Diperbarui 27 Okt 2026 (siang). Baca ini dulu saat melanjutkan pekerjaan.*
 
 ## Update 14 Nov 2026 (K4 sudah dideploy ke produksi)
+**v0.5.0 (di lokal, belum dideploy):** tombol WhatsApp per akun di Akun pengguna untuk mengirim akses. Roadmap template pesan: `ROADMAP_TEMPLATE_WHATSAPP.md`.
+
 K4 (v0.4.0, `3289e73`) live di produksi sejak 14 Nov malam: SQL `deploy/sql/k4-pagu-bidang-siklus.sql` dijalankan manual lebih dulu (lalu `ALTER OWNER` ke `gkjj_kegiatan`, lihat `DEPLOY.md`), baru `3-deploy-kegiatan.sh`. Dashboard 404 diselesaikan dengan mencentang "Tahun aktif" dan mengisi proyeksi Kas Jemaat di Master > Tahun. **Tanggal resmi: pra-muker 23 Nov, muker 30 Nov 2026** (dikonfirmasi Daru 14 Nov). v0.4.1 (`e276dd0`): istilah "program" menjadi "kegiatan", butir jadwal menjadi "aktivitas".
 
 ## Update 10 Nov 2026 (K4 selesai di lokal)

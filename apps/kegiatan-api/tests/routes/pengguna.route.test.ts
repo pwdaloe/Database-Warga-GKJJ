@@ -26,6 +26,7 @@ describe('akses ke /api/pengguna', () => {
       expect((await request(app).get('/api/pengguna').set(h)).status).toBe(403)
       expect((await request(app).post('/api/pengguna').set(h).send({ username: 'abc', peran: 'MAJELIS', nama: 'Abc Def' })).status).toBe(403)
       expect((await request(app).post('/api/pengguna/1/reset-password').set(h)).status).toBe(403)
+      expect((await request(app).post('/api/pengguna/1/notifikasi-akses').set(h)).status).toBe(403)
       expect((await request(app).put('/api/pengguna/1').set(h).send({ aktif: false })).status).toBe(403)
       expect(prisma.pengguna.create).not.toHaveBeenCalled()
     })
@@ -129,6 +130,80 @@ describe('reset password dan ubah akun', () => {
     const h = masuk(prisma, pengguna('ADMIN', { id: 20 }))
     prisma.pengguna.findUnique.mockImplementation(async () => ({ ...pengguna('ADMIN', { id: 20 }), peran: 'ADMIN', username: 'admin' }))
     expect((await request(app).put('/api/pengguna/20').set(h).send({ aktif: false })).status).toBe(400)
+    expect(prisma.pengguna.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('notifikasi akses WhatsApp', () => {
+  const admin = () => masuk(prisma, pengguna('SEKRETARIAT'))
+  const dukungDb = (akun: Record<string, unknown>) =>
+    prisma.pengguna.findUnique.mockImplementation(async (args: { where: { id: number } }) => (args.where.id === 1 ? pengguna('SEKRETARIAT') : akunDb(akun)))
+
+  it('belum ganti password: password direset dan ikut di pesan + tautan wa.me', async () => {
+    const h = admin()
+    dukungDb({ wajibGantiPassword: true })
+    prisma.pengguna.update.mockResolvedValue({})
+    const res = await request(app).post('/api/pengguna/20/notifikasi-akses').set(h)
+    expect(res.status).toBe(200)
+    expect(res.body.data.jenis).toBe('DENGAN_PASSWORD')
+    const data = prisma.pengguna.update.mock.calls[0]![0].data
+    expect(await bcrypt.compare(res.body.data.passwordSementara, data.passwordHash)).toBe(true)
+    expect(res.body.data.pesanWhatsapp).toContain('sudah dapat Anda akses')
+    expect(res.body.data.pesanWhatsapp).toContain('ketua.koman')
+    expect(res.body.data.pesanWhatsapp).toContain(res.body.data.passwordSementara)
+    expect(res.body.data.waLink).toMatch(/^https:\/\/wa\.me\/6281234567890\?text=/)
+    expect(JSON.stringify(prisma.logAudit.create.mock.calls)).not.toContain(res.body.data.passwordSementara)
+  })
+
+  it('sudah ganti password: pesan pengingat tanpa password, tidak mengubah akun', async () => {
+    const h = admin()
+    dukungDb({ wajibGantiPassword: false })
+    const res = await request(app).post('/api/pengguna/20/notifikasi-akses').set(h)
+    expect(res.status).toBe(200)
+    expect(res.body.data.jenis).toBe('TANPA_PASSWORD')
+    expect(res.body.data.passwordSementara).toBeNull()
+    expect(res.body.data.pesanWhatsapp).not.toContain('Password sementara')
+    expect(prisma.pengguna.update).not.toHaveBeenCalled()
+  })
+
+  it('nomor kosong/tidak valid → 400; akun nonaktif → 409; tanpa perubahan apa pun', async () => {
+    const h = admin()
+    dukungDb({ whatsapp: null })
+    expect((await request(app).post('/api/pengguna/20/notifikasi-akses').set(h)).status).toBe(400)
+    dukungDb({ whatsapp: '123' })
+    expect((await request(app).post('/api/pengguna/20/notifikasi-akses').set(h)).status).toBe(400)
+    dukungDb({ aktif: false })
+    expect((await request(app).post('/api/pengguna/20/notifikasi-akses').set(h)).status).toBe(409)
+    expect(prisma.pengguna.update).not.toHaveBeenCalled()
+  })
+
+  it('SEKRETARIAT tidak boleh mengirim akses untuk akun ADMIN', async () => {
+    const h = admin()
+    dukungDb({ peran: 'ADMIN' })
+    expect((await request(app).post('/api/pengguna/20/notifikasi-akses').set(h)).status).toBe(403)
+    expect(prisma.pengguna.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('ubah nomor WhatsApp akun', () => {
+  const admin = () => masuk(prisma, pengguna('SEKRETARIAT'))
+  const dukungDb = () => prisma.pengguna.findUnique.mockImplementation(async (args: { where: { id: number } }) => (args.where.id === 1 ? pengguna('SEKRETARIAT') : akunDb()))
+
+  it('nomor valid disimpan; kosong menghapus nomor (null)', async () => {
+    const h = admin()
+    dukungDb()
+    prisma.pengguna.update.mockResolvedValue(akunDb())
+    expect((await request(app).put('/api/pengguna/20').set(h).send({ whatsapp: '0812-3456-7890' })).status).toBe(200)
+    expect(prisma.pengguna.update.mock.calls[0]![0].data.whatsapp).toBe('0812-3456-7890')
+    expect((await request(app).put('/api/pengguna/20').set(h).send({ whatsapp: '' })).status).toBe(200)
+    expect(prisma.pengguna.update.mock.calls[1]![0].data.whatsapp).toBeNull()
+  })
+
+  it('nomor tidak valid → 400 dan tidak menyimpan', async () => {
+    const h = admin()
+    dukungDb()
+    expect((await request(app).put('/api/pengguna/20').set(h).send({ whatsapp: '12345' })).status).toBe(400)
+    expect((await request(app).put('/api/pengguna/20').set(h).send({ whatsapp: 'abc' })).status).toBe(400)
     expect(prisma.pengguna.update).not.toHaveBeenCalled()
   })
 })
