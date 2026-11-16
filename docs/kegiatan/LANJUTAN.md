@@ -2,7 +2,10 @@
 
 *Diperbarui 14 Nov 2026 (malam). Baca ini dulu saat melanjutkan pekerjaan.*
 
-## TODO besok (15 Nov 2026), urut prioritas
+## Update 16 Nov 2026
+Terverifikasi di produksi oleh Daru: tombol Nomor, tombol WhatsApp, tampilan HP 390 px. Akses sudah dikirim ke pengurus UPK. Pagu bidang resmi 2027 sudah diisi sebagian (level bidang saja); daftar pengurus per UPK diisi sambil jalan. **K5 dimulai**: rencana di `RENCANA_K5.md` (K5a rumusan+revisi, K5b realokasi, K5d kunci dan tetapkan, K5c kolaborasi), menunggu 5 keputusan di bagian 5 dokumen itu. **Sebelum K5 dikerjakan**: menu **Panduan** (v0.5.1, publik di `/panduan`, belum dideploy) dibuat untuk mengumpulkan masukan alur formulir yang berjalan sekarang; keputusan K5 menunggu masukan itu. Teks panduan di `apps/kegiatan-web/src/lib/panduan.ts`; endpoint publik `GET /api/versi/dukungan`.
+
+## TODO 15 Nov 2026 (daftar lama; butir 1–3 sudah selesai 16 Nov)
 Produksi sekarang **v0.5.0 / `17c7ed5`** (K4, istilah "kegiatan", kirim akses WhatsApp, edit nomor). Pra-muker **23 Nov**, muker **30 Nov**; status pengajuan RKA 2027 = DIBUKA.
 1. **Verifikasi v0.5.0 di produksi** (belum dicoba): Akun pengguna > tombol **Nomor** (simpan, kosongkan, nomor salah ditolak) dan tombol **WhatsApp** (uji dulu di akun sendiri; pada akun "Belum ganti password" tombol ini mereset password). Cek juga tampilan HP 390 px. Verifikasi label baru di `/program/baru`.
 2. **Kirim akses ke pengurus UPK**: isi nomor yang kosong lewat tombol Nomor, lalu kirim satu per satu. Catat siapa yang sudah.

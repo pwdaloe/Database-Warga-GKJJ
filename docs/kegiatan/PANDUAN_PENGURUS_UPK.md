@@ -1,4 +1,6 @@
-# Panduan Pengurus UPK: mengajukan Program Kerja RKA 2027
+# Panduan Pengurus UPK: mengajukan Kegiatan RKA 2027
+
+> Versi lengkap dan terbaru ada di aplikasi: menu **Panduan** (https://kegiatan.gkjjakarta.org/panduan, dapat dibuka tanpa masuk). Sumber teksnya `apps/kegiatan-web/src/lib/panduan.ts`; dokumen ini ringkasan dan dapat tertinggal.
 
 Alamat: **https://kegiatan.gkjjakarta.org** · Bisa dibuka dari HP maupun komputer.
 
@@ -7,12 +9,12 @@ Alamat: **https://kegiatan.gkjjakarta.org** · Bisa dibuka dari HP maupun komput
 2. Buka alamat di atas, masuk, lalu buat **password baru** (minimal 10 karakter).
 3. Lupa password? Hubungi sekretariat; password sementara baru akan dikirim.
 
-## Satu program = satu hasil utama
-Program berisi beberapa kegiatan, indikator, dan rincian biaya. Jangan membuat satu program untuk setiap kegiatan kecil; kelompokkan kegiatan yang menuju hasil yang sama.
+## Satu kegiatan = satu hasil utama
+Kegiatan berisi beberapa kegiatan, indikator, dan rincian biaya. Jangan membuat satu kegiatan untuk setiap acara kecil; kelompokkan aktivitas yang menuju hasil yang sama.
 
 ## Langkah mengisi
-1. Menu **Program** → **Program baru** (hanya tersedia saat pengajuan dibuka).
-2. Isi bagian 1–9 dari atas ke bawah. **Simpan draft** kapan saja; Anda bisa melanjutkan nanti.
+1. Menu **Kegiatan** → **Kegiatan baru** (hanya tersedia saat pengajuan dibuka).
+2. Isi bagian 1–10 dari atas ke bawah. **Simpan draft** kapan saja; Anda bisa melanjutkan nanti.
 3. Bagian yang wajib diisi bertanda **\***. Angka anggaran ditulis tanpa titik atau koma; titik ribuan muncul sendiri.
 4. **Anggaran (RAB)**: isi uraian, volume, satuan, dan harga satuan. **Jumlah dan total dihitung otomatis**; tidak perlu dan tidak bisa diketik.
 5. **Sumber dana**: bagi total anggaran ke alokasi gereja, swadaya peserta, penggalangan mandiri, dan donasi. **Totalnya harus sama dengan total anggaran.** Tombol "Isi sisa kebutuhan ke alokasi gereja" membantu menutup selisih.

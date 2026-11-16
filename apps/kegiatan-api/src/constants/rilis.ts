@@ -15,6 +15,23 @@ export interface Rilis {
 
 export const RILIS: readonly Rilis[] = [
   {
+    versi: '0.5.2',
+    tanggal: '2026-11-16',
+    judul: 'Perbaikan istilah pada pesan kelengkapan',
+    perubahan: [
+      { jenis: 'PERBAIKAN', teks: 'Pesan "belum lengkap untuk diajukan" kini menyebut "Aktivitas 1, 2, …" untuk butir rencana aktivitas dan jadwal (sebelumnya "Kegiatan 1, 2, …", yang membingungkan dengan nama kegiatan).' },
+    ],
+  },
+  {
+    versi: '0.5.1',
+    tanggal: '2026-11-16',
+    judul: 'Menu Panduan',
+    perubahan: [
+      { jenis: 'BARU', teks: 'Menu Panduan untuk semua peran, dan dapat dibuka tanpa masuk (alamat /panduan): alur siklus anggaran, cara mengisi tiap bagian formulir, panduan per peran, serta pertanyaan dan istilah.' },
+      { jenis: 'BARU', teks: 'Tombol "Kirim masukan" pada Panduan membuka WhatsApp pusat bantuan dengan pesan awal masukan panduan.' },
+    ],
+  },
+  {
     versi: '0.5.0',
     tanggal: '2026-11-14',
     judul: 'Kirim akses lewat WhatsApp',

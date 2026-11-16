@@ -117,7 +117,7 @@ export function periksaKelengkapan(p: SimpanProgram): string[] {
 
   if (p.jadwal.length === 0) masalah.push('Tambahkan minimal satu aktivitas pada rencana aktivitas dan jadwal.')
   p.jadwal.forEach((j, i) => {
-    const nama = `Kegiatan ${i + 1}`
+    const nama = `Aktivitas ${i + 1}`
     if (j.kategoriWaktu === 'SEKALI' && !j.tanggalMulai) masalah.push(`${nama}: tanggal pelaksanaan belum diisi.`)
     if (j.kategoriWaktu === 'RENTANG' && (!j.tanggalMulai || !j.tanggalSelesai)) masalah.push(`${nama}: tanggal mulai dan selesai belum lengkap.`)
     if (j.kategoriWaktu === 'PERIODE' && kosong(j.keteranganPeriode)) masalah.push(`${nama}: keterangan periode belum diisi (mis. setiap bulan).`)

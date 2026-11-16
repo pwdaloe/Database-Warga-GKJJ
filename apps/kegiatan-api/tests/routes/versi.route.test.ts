@@ -89,3 +89,23 @@ describe('GET /api/versi: penanda pemeliharaan (deploy sedang berlangsung)', () 
   })
 })
 
+
+describe('GET /api/versi/dukungan (publik)', () => {
+  it('dapat dibuka tanpa login; nonaktif bila nomor belum diisi', async () => {
+    const res = await request(app).get('/api/versi/dukungan')
+    expect(res.status).toBe(200)
+    expect(res.headers['cache-control']).toBe('no-store')
+    expect(res.body.data.aktif).toBe(false)
+    expect(res.body.data.nomor).toBeNull()
+  })
+
+  it('mengembalikan nomor internasional bila aktif dan valid', async () => {
+    prisma.pengaturan.findMany.mockResolvedValueOnce([
+      { kunci: 'dukungan_wa_aktif', nilai: 'true' },
+      { kunci: 'dukungan_wa_nomor', nilai: '081234567890' },
+    ])
+    const res = await request(app).get('/api/versi/dukungan')
+    expect(res.body.data.aktif).toBe(true)
+    expect(res.body.data.nomor).toBe('6281234567890')
+  })
+})

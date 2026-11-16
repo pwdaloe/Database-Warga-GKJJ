@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { Dashboard, InfoVersi, Master, ProgramDetail, ProgramRingkas } from '@/lib/tipe'
+import type { Dashboard, Dukungan, InfoVersi, Master, ProgramDetail, ProgramRingkas } from '@/lib/tipe'
 
 export function useMaster(tahunId?: number) {
   return useQuery({
@@ -68,5 +68,14 @@ export function useVersi() {
     queryKey: ['versi'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => (await api.get('/versi')).data.data as InfoVersi,
+  })
+}
+
+/** Publik (tanpa login): nomor WhatsApp pusat bantuan untuk tombol masukan pada Panduan. */
+export function useDukunganPublik() {
+  return useQuery({
+    queryKey: ['dukungan-publik'],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => (await api.get('/versi/dukungan')).data.data as Dukungan,
   })
 }

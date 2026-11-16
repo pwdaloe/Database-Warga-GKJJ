@@ -53,6 +53,9 @@ export default function HalamanLogin() {
           </form>
         </Kartu>
         <p className="mt-4 text-center text-xs text-marine-100">Lupa password atau belum punya akun? Hubungi sekretariat gereja.</p>
+        <p className="mt-2 text-center text-xs text-marine-100">
+          <Link href="/panduan" className="inline-flex min-h-[44px] items-center underline underline-offset-2">Panduan cara mengisi formulir</Link>
+        </p>
         {versi.data && (
           <p className="mt-2 text-center text-xs text-marine-100/80">
             <Link href="/versi" className="underline-offset-2 hover:underline">Versi {versi.data.versi} · Apa yang baru</Link>

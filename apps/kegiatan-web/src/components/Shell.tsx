@@ -3,7 +3,7 @@
 import clsx from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, ClipboardList, LogOut, MessageCircle, Settings, Users, Wallet } from 'lucide-react'
+import { BarChart3, BookOpen, ClipboardList, LogOut, MessageCircle, Settings, Users, Wallet } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaster, useVersi } from '@/hooks/useData'
 import { tautanDukungan } from '@/lib/dukungan'
@@ -26,6 +26,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { href: '/alokasi', label: 'Alokasi', ikon: Wallet, tampil: adalah('KOORDINATOR_BIDANG') },
     { href: '/admin/master', label: 'Master', ikon: Settings, tampil: adalah('ADMIN', 'SEKRETARIAT') },
     { href: '/admin/pengguna', label: 'Akun', ikon: Users, tampil: adalah('ADMIN', 'SEKRETARIAT') },
+    { href: '/panduan', label: 'Panduan', ikon: BookOpen, tampil: true },
   ].filter((m) => m.tampil)
 
   return (

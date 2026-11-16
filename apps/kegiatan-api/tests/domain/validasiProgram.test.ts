@@ -60,6 +60,7 @@ describe('periksaKelengkapan', () => {
 
   it('jadwal: SEKALI butuh tanggal, RENTANG butuh dua tanggal, PERIODE butuh keterangan', () => {
     expect(periksaKelengkapan(lengkap({ jadwal: [{ nama: 'A', kategoriWaktu: 'SEKALI' }] })).some((x) => x.includes('tanggal pelaksanaan'))).toBe(true)
+    expect(periksaKelengkapan(lengkap({ jadwal: [{ nama: 'A', kategoriWaktu: 'SEKALI' }] })).some((x) => x.startsWith('Aktivitas 1:'))).toBe(true)
     expect(periksaKelengkapan(lengkap({ jadwal: [{ nama: 'A', kategoriWaktu: 'RENTANG', tanggalMulai: '2027-01-01' }] })).some((x) => x.includes('mulai dan selesai'))).toBe(true)
     expect(periksaKelengkapan(lengkap({ jadwal: [{ nama: 'A', kategoriWaktu: 'PERIODE' }] })).some((x) => x.includes('keterangan periode'))).toBe(true)
     expect(periksaKelengkapan(lengkap({ jadwal: [{ nama: 'A', kategoriWaktu: 'TAHUN' }] }))).toEqual([])

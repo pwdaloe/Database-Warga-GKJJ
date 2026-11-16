@@ -3,6 +3,7 @@ import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { RILIS, RILIS_TERBARU } from '../constants/rilis.js'
 import { ok } from '../utils/response.js'
+import { ambilDukungan } from '../services/pengaturan.service.js'
 
 export const versiRouter = Router()
 
@@ -39,4 +40,10 @@ async function pemeliharaan(): Promise<{ aktif: boolean; pesan: string | null }>
 versiRouter.get('/', async (_req, res) => {
   res.set('Cache-Control', 'no-store')
   ok(res, { versi: RILIS_TERBARU.versi, tanggal: RILIS_TERBARU.tanggal, commit: await commitBerjalan(), pemeliharaan: await pemeliharaan(), rilis: RILIS })
+})
+
+/** Publik: nomor WhatsApp pusat bantuan, agar halaman Panduan (tanpa login) dapat menyediakan tombol masukan. */
+versiRouter.get('/dukungan', async (_req, res) => {
+  res.set('Cache-Control', 'no-store')
+  ok(res, await ambilDukungan())
 })
